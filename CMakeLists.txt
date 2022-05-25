@@ -15,7 +15,8 @@ include_directories("$ENV{BOOST_ROOT}/include")
 link_directories("$ENV{BOOST_ROOT}/lib")
 
 include_directories("${PROJECT_SOURCE_DIR}/include")
-include_directories("${PROJECT_SOURCE_DIR}/gtest-1.7.0/include")
+#include_directories("${PROJECT_SOURCE_DIR}/gtest-1.7.0/include")
 
+add_subdirectory("googletest")
 add_subdirectory("libControlCAN")
 add_subdirectory ("test")

@@ -16,6 +16,8 @@
 #include <boost/make_unique.hpp>
 #include <boost/thread.hpp>
 
+//#include "gtest/gtest.h"
+
 #define BOOST_DATE_TIME_SOURCE
 #define BOOST_THREAD_NO_LIB
 
@@ -30,7 +32,7 @@ int main() {
   std::cout << "VCI_OpenDevice call result: " << result << std::endl;
   std::cout << "vciobjdatasize: " << sizeof(VCI_CAN_OBJ) << std::endl;
 
-  VCI_INIT_CONFIG cfg;
+  VCI_INIT_CONFIG cfg{};
   cfg.Timing0 = 0x00;
   cfg.Timing1 = 0x1C;
   cfg.Filter = 0;
