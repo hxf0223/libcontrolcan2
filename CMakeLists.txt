@@ -14,9 +14,12 @@ set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin" )
 include_directories("$ENV{BOOST_ROOT}/include")
 link_directories("$ENV{BOOST_ROOT}/lib")
 
+include_directories("${PROJECT_SOURCE_DIR}/googletest/include")
+include_directories("${PROJECT_SOURCE_DIR}/glog/include")
 include_directories("${PROJECT_SOURCE_DIR}/include")
-#include_directories("${PROJECT_SOURCE_DIR}/gtest-1.7.0/include")
+link_directories("${PROJECT_SOURCE_DIR}/bin")
 
+add_subdirectory("glog")
 add_subdirectory("googletest")
 add_subdirectory("libControlCAN")
 add_subdirectory ("test")
