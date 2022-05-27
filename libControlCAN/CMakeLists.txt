@@ -8,8 +8,8 @@ add_definitions(-DWIN32_LEAN_AND_MEAN)
 add_definitions(-D_WINSOCK_DEPRECATED_NO_WARNINGS)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc)
 
-# set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
-# set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
+# set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
+# set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
 
 file(GLOB LIB_CTRL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc)
 add_library(libControlCAN SHARED ${LIB_CTRL_SRCS})
@@ -17,5 +17,5 @@ set(libControlCAN ${libControlCAN} PARENT_SCOPE)
 
 if (WIN32)
 	set_property(TARGET libControlCAN PROPERTY
-		MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+		MSVC_RUNTIME_LIBRARY "MultiThreadedDLL$<$<CONFIG:Debug>:Debug>")
 endif()
