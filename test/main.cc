@@ -28,7 +28,7 @@ constexpr DWORD channel = 0;
 
 TEST(CAN, F001_P0) {
   auto result = VCI_OpenDevice(devtype, 0, 0);
-  CHECK(0 == result) << "VCI_OpenDevice fail: " << result;
+  CHECK(1 == result) << "VCI_OpenDevice fail: " << result;
 
   VCI_INIT_CONFIG cfg{};
   cfg.Timing0 = 0x00;
@@ -56,8 +56,6 @@ TEST(CAN, F001_P0) {
   can_obj.TimeStamp = 0;
 
   VCI_CAN_OBJ can_recv_buff[10];
-  const auto start = boost::chrono::high_resolution_clock::now();
-  boost::chrono::microseconds us;
 
   for (int i = 0; i < 4000; i++, can_obj.Data[2]++) {
     result = VCI_Transmit(devtype, devid, channel, &can_obj, 1);
@@ -72,7 +70,36 @@ TEST(CAN, F001_P0) {
   }
 
   result = VCI_CloseDevice(devtype, 0);
-  CHECK(0 == result) << "VCI_CloseDevice fail: " << result;
+  CHECK(1 == result) << "VCI_CloseDevice fail: " << result;
+}
+
+TEST(CAN, F002_P0) {
+  auto result = VCI_OpenDevice(devtype, 0, 0);
+  CHECK(1 == result) << "VCI_OpenDevice fail: " << result;
+
+  VCI_INIT_CONFIG cfg{};
+  cfg.Timing0 = 0x00;
+  cfg.Timing1 = 0x1C;
+  cfg.Filter = 0;
+  cfg.AccMask = 0xffffffff;
+  cfg.AccCode = 0;
+  cfg.Mode = 0;
+  cfg.Reserved = 0;
+  result = VCI_InitCAN(devtype, devid, channel, &cfg);
+
+  VCI_CAN_OBJ can_recv_buff[100];
+  result = VCI_StartCAN(devtype, devid, channel);
+
+  LOG(INFO) << std::setfill('0') << std::setw(8);
+  for (int i = 0; i < 4000; i++) {
+    auto len = VCI_Receive(devtype, devid, channel, can_recv_buff, 20, 100);
+    if (len <= 0) continue;
+    std::string str = can::utils::bin2hex_dump(can_recv_buff[0].Data, 8);
+    LOG(INFO) << "VCI_Receive: " << std::hex << can_recv_buff[0].ID << ", data: " << str;
+  }
+
+  result = VCI_CloseDevice(devtype, 0);
+  CHECK(1 == result) << "VCI_CloseDevice fail: " << result;
 }
 
 int main(int argc, char **argv) {

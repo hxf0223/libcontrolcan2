@@ -5,5 +5,5 @@ target_link_libraries(can_test libControlCAN gtest glog)
 
 if (WIN32)
 	set_property(TARGET can_test PROPERTY
-		MSVC_RUNTIME_LIBRARY "MultiThreadedDLL$<$<CONFIG:Debug>:Debug>")
+		MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 endif()

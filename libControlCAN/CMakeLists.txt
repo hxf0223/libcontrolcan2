@@ -17,5 +17,5 @@ set(libControlCAN ${libControlCAN} PARENT_SCOPE)
 
 if (WIN32)
 	set_property(TARGET libControlCAN PROPERTY
-		MSVC_RUNTIME_LIBRARY "MultiThreadedDLL$<$<CONFIG:Debug>:Debug>")
+		MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 endif()
