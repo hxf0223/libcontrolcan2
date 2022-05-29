@@ -25,3 +25,4 @@ cmake .. -G "Visual Studio 17 2022" -A Win32 -DCMAKE_BUILD_TYPE="Release" -DBUIL
 
 ### 参考
 - [CMake设置MSVC工程MT/MTd/MD/MDd](https://blog.csdn.net/Copperxcx/article/details/123084367)
+- [USBCAN资料](https://www.zlg.cn/can/down/down/id/22.html)

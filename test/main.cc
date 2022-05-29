@@ -1,6 +1,4 @@
-﻿#include <Windows.h>
-
-#include <iostream>
+﻿#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -18,9 +16,6 @@
 
 #include "glog/logging.h"
 #include "gtest/gtest.h"
-
-#define BOOST_DATE_TIME_SOURCE
-#define BOOST_THREAD_NO_LIB
 
 constexpr DWORD devtype = 4;
 constexpr DWORD devid = 0;
@@ -92,7 +87,7 @@ TEST(CAN, F002_P0) {
 
   LOG(INFO) << std::setfill('0') << std::setw(8);
   for (int i = 0; i < 4000; i++) {
-    auto len = VCI_Receive(devtype, devid, channel, can_recv_buff, 20, 100);
+    auto len = VCI_Receive(devtype, devid, channel, can_recv_buff, 1, 100);
     if (len <= 0) continue;
     std::string str = can::utils::bin2hex_dump(can_recv_buff[0].Data, 8);
     LOG(INFO) << "VCI_Receive: " << std::hex << can_recv_buff[0].ID << ", data: " << str;
@@ -103,7 +98,9 @@ TEST(CAN, F002_P0) {
 }
 
 int main(int argc, char **argv) {
+  FLAGS_alsologtostderr = 1;
   ::testing::InitGoogleTest(&argc, argv);
+  google::InitGoogleLogging(argv[0]);
   int ret = RUN_ALL_TESTS();
   return ret;
 }

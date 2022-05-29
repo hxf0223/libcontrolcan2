@@ -1,4 +1,4 @@
-﻿cmake_minimum_required (VERSION 3.8)
+﻿cmake_minimum_required (VERSION 3.15)
 
 add_executable (can_test "main.cc")
 target_link_libraries(can_test libControlCAN gtest glog)
