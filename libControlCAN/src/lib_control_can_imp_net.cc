@@ -631,3 +631,16 @@ bool CanImpCanNet::buffer_list_pop(std::string &line) {
   lock_leave();
   return true;
 }
+
+#include "lib_control_can_imp.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+LIBCC_DLL CanImpInterface *createCanNet() {
+  return new CanImpCanNet();
+}
+
+#ifdef __cplusplus
+}
+#endif

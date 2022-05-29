@@ -34,7 +34,9 @@ struct dll_load_dll_type {
     // std::cout << "dll_load_dll_type dtor "
     //		<< path << " " << hDll << std::endl;
     try {
-      if (nullptr != hDll) FreeLibrary(hDll);
+      if (nullptr != hDll) {
+        FreeLibrary(hDll);
+      }
     } catch (std::exception &e) {
       std::cout << "lib_control_can_imp_dc dll_load_dll_type dtor: " << e.what() << std::endl;
     }

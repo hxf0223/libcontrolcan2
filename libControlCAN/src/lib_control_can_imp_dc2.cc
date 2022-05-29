@@ -212,6 +212,8 @@ ULONG CanImpDirectCan2::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CAN
   return 0;
 }
 
+
+
 dll_load_dll_type *CanImpDirectCan2::load_library(std::string path) {
   auto const h = LoadLibrary(path.c_str());
   if (nullptr == h) return nullptr;
@@ -241,3 +243,16 @@ dll_load_dll_type *CanImpDirectCan2::load_library(std::string path) {
 std::unique_ptr<dll_load_dll_type> CanImpDirectCan2::load_library_s(std::string path) {
   return std::unique_ptr<dll_load_dll_type>(load_library(path));
 }
+
+#include "lib_control_can_imp.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+  LIBCC_DLL CanImpInterface *createCanDC() {
+    return new CanImpDirectCan2();
+  }
+
+#ifdef __cplusplus
+}
+#endif

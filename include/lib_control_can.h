@@ -2,35 +2,10 @@
 // Created by Administrator on 2017/8/30 0030.
 //
 
-#ifndef LIBCONTROLCAN_LIB_CONTROL_CAN_H
-#define LIBCONTROLCAN_LIB_CONTROL_CAN_H
+#pragma once
 
 #include "usbcan.h"
-
-#ifdef _MSC_VER
-
-#ifdef BUILDING_LIBCC_DLL
-#define LIBCC_DLL __declspec(dllexport)
-#else
-#define LIBCC_DLL __declspec(dllimport)
-#endif
-
-#define LIBCC_EXPORT_CALL LIBCC_DLL __stdcall
-
-#else
-
-#ifdef BUILDING_LIBCC_DLL
-#define LIBCC_DLL //__declspec(dllexport)   //
-                  //添加dllexport会使得导出函数添加前缀_imp_，导致调用方链接时找不到
-#else
-#define LIBCC_DLL //__declspec(dllimport)
-#endif
-
-#define LIBCC_EXPORT_CALL __stdcall LIBCC_DLL
-
-#endif
-
-#define LIBCC_CALLCONV __stdcall
+#include "lib_control_can_exp.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -58,4 +33,4 @@ ULONG LIBCC_EXPORT_CALL VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CAN
 }
 #endif
 
-#endif // LIBCONTROLCAN_LIB_CONTROL_CAN_H
+

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "usbcan.h"
+#include "lib_control_can_exp.h"
 
 class CanImpInterface {
 public:
@@ -31,3 +32,15 @@ public:
 	virtual vciReturnType VCI_Transmit(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_CAN_OBJ pSend, ULONG Len) = 0;
 	virtual ULONG VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_CAN_OBJ pReceive, ULONG Len, INT WaitTime) = 0;
 };
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+	LIBCC_DLL CanImpInterface *createCanDC();
+	LIBCC_DLL CanImpInterface *createCanNet();
+
+#ifdef __cplusplus
+}
+#endif
