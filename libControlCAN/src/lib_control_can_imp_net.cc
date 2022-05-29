@@ -258,30 +258,38 @@ vciReturnType CanImpCanNet::VCI_Transmit(DWORD DeviceType, DWORD DeviceInd, DWOR
                                          ULONG Len) {
   if (!_connected.load()) return vciReturnType::STATUS_ERR;
 
-  std::vector<uint8_t> v;
-  v.reserve(64);
-
-  auto p = reinterpret_cast<uint8_t *>(&DeviceType);
-  std::copy(p, p + sizeof(DeviceType), std::back_inserter(v));
-  p = reinterpret_cast<uint8_t *>(&DeviceInd);
-  std::copy(p, p + sizeof(DeviceInd), std::back_inserter(v));
-  p = reinterpret_cast<uint8_t *>(&CANInd);
-  std::copy(p, p + sizeof(CANInd), std::back_inserter(v));
-  p = reinterpret_cast<uint8_t *>(pSend);
-  std::copy(p, p + sizeof(VCI_CAN_OBJ) * Len, std::back_inserter(v));
+  uint8_t arr[64];
+  uint8_t *ptr_arr = arr;
+  memcpy(ptr_arr, &DeviceType, sizeof(DeviceType)), ptr_arr += sizeof(DeviceType);
+  memcpy(ptr_arr, &DeviceInd, sizeof(DeviceInd)), ptr_arr += sizeof(DeviceInd);
+  memcpy(ptr_arr, &CANInd, sizeof(CANInd)), ptr_arr += sizeof(CANInd);
+  memcpy(ptr_arr, pSend, Len), ptr_arr += sizeof(VCI_CAN_OBJ) * Len;
   // p = reinterpret_cast<uint8_t*>(&Len); std::copy(p, p + sizeof(Len), std::back_inserter(v));	// ignore Len
 
-  std::string data;
-  data.reserve(256); // need more buffer
+  const size_t data_len = size_t(ptr_arr - arr);
+  constexpr char *head = "VCI_Transmit,";
+  constexpr size_t head_len = 13, small_buff_len = 256;
 
-  data.append("VCI_Transmit,");
-  auto &&data2 = can::utils::bin2hex_fast(v.data(), v.size());
-  data.append(data2);
-  data.append("\n");
+  if ((data_len * 2 + head_len + 1) < small_buff_len) {
+    char line_buff[small_buff_len];
+    char *ptr_line = line_buff;
+    memcpy(ptr_line, head, head_len), ptr_line += head_len;
+    can::utils::bin2hex_fast(arr, data_len, ptr_line), ptr_line += data_len*2;
+    *ptr_line = '\n', ptr_line++;
 
-  auto const ierror = write_line(data);
-  if (data.size() != ierror) {
-    return vciReturnType::STATUS_ERR;
+    const size_t write_len = (size_t)((ptr_line - line_buff));
+    const auto e = write_line(line_buff, write_len);
+    if (e != write_len) return vciReturnType::STATUS_ERR;
+  } else {
+    std::string data;
+    data.reserve(512); // need more buffer
+
+    data.append(head);
+    data.append(can::utils::bin2hex_fast(arr, data_len));
+    data.append("\n");
+
+    auto const e = write_line(data);
+    if (data.size() != e) return vciReturnType::STATUS_ERR;
   }
 
   return vciReturnType::STATUS_OK;
@@ -504,14 +512,18 @@ void CanImpCanNet::disconnect() {
   _connected.store(false);
 }
 
-int CanImpCanNet::write_line(const std::string &line) const {
-  auto const ierror = send(_socket, line.c_str(), (int)(line.length()), 0);
+int CanImpCanNet::write_line(const char *p, size_t len) const {
+  auto const ierror = send(_socket, p, (int)(len), 0);
   if (ierror == SOCKET_ERROR) {
-    std::cout << "write_line failed with error: " << WSAGetLastError() << std::endl;
+    std::cout << "write_line error: " << WSAGetLastError() << std::endl;
     return -1;
   }
 
   return ierror;
+}
+
+int CanImpCanNet::write_line(const std::string &line) const {
+  return write_line(line.data(), line.size());
 }
 
 /* socket peek:

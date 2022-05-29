@@ -90,6 +90,17 @@ static std::string bin2hex_fast(void *const p, size_t len) {
   return str;
 }
 
+static size_t bin2hex_fast(void *const p, size_t len, const char* dst) {
+  const auto data = static_cast<unsigned char *>(p);
+  auto pstr = const_cast<char *>(dst);
+  for (size_t i = 0; i < len; i++) {
+    *pstr++ = hexmap[(data[i] & 0xF0) >> 4];
+    *pstr++ = hexmap[data[i] & 0x0F];
+  }
+
+  return (len*2);
+}
+
 static std::vector<unsigned char> hex_string_to_bin(std::string str) {
   // mapping of ASCII characters to hex values
   static uint8_t hashmap[] = {

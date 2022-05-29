@@ -55,6 +55,7 @@ private:
   int connect2(const std::string &host, const std::string &service);
   void disconnect();
 
+  int write_line(const char *p, size_t len) const;
   int write_line(const std::string &line) const;
   std::string read_line(int timeout);
   std::string read_line_post_process(const char *buffer, size_t len);
