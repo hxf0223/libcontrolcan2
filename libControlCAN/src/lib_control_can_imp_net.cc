@@ -7,7 +7,6 @@
 #pragma warning(disable : 4819)
 #endif
 
-#include <Windows.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/bind.hpp>
 #include <boost/chrono.hpp>
@@ -45,20 +44,6 @@ typedef Ini<> ini_t;
 using std::chrono::duration_cast;
 using std::chrono::microseconds;
 
-/*
-高精度计时
-
-#include <chrono>
-#include <iostream>
-
-using std::chrono::microseconds;
-using std::chrono::duration_cast;
-
-auto t1 = std::chrono::high_resolution_clock::now();
-auto t2 = std::chrono::high_resolution_clock::now();
-auto delta_micro = duration_cast<microseconds>(t2 - t1);
-std::cout << delta_micro.count() << std::endl;
-*/
 
 boost::xpressive::sregex CanImpCanNet::_hex_str_pattern(sregex::compile("^(?:[0-9a-fA-F][0-9a-fA-F])+$"));
 // boost::xpressive::sregex CanImpCanNet::_receive_pattern(sregex::compile("^VCI_Receive[0-9a-fA-F]{32},"));
