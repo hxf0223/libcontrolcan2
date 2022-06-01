@@ -1,0 +1,43 @@
+{
+    // 使用 IntelliSense 了解相关属性。
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "gdb for dump client",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/home/hxf0223/tmp/hcp_x86/bin/tests_npu",
+            "args": [
+                "--gtest_filter=NPU_PROF.F001_P0"
+            ],
+            "stopAtEntry": false,
+            "cwd": "/home/hxf0223/tmp/hcp_x86/bin",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "为 gdb 启用整齐打印",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "libs for gdb",
+                    "text": "set environment LD_LIBRARY_PATH=/home/hxf0223/tmp/hcp_x86/bin:$LD_LIBRARY_PATH",
+                    "ignoreFailures": false
+                },
+                {
+                    "description": "debug forked child",
+                    "text": "-gdb-set follow-fork-mode child",
+                    "ignoreFailures": false
+                }
+            ],
+            "miDebuggerPath": "/usr/bin/gdb",
+            "sourceFileMap": {
+                "/build/glibc-S9d2JN": "/usr/src/glibc"
+            }
+        }
+    ]
+}
