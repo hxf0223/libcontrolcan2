@@ -1,7 +1,6 @@
 #pragma once
 
 #include "usbcan.h"
-#include <Windows.h>
 #include <iostream>
 #include <memory>
 

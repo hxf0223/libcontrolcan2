@@ -1,5 +1,7 @@
 ﻿cmake_minimum_required (VERSION 3.15)
 
+include(${PROJECT_SOURCE_DIR}/cmake/platform_include.cmake)
+
 add_executable (can_test "main.cc")
 target_link_libraries(can_test libControlCAN gtest glog)
 
