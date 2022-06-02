@@ -14,8 +14,6 @@
 #include <boost/regex.hpp>
 #include <boost/xpressive/xpressive.hpp>
 
-#define BUFFER_LOCK_CS
-
 class CanImpCanNet : public CanImpInterface {
 public:
   CanImpCanNet();
@@ -70,13 +68,7 @@ private:
   std::string _str_sock_port;
   SOCKET _socket;
 
-#ifdef BUFFER_LOCK_CS
-  // http://memleap.com/windows/multithreading/performance-comparison-stdmutex-c11-critical_section-win32-mutex-win32/
-  // https://stoyannk.wordpress.com/2016/04/30/msvc-mutex-is-slower-than-you-might-expect/
-  CRITICAL_SECTION _buffer_cs;
-#else
   std::mutex _buffer_mutex;
-#endif
 
   std::list<std::string> _buffer_list;
   std::vector<char> _join_buffer;

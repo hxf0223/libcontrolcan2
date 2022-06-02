@@ -1,12 +1,3 @@
-#ifdef _MSC_VER
-//#include "stdafx.h"
-#endif
-
-#ifdef _MSC_VER
-#pragma warning(disable : 4101)
-#pragma warning(disable : 4819)
-#endif
-
 #include <boost/algorithm/string.hpp>
 #include <boost/bind.hpp>
 #include <boost/chrono.hpp>
@@ -23,6 +14,11 @@
 #include "hex_dump.hpp"
 #include "lib_control_can_imp_net.hpp"
 #include "misc.hpp"
+
+#ifdef _WIN32
+#pragma warning(disable : 4101)
+#pragma warning(disable : 4819)
+#endif
 
 // Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
 #pragma comment(lib, "Ws2_32.lib")
@@ -44,21 +40,12 @@ typedef Ini<> ini_t;
 using std::chrono::duration_cast;
 using std::chrono::microseconds;
 
-
 boost::xpressive::sregex CanImpCanNet::_hex_str_pattern(sregex::compile("^(?:[0-9a-fA-F][0-9a-fA-F])+$"));
 // boost::xpressive::sregex CanImpCanNet::_receive_pattern(sregex::compile("^VCI_Receive[0-9a-fA-F]{32},"));
 boost::xpressive::sregex CanImpCanNet::_receive_pattern(sregex::compile("^(VCI_Receive|VCI_Transmit)[0-9a-fA-F]{32},"));
 boost::regex CanImpCanNet::_receive_line_feed_pattern("^VCI_Receive[0-9a-fA-F]{32},");
 std::string CanImpCanNet::_empty_string;
 int CanImpCanNet::_conn_timeout_ms = 300;
-
-#ifdef BUFFER_LOCK_CS
-#define lock_enter() EnterCriticalSection(&_buffer_cs)
-#define lock_leave() LeaveCriticalSection(&_buffer_cs)
-#else
-#define lock_enter() std::unique_lock<std::mutex> lck(_buffer_mutex)
-#define lock_leave()
-#endif
 
 CanImpCanNet::CanImpCanNet() : _connected(false), _str_sock_addr(""), _str_sock_port(""), _socket(INVALID_SOCKET) {
   const auto dir_path = getexepath().parent_path();
@@ -71,10 +58,6 @@ CanImpCanNet::CanImpCanNet() : _connected(false), _str_sock_addr(""), _str_sock_
   } else {
     // std::cout << "CanImpCanNet ctor: " << ini_file_name << " not exist." << std::endl;
   }
-
-#ifdef BUFFER_LOCK_CS
-  InitializeCriticalSectionAndSpinCount(&_buffer_cs, 4000);
-#endif
 
   _join_buffer.reserve(1024);
   buffer_list_init(); // init at end of ctor
@@ -274,7 +257,7 @@ vciReturnType CanImpCanNet::VCI_Transmit(DWORD DeviceType, DWORD DeviceInd, DWOR
     char line_buff[small_buff_len];
     char *ptr_line = line_buff;
     memcpy(ptr_line, head, head_len), ptr_line += head_len;
-    can::utils::bin2hex_fast(arr, data_len, ptr_line), ptr_line += data_len*2;
+    can::utils::bin2hex_fast(arr, data_len, ptr_line), ptr_line += data_len * 2;
     *ptr_line = '\n', ptr_line++;
 
     const size_t write_len = (size_t)((ptr_line - line_buff));
@@ -568,14 +551,16 @@ std::string CanImpCanNet::read_line(int timeout) {
   }
 
   if (bytes_read > 0) {
-    lock_enter();
-    std::copy(buff, buff + bytes_read, std::back_inserter(_join_buffer));
-    std::string join_str(_join_buffer.begin(), _join_buffer.end());
+    std::string join_str;
+    {
+      std::lock_guard lk(_buffer_mutex);
+      std::copy(buff, buff + bytes_read, std::back_inserter(_join_buffer));
+      join_str = std::string(_join_buffer.begin(), _join_buffer.end());
 
-    if (!_join_buffer.empty()) {
-      _join_buffer.erase(_join_buffer.begin(), _join_buffer.end());
+      if (!_join_buffer.empty()) {
+        _join_buffer.erase(_join_buffer.begin(), _join_buffer.end());
+      }
     }
-    lock_leave();
 
     return read_line_post_process(join_str.c_str(), join_str.length()); // lock
   }
@@ -597,10 +582,9 @@ std::string CanImpCanNet::read_line_post_process(const char *buffer, size_t len)
     }
 
     if (!buff_end_with_feed) {
-      lock_enter();
+      std::lock_guard lk(_buffer_mutex);
       auto &left_str = vec_line.at(vec_line.size() - 1);
       std::copy(left_str.begin(), left_str.end(), std::back_inserter(_join_buffer));
-      lock_leave();
     }
 
     return first_str;
@@ -610,28 +594,23 @@ std::string CanImpCanNet::read_line_post_process(const char *buffer, size_t len)
 }
 
 void CanImpCanNet::buffer_list_init() {
-  lock_enter();
-
+  std::lock_guard lk(_buffer_mutex);
   _buffer_list.clear();
   if (!_join_buffer.empty()) _join_buffer.erase(_join_buffer.begin(), _join_buffer.end());
 
   _buffer_list_empty.store(true);
-  lock_leave();
 }
 
 void CanImpCanNet::buffer_list_push(const std::string &line) {
-  lock_enter();
+  std::lock_guard lk(_buffer_mutex);
   _buffer_list.push_back(line);
   _buffer_list_empty.store(false);
-  lock_leave();
 }
 
 bool CanImpCanNet::buffer_list_pop(std::string &line) {
-  lock_enter();
-
+  std::lock_guard lk(_buffer_mutex);
   if (_buffer_list.empty()) {
     _buffer_list_empty.store(true);
-    lock_leave();
     return false;
   }
 
@@ -640,7 +619,6 @@ bool CanImpCanNet::buffer_list_pop(std::string &line) {
 
   if (_buffer_list.empty()) _buffer_list_empty.store(true);
 
-  lock_leave();
   return true;
 }
 
