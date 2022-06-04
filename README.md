@@ -2,7 +2,8 @@
 
 ### 开发环境
 - VS2022扩展：Clang Power Tools ；
-- 依赖于boost，需要定义系统环境变量 BOOST_ROOT；
+- VS2022扩展：Format Document On Save ；
+- 依赖于boost，需要定义系统环境变量 BOOST_ROOT ；
 - 使用gtest源码 [v1.11.0](https://github.com/google/googletest/releases/tag/release-1.11.0)；
 - 使用glog源码 [v0.6.0](https://github.com/google/glog/releases/tag/v0.6.0)。
 
