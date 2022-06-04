@@ -4,15 +4,21 @@
 
 #include <boost/asio.hpp>
 #include <chrono>
+#include <memory>
 #include <thread>
 
 #include "glog/logging.h"
 #include "gtest/gtest.h"
 
 #include "hex_dump.hpp"
+#include "lib_control_can_imp.h"
 #include "usbcan.h"
 
-TEST(CAN, socket_perf) {
+constexpr DWORD devtype = 4;
+constexpr DWORD devid = 0;
+constexpr DWORD channel = 0;
+
+TEST(Socket, perfServer) {
   using namespace boost::asio;
   using namespace boost::asio::ip;
 
@@ -38,8 +44,52 @@ TEST(CAN, socket_perf) {
     }
   }; // server_proc
 
-  auto client_proc = []() {};
-
   std::thread server_thread(server_proc);
   server_thread.join();
+}
+
+TEST(Socket, perfClient) {
+  auto client_proc = [](std::shared_ptr<CanImpInterface> canDc) {
+    constexpr DWORD rec_buff_size = 100;
+    VCI_CAN_OBJ can_recv_buff[rec_buff_size];
+    ULONG recv_frame_cnt = 0;
+
+    auto tm0 = std::chrono::steady_clock::now();
+    while (true) {
+      auto recv_frame_num = canDc->VCI_Receive(devtype, devid, channel, can_recv_buff, rec_buff_size, 100);
+      for (ULONG i = 0; i < recv_frame_num; i++) {
+        std::string str = can::utils::bin2hex_dump(can_recv_buff[i].Data, 8);
+        LOG(INFO) << "<<<===: " << str;
+      }
+
+      auto tm1 = std::chrono::steady_clock::now();
+      std::chrono::duration<double, std::milli> dur = tm1 - tm0;
+      if (dur.count() > 120 * 1000) break;
+    }
+
+    auto tm2 = std::chrono::steady_clock::now();
+    std::chrono::duration<double, std::milli> dur1 = tm2 - tm0;
+    LOG(INFO) << "receive frame num: " << recv_frame_cnt << ", time in ms: " << dur1.count();
+  }; // client_proc
+
+  std::shared_ptr<CanImpInterface> can_dc(createCanNet());
+  auto result = can_dc->VCI_OpenDevice(devtype, 0, 0);
+  CHECK(result != 0) << "CAN NET VCI_OpenDevice fail.";
+
+  VCI_INIT_CONFIG cfg{};
+  cfg.Timing0 = 0x00;
+  cfg.Timing1 = 0x1C;
+  cfg.Filter = 0;
+  cfg.AccMask = 0xffffffff;
+  cfg.AccCode = 0;
+  cfg.Mode = 0;
+  cfg.Reserved = 0;
+  result = can_dc->VCI_InitCAN(devtype, devid, channel, &cfg);
+  CHECK(result != 0) << "CAN NET VCI_InitCAN fail.";
+
+  result = can_dc->VCI_StartCAN(devtype, devid, channel);
+  CHECK(result != 0) << "CAN NET VCI_StartCAN fail.";
+
+  std::thread client_thread(client_proc, can_dc);
+  client_thread.join();
 }
