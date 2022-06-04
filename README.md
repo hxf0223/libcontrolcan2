@@ -30,3 +30,8 @@ cmake .. -G "Visual Studio 17 2022" -A Win32 -DCMAKE_BUILD_TYPE="Release" -DBUIL
 - [windows临界区与std::lock_guargd性能对比](https://gitee.com/vaughnHuang/cs_lock_perf_test)
 - [concurrentqueue](https://github.com/cameron314/concurrentqueue)
 
+### template相关参考
+- [泛化之美--C++11可变模版参数的妙用](https://www.cnblogs.com/qicosmos/p/4325949.html)
+- [Variadic templates (C++11)](https://www.ibm.com/docs/en/zos/2.3.0?topic=only-variadic-templates-c11)
+- [std true_type false_type的使用](https://stackoverflow.com/questions/20368187/when-would-i-use-stdintegral-constant-over-constexpr)
+

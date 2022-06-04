@@ -116,16 +116,13 @@ vciReturnType CanImpCanNet::VCI_ReadBoardInfo(DWORD DeviceType, DWORD DeviceInd,
 vciReturnType CanImpCanNet::VCI_InitCAN(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_INIT_CONFIG pInitConfig) {
   if (!_connected.load()) return vciReturnType::STATUS_ERR;
 
-  std::string data("VCI_InitCAN,");
-  data += can::utils::bin2hex_fast(&DeviceType, sizeof(DeviceType));
-  data += can::utils::bin2hex_fast(&DeviceInd, sizeof(DeviceInd));
-  data += can::utils::bin2hex_fast(&CANInd, sizeof(CANInd));
-  data += can::utils::bin2hex_fast(pInitConfig, sizeof(VCI_INIT_CONFIG));
-  data += '\n';
+  char buff[256];
+  constexpr char *head = "VCI_InitCAN,";
+  auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, &CANInd, pInitConfig, "\n");
 
   // std::cout << "VCI_InitCAN: " << data;
-  auto const ierror = write_line(data);
-  if (data.size() != ierror) return vciReturnType::STATUS_ERR;
+  auto const ierror = write_line(buff, size);
+  if (size != ierror) return vciReturnType::STATUS_ERR;
 
   return vciReturnType::STATUS_OK;
 }
@@ -158,9 +155,7 @@ vciReturnType CanImpCanNet::VCI_SetReference(DWORD DeviceType, DWORD DeviceInd, 
   return vciReturnType::STATUS_ERR;
 }
 
-DWORD CanImpCanNet::VCI_GetReceiveNum(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd) {
-  return 1;
-}
+DWORD CanImpCanNet::VCI_GetReceiveNum(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd) { return 1; }
 
 vciReturnType CanImpCanNet::VCI_ClearBuffer(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd) {
   if (!_connected.load()) return vciReturnType::STATUS_ERR;
@@ -455,9 +450,7 @@ int CanImpCanNet::write_line(const char *p, size_t len) const {
   return ierror;
 }
 
-int CanImpCanNet::write_line(const std::string &line) const {
-  return write_line(line.data(), line.size());
-}
+int CanImpCanNet::write_line(const std::string &line) const { return write_line(line.data(), line.size()); }
 
 /* socket peek:
  * https://stackoverflow.com/questions/12984816/get-the-number-of-bytes-available-in-socket-by-recv-with-msg-peek-in-c
@@ -579,9 +572,7 @@ bool CanImpCanNet::buffer_list_pop(std::string &line) {
 extern "C" {
 #endif
 
-LIBCC_DLL CanImpInterface *createCanNet() {
-  return new CanImpCanNet();
-}
+LIBCC_DLL CanImpInterface *createCanNet() { return new CanImpCanNet(); }
 
 #ifdef __cplusplus
 }
