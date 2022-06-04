@@ -2,6 +2,7 @@
 #include <memory>
 #include <vector>
 #include <csignal>
+#include <thread>
 
 #include "hex_dump.hpp"
 #include "lib_control_can_imp.h"
@@ -29,7 +30,7 @@ void signal_handler(int signal) {
 }
 
 int main(int argc, char **argv) {
-  std::unique_ptr<CanImpInterface> can_dc(createCanDC());
+  std::shared_ptr<CanImpInterface> can_dc(createCanDC());
   auto result = can_dc->VCI_OpenDevice(devtype, 0, 0);
   if (result != 1) {
     std::cout << "CAN DC VCI_OpenDevice fail." << std::endl;
@@ -51,19 +52,30 @@ int main(int argc, char **argv) {
   }
 
   std::signal(SIGINT, signal_handler);
-
-  constexpr DWORD rec_buff_size = 100;
-  VCI_CAN_OBJ can_recv_buff[rec_buff_size];
   result = can_dc->VCI_StartCAN(devtype, devid, channel);
-  while (0 == gSignalStatus) {
-    auto num = can_dc->VCI_GetReceiveNum(devtype, devid, channel);
-    if (num > rec_buff_size) num = rec_buff_size;
-    auto recv_frame_num = can_dc->VCI_Receive(devtype, devid, channel, can_recv_buff, num, 100);
-    for (ULONG i = 0; i < recv_frame_num; i++) {
-      std::string str = can::utils::bin2hex_dump(can_recv_buff[i].Data, 8);
-      std::cout << "VCI_Receive: " << std::hex << can_recv_buff[i].ID << ", data: " << str << std::endl;
+  
+  auto recv_func = [](std::shared_ptr<CanImpInterface> canDc) {
+    constexpr DWORD rec_buff_size = 100;
+    VCI_CAN_OBJ can_recv_buff[rec_buff_size];
+    uint64_t recv_count = 0;
+    while (0 == gSignalStatus) {
+      auto num = canDc->VCI_GetReceiveNum(devtype, devid, channel);
+      if (num > rec_buff_size) num = rec_buff_size;
+      auto recv_frame_num = canDc->VCI_Receive(devtype, devid, channel, can_recv_buff, num, 100);
+      for (ULONG i = 0; i < recv_frame_num; i++) {
+        std::string str = can::utils::bin2hex_dump(can_recv_buff[i].Data, 8);
+        uint64_t now =
+          std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch())
+            .count();
+        std::cout << "VCI_Receive: " << std::hex << can_recv_buff[i].ID << ", time: " << now
+                  << ", data: " << str << std::endl;
+        
+      }
     }
-  }
+  };
+
+  std::thread recv_thd(recv_func, can_dc);
+  recv_thd.join();
 
   result = can_dc->VCI_CloseDevice(devtype, 0);
   std::cout << "VCI_CloseDevice: " << (ULONG)result << std::endl;

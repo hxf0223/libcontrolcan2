@@ -2,7 +2,8 @@
 
 ### 开发环境
 - VS2022扩展：Clang Power Tools ；
-- 依赖于boost，需要定义系统环境变量 BOOST_ROOT；
+- VS2022扩展：Format Document On Save ；
+- 依赖于boost，需要定义系统环境变量 BOOST_ROOT ；
 - 使用gtest源码 [v1.11.0](https://github.com/google/googletest/releases/tag/release-1.11.0)；
 - 使用glog源码 [v0.6.0](https://github.com/google/glog/releases/tag/v0.6.0)。
 
@@ -27,3 +28,37 @@ cmake .. -G "Visual Studio 17 2022" -A Win32 -DCMAKE_BUILD_TYPE="Release" -DBUIL
 - [CMake设置MSVC工程MT/MTd/MD/MDd](https://blog.csdn.net/Copperxcx/article/details/123084367)
 - [USBCAN资料](https://www.zlg.cn/can/down/down/id/22.html)
 - [windows临界区与std::lock_guargd性能对比](https://gitee.com/vaughnHuang/cs_lock_perf_test)
+- [concurrentqueue](https://github.com/cameron314/concurrentqueue)
+
+### template相关参考
+- [泛化之美--C++11可变模版参数的妙用](https://www.cnblogs.com/qicosmos/p/4325949.html)
+- [Variadic templates (C++11)](https://www.ibm.com/docs/en/zos/2.3.0?topic=only-variadic-templates-c11)
+- [std true_type false_type的使用](https://stackoverflow.com/questions/20368187/when-would-i-use-stdintegral-constant-over-constexpr)
+
+### template std::true_type std::false_type
+```C++
+#include <type_traits>
+#include <iostream>
+/* https://ideone.com/469YTq */
+
+template<typename T>
+void use_impl(const T&, std::false_type) {
+	std::cout << "use_impl(false)" << std::endl;
+}
+
+template<typename T>
+void use_impl(const T&, std::true_type) {
+	std::cout << "use_impl(true)" << std::endl;
+}
+ 
+template<typename T>
+void use(const T& v) {
+   use_impl(v, typename std::is_integral<T>::type());
+}
+
+int main() {
+   use(1);
+   use(1.2);
+}
+
+```

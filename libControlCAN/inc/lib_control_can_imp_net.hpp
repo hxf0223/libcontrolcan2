@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef _WIN32
+#include <sdkddkver.h> // avoid boost.asio warning: Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately
+#endif
+
 #include "usbcan.h"
 #include <winsock2.h>
 #include <ws2tcpip.h>

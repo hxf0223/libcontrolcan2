@@ -2,8 +2,9 @@
 
 include(${PROJECT_SOURCE_DIR}/cmake/platform_include.cmake)
 
-add_executable (can_test "main.cc")
-target_link_libraries(can_test libControlCAN gtest glog)
+file( GLOB SRC_FILES *.cc )
+add_executable( can_test ${SRC_FILES} )
+target_link_libraries( can_test libControlCAN gtest glog )
 
 if (WIN32)
 	set_property(TARGET can_test PROPERTY

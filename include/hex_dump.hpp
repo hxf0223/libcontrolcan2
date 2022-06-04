@@ -5,9 +5,9 @@
 #include <iomanip>
 #include <ostream>
 #include <sstream> // std::ostringstream
+#include <type_traits>
 #include <utility>
 #include <vector>
-//#include <boost/thread/condition_variable.hpp>
 
 namespace can {
 namespace utils {
@@ -76,30 +76,65 @@ static std::string bin2hex(unsigned char const *pbin, size_t len) {
   return bin2hex(oss, pbin, len);
 }
 
-static const char hexmap[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
-static std::string bin2hex_fast(void *const p, size_t len) {
-  std::string str(len * 2, ' ');
-  const auto data = static_cast<unsigned char *>(p);
-  auto pstr = const_cast<char *>(str.data());
-
-  for (size_t i = 0; i < len; i++) {
-    *pstr++ = hexmap[(data[i] & 0xF0) >> 4];
-    *pstr++ = hexmap[data[i] & 0x0F];
+struct bin2hex {
+  template <typename T>
+  static const T ptr_of(const T &v, std::true_type) {
+    return v;
   }
 
-  return str;
-}
-
-static size_t bin2hex_fast(void *const p, size_t len, const char* dst) {
-  const auto data = static_cast<unsigned char *>(p);
-  auto pstr = const_cast<char *>(dst);
-  for (size_t i = 0; i < len; i++) {
-    *pstr++ = hexmap[(data[i] & 0xF0) >> 4];
-    *pstr++ = hexmap[data[i] & 0x0F];
+  template <class T>
+  static const T *ptr_of(const T &v, std::false_type) {
+    return &v;
   }
 
-  return (len*2);
-}
+  static size_t bin2hex_fast(const char *dst) {
+    auto ptr_dst = const_cast<char *>(dst);
+    *ptr_dst = '\0';
+    return 0;
+  }
+
+  template <typename... Args>
+  static size_t bin2hex_fast(const char *dst, const char *src, Args... rest) {
+    auto ptr_dst = const_cast<char *>(dst);
+    size_t src_bytes = std::strlen(src);
+    std::memcpy(ptr_dst, src, src_bytes);
+
+    auto rest_size = bin2hex_fast(ptr_dst + src_bytes, rest...);
+    return (src_bytes + rest_size);
+  }
+
+  template <typename T, typename... Args>
+  static size_t bin2hex_fast(const char *dst, const T &head, Args... rest) {
+    using rm_ref_t = std::remove_reference_t<T &>;
+    using decay2_t = std::remove_const_t<std::remove_reference_t<T &>>;
+    static_assert(std::is_pod<decay2_t>::value, "Not a POD type."); // do NOT use std::decay<T>::type
+    size_t bytes = (std::is_pointer<T>::value) ? sizeof(std::remove_pointer<T>::type) : sizeof(T);
+    uint8_t *psrc = (uint8_t *)ptr_of(head, std::is_pointer<T>::type());
+
+    auto pdst = const_cast<char *>(dst);
+    do_conv(pdst, psrc, bytes);
+
+    auto rest_size = bin2hex_fast(pdst + bytes * 2, rest...);
+    return (bytes + rest_size);
+  }
+
+  static std::string bin2hex_fast(void *const p, size_t len) {
+    std::string str(len * 2, ' ');
+    const auto psrc = static_cast<unsigned char *>(p);
+    do_conv(const_cast<char *>(str.data()), psrc, len);
+
+    return str;
+  }
+
+private:
+  static void do_conv(char *pdst, const uint8_t *psrc, size_t len) {
+    static char hexmap[]{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+    for (size_t i = 0; i < len; i++) {
+      *pdst++ = hexmap[(psrc[i] & 0xF0) >> 4];
+      *pdst++ = hexmap[psrc[i] & 0x0F];
+    }
+  }
+};
 
 static std::vector<unsigned char> hex_string_to_bin(std::string str) {
   // mapping of ASCII characters to hex values
