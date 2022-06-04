@@ -35,3 +35,30 @@ cmake .. -G "Visual Studio 17 2022" -A Win32 -DCMAKE_BUILD_TYPE="Release" -DBUIL
 - [Variadic templates (C++11)](https://www.ibm.com/docs/en/zos/2.3.0?topic=only-variadic-templates-c11)
 - [std true_type false_typeµÄÊ¹ÓÃ](https://stackoverflow.com/questions/20368187/when-would-i-use-stdintegral-constant-over-constexpr)
 
+### template std::true_type std::false_type
+```C++
+#include <type_traits>
+#include <iostream>
+/* https://ideone.com/469YTq */
+
+template<typename T>
+void use_impl(const T&, std::false_type) {
+	std::cout << "use_impl(false)" << std::endl;
+}
+
+template<typename T>
+void use_impl(const T&, std::true_type) {
+	std::cout << "use_impl(true)" << std::endl;
+}
+ 
+template<typename T>
+void use(const T& v) {
+   use_impl(v, typename std::is_integral<T>::type());
+}
+
+int main() {
+   use(1);
+   use(1.2);
+}
+
+```
