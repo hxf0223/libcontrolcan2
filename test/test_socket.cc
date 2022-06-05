@@ -28,16 +28,18 @@ TEST(Socket, perfServer) {
     tcp::socket server_socket(io_service); // Creating socket object
     acceptor_server.accept(server_socket); // waiting for connection
 
-    constexpr char *cmd_recv = "VCI_Receive";
+    const char *cmd_recv = "VCI_Receive";
     uint64_t send_count = 0;
     char send_buff[256];
     while (true) {
       VCI_CAN_OBJ can_obj{};
       auto dur = std::chrono::system_clock::now().time_since_epoch();
       uint64_t now = std::chrono::duration_cast<std::chrono::nanoseconds>(dur).count();
-      strcpy(send_buff, cmd_recv);
 
-      auto size = can::utils::bin2hex::bin2hex_fast(send_buff, cmd_recv, &send_count, &now, &can_obj);
+      auto size = can::utils::bin2hex::bin2hex_fast(send_buff, cmd_recv, &send_count, &now, &can_obj, "\n");
+      LOG(INFO) << "size: " << size << ", data: " << send_buff;
+      getchar();
+
       boost::asio::write(server_socket, boost::asio::buffer(send_buff, size));
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
       send_count++;

@@ -12,7 +12,10 @@ TEST(CAN, bin2hex_template) {
   uint64_t data64 = 0x0102030405060708;
   uint32_t data32 = 0x090A0B0C;
 
-  auto size = bin2hex::bin2hex_fast(buffer, data64);
+  auto size = bin2hex::bin2hex_fast(buffer, "const string literal.\n");
+  LOG(INFO) << "bin2hex size: " << size << ", char* literal: " << buffer;
+
+  size = bin2hex::bin2hex_fast(buffer, data64);
   LOG(INFO) << "bin2hex size: " << size << ", data64: " << buffer;
 
   size = bin2hex::bin2hex_fast(buffer, data64, data32);

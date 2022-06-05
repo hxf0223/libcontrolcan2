@@ -94,7 +94,7 @@ struct bin2hex {
   }
 
   template <typename... Args>
-  static size_t bin2hex_fast(const char *dst, const char *src, Args... rest) {
+  static size_t bin2hex_fast(const char *dst, const char *const src, Args... rest) {
     auto ptr_dst = const_cast<char *>(dst);
     size_t src_bytes = std::strlen(src);
     std::memcpy(ptr_dst, src, src_bytes);
