@@ -6,7 +6,7 @@ file( GLOB SRC_FILES *.cc )
 add_executable( can_test ${SRC_FILES} )
 target_link_libraries( can_test libControlCAN gtest glog )
 
-if (WIN32)
+if (CMAKE_HOST_WIN32)
 	set_property(TARGET can_test PROPERTY
 		MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 endif()
