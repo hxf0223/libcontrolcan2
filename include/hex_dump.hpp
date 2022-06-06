@@ -115,7 +115,7 @@ struct bin2hex {
     do_conv(pdst, psrc, bytes);
 
     auto rest_size = bin2hex_fast(pdst + bytes * 2, rest...);
-    return (bytes + rest_size);
+    return (bytes * 2 + rest_size);
   }
 
   static std::string bin2hex_fast(void *const p, size_t len) {
