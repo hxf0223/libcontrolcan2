@@ -1,4 +1,4 @@
-#include <Windows.h>
+// #include <Windows.h>
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 #include <iostream>
@@ -240,28 +240,7 @@ ULONG CanImpDirectCan::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANI
 }
 
 dll_load_dll_type *CanImpDirectCan::load_library(const std::string &path) {
-  auto const h = LoadLibrary(path.c_str());
-  if (nullptr == h) return nullptr;
-
-  auto dll = new dll_load_dll_type();
-  dll->path = path;
-  dll->hDll = h;
-
-  dll->fOpenDevice = reinterpret_cast<fVCI_OpenDevice>(GetProcAddress(h, "VCI_OpenDevice"));
-  dll->fCloseDevice = reinterpret_cast<fVCI_CloseDevice>(GetProcAddress(h, "VCI_CloseDevice"));
-  dll->fResetCan = reinterpret_cast<fVCI_ResetCAN>(GetProcAddress(h, "VCI_ResetCAN"));
-  dll->fInitCan = reinterpret_cast<fVCI_InitCAN>(GetProcAddress(h, "VCI_InitCAN"));
-  dll->fReadBoardInfo = reinterpret_cast<fVCI_ReadBoardInfo>(GetProcAddress(h, "VCI_ReadBoardInfo"));
-  dll->fReadErrInfo = reinterpret_cast<fVCI_ReadErrInfo>(GetProcAddress(h, "VCI_ReadErrInfo"));
-  dll->fReadCanStatus = reinterpret_cast<fVCI_ReadCANStatus>(GetProcAddress(h, "VCI_ReadCANStatus"));
-  dll->fGetReference = reinterpret_cast<fVCI_GetReference>(GetProcAddress(h, "VCI_GetReference"));
-  dll->fSetReference = reinterpret_cast<fVCI_SetReference>(GetProcAddress(h, "VCI_SetReference"));
-  dll->fGetReceiveNum = reinterpret_cast<fVCI_GetReceiveNum>(GetProcAddress(h, "VCI_GetReceiveNum"));
-  dll->fClearBuffer = reinterpret_cast<fVCI_ClearBuffer>(GetProcAddress(h, "VCI_ClearBuffer"));
-  dll->fStartCan = reinterpret_cast<fVCI_StartCAN>(GetProcAddress(h, "VCI_StartCAN"));
-  dll->fTransmit = reinterpret_cast<fVCI_Transmit>(GetProcAddress(h, "VCI_Transmit"));
-  dll->fReceive = reinterpret_cast<fVCI_Receive>(GetProcAddress(h, "VCI_Receive"));
-
+  auto dll = new dll_load_dll_type(path);
   return dll;
 }
 

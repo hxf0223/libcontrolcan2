@@ -1,39 +1,40 @@
 ## README
 
-### ¿ª·¢»·¾³
-- VS2022À©Õ¹£ºClang Power Tools £»
-- VS2022À©Õ¹£ºFormat Document On Save £»
-- ÒÀÀµÓÚboost£¬ĞèÒª¶¨ÒåÏµÍ³»·¾³±äÁ¿ BOOST_ROOT £»
-- Ê¹ÓÃgtestÔ´Âë [v1.11.0](https://github.com/google/googletest/releases/tag/release-1.11.0)£»
-- Ê¹ÓÃglogÔ´Âë [v0.6.0](https://github.com/google/glog/releases/tag/v0.6.0)¡£
+### å¼€å‘ç¯å¢ƒ
+- VS2022æ‰©å±•ï¼šClang Power Tools ï¼›
+- VS2022æ‰©å±•ï¼šFormat Document On Save ï¼›
+- ä¾èµ–äºboostï¼Œéœ€è¦å®šä¹‰ç³»ç»Ÿç¯å¢ƒå˜é‡ BOOST_ROOT ï¼›
+- ä½¿ç”¨gtestæºç  [v1.11.0](https://github.com/google/googletest/releases/tag/release-1.11.0)ï¼›
+- ä½¿ç”¨glogæºç  [v0.6.0](https://github.com/google/glog/releases/tag/v0.6.0)ã€‚
 
-gtest¸üĞÂµÄ°æ±¾ĞèÒª Abseil±àÒë£¬¿ÉÄÜ»á±È½ÏÂé·³¡£
-gtestÔ´ÂëÄ¿Â¼Ïà¶ÔÓÚ¹Ù·½gtest²Ö¿âĞŞ¸Ä£º
-- googletest/CMakeLists.txt£ºset(GOOGLETEST_VERSION 1.11.0)£¬·ñÔòÕÒ²»µ½GOOGLETEST_VERSION»á±¨´í£»
-- googletest/cmake/internal_utils.cmake£ºº¯Êıcxx_library_with_typeÖĞ¸ü¸ÄRUNTIME_OUTPUT_DIRECTORYµÈ±äÁ¿µÄÂ·¾¶ÎªCMAKE_ARCHIVE_OUTPUT_DIRECTORY£¬Ê¹Êä³öÂ·¾¶Óë¸¸CMakeLists.txt±£³ÖÒ»ÖÂ¡£
-- googletest/CMakeLists.txt£ºÌí¼Ó set(gtest ${gtest} PARENT_SCOPE)£¬ÈÃtestÄ¿Â¼ÄÜ¹»ÒÀÀµÓÚgtestÖ®ºó±àÒë£»
-- googletest/CMakeLists.txt£ºgtest£¬gtest_main ¾²Ì¬±àÒëĞŞ¸ÄÎª cxx_shared_library ¶¯Ì¬±àÒë¡£
+gtestæ›´æ–°çš„ç‰ˆæœ¬éœ€è¦ Abseilç¼–è¯‘ï¼Œå¯èƒ½ä¼šæ¯”è¾ƒéº»çƒ¦ã€‚
+gtestæºç ç›®å½•ç›¸å¯¹äºå®˜æ–¹gtestä»“åº“ä¿®æ”¹ï¼š
+- googletest/CMakeLists.txtï¼šset(GOOGLETEST_VERSION 1.11.0)ï¼Œå¦åˆ™æ‰¾ä¸åˆ°GOOGLETEST_VERSIONä¼šæŠ¥é”™ï¼›
+- googletest/cmake/internal_utils.cmakeï¼šå‡½æ•°cxx_library_with_typeä¸­æ›´æ”¹RUNTIME_OUTPUT_DIRECTORYç­‰å˜é‡çš„è·¯å¾„ä¸ºCMAKE_ARCHIVE_OUTPUT_DIRECTORYï¼Œä½¿è¾“å‡ºè·¯å¾„ä¸çˆ¶CMakeLists.txtä¿æŒä¸€è‡´ã€‚
+- googletest/CMakeLists.txtï¼šæ·»åŠ  set(gtest ${gtest} PARENT_SCOPE)ï¼Œè®©testç›®å½•èƒ½å¤Ÿä¾èµ–äºgtestä¹‹åç¼–è¯‘ï¼›
+- googletest/CMakeLists.txtï¼šgtestï¼Œgtest_main é™æ€ç¼–è¯‘ä¿®æ”¹ä¸º cxx_shared_library åŠ¨æ€ç¼–è¯‘ã€‚
 
-glogÔ´ÂëÏà¶ÔÓÚ¹Ù·½glogµÄĞŞ¸Ä£º
-- glog/CMakeLists.txt£º set(BUILD_TESTING OFF)£¬½ûÓÃ±àÒëglogµÄ²âÊÔÓÃÀı£»
-- glog/CMakeLists.txt£ºset(glog ${glog} PARENT_SCOPE)£»
-- Ìí¼Ó glog/include/glogÄ¿Â¼£¬½«installµÃµ½µÄÍ·ÎÄ¼ş¿½±´µ½´ËÄ¿Â¼ÏÂ¡£
+glogæºç ç›¸å¯¹äºå®˜æ–¹glogçš„ä¿®æ”¹ï¼š
+- glog/CMakeLists.txtï¼š set(BUILD_TESTING OFF)ï¼Œç¦ç”¨ç¼–è¯‘glogçš„æµ‹è¯•ç”¨ä¾‹ï¼›
+- glog/CMakeLists.txtï¼šset(glog ${glog} PARENT_SCOPE)ï¼›
+- æ·»åŠ  glog/include/glogç›®å½•ï¼Œå°†installå¾—åˆ°çš„å¤´æ–‡ä»¶æ‹·è´åˆ°æ­¤ç›®å½•ä¸‹ã€‚
 
-### ¹Ù·½glogÊ¹ÓÃvs2022±àÒëÃüÁî
+### å®˜æ–¹glogä½¿ç”¨vs2022ç¼–è¯‘å‘½ä»¤
 ```bash
 cmake .. -G "Visual Studio 17 2022" -A Win32 -DCMAKE_BUILD_TYPE="Release" -DBUILD_SHARED_LIBS="ON" -DCMAKE_INSTALL_BINDIR="bin" -DCMAKE_INSTALL_SBINDIR="bin" -DCMAKE_INSTALL_LIBEXECDIR="bin" -DCMAKE_INSTALL_LIBDIR="lib" -DCMAKE_INSTALL_INCLUDEDIR="include" -DCMAKE_INSTALL_DATAROOTDIR="share" -DCMAKE_EXPORT_NO_PACKAGE_REGISTRY="ON" -DWITH_THREADS="True" -DWITH_SYMBOLIZE="True" -DWITH_UNWIND="True" -DBUILD_TESTING="False"
 ```
 
-### ²Î¿¼
-- [CMakeÉèÖÃMSVC¹¤³ÌMT/MTd/MD/MDd](https://blog.csdn.net/Copperxcx/article/details/123084367)
-- [USBCAN×ÊÁÏ](https://www.zlg.cn/can/down/down/id/22.html)
-- [windowsÁÙ½çÇøÓëstd::lock_guargdĞÔÄÜ¶Ô±È](https://gitee.com/vaughnHuang/cs_lock_perf_test)
+### å‚è€ƒ
+- [CMakeè®¾ç½®MSVCå·¥ç¨‹MT/MTd/MD/MDd](https://blog.csdn.net/Copperxcx/article/details/123084367)
+- [å‘¨ç«‹åŠŸ USBCAN èµ„æ–™](https://www.zlg.cn/can/down/down/id/22.html)
+- [å‘¨ç«‹åŠŸ USBCAN Linuxèµ„æ–™](https://www.zlg.cn/Index/Search/search?key=linux)
+- [windowsä¸´ç•ŒåŒºä¸std::lock_guargdæ€§èƒ½å¯¹æ¯”](https://gitee.com/vaughnHuang/cs_lock_perf_test)
 - [concurrentqueue](https://github.com/cameron314/concurrentqueue)
 
-### templateÏà¹Ø²Î¿¼
-- [·º»¯Ö®ÃÀ--C++11¿É±äÄ£°æ²ÎÊıµÄÃîÓÃ](https://www.cnblogs.com/qicosmos/p/4325949.html)
+### templateç›¸å…³å‚è€ƒ
+- [æ³›åŒ–ä¹‹ç¾--C++11å¯å˜æ¨¡ç‰ˆå‚æ•°çš„å¦™ç”¨](https://www.cnblogs.com/qicosmos/p/4325949.html)
 - [Variadic templates (C++11)](https://www.ibm.com/docs/en/zos/2.3.0?topic=only-variadic-templates-c11)
-- [std true_type false_typeµÄÊ¹ÓÃ](https://stackoverflow.com/questions/20368187/when-would-i-use-stdintegral-constant-over-constexpr)
+- [std true_type false_typeçš„ä½¿ç”¨](https://stackoverflow.com/questions/20368187/when-would-i-use-stdintegral-constant-over-constexpr)
 
 ### template std::true_type std::false_type
 ```C++
@@ -50,7 +51,7 @@ template<typename T>
 void use_impl(const T&, std::true_type) {
 	std::cout << "use_impl(true)" << std::endl;
 }
- 
+
 template<typename T>
 void use(const T& v) {
    use_impl(v, typename std::is_integral<T>::type());
