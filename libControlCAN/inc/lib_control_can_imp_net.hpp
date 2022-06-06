@@ -4,17 +4,25 @@
 #include <sdkddkver.h> // avoid boost.asio warning: Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately
 #endif
 
+#if 0
+
 #ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
 typedef SOCKET sockfd_t;
+#define INV_SOCKET INVALID_SOCKET
 #elif defined(__linux__)
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 typedef int sockfd_t;
+#define INV_SOCKET (-1)
+#define SOCKET_ERROR (-1)
 #endif
 
+#endif
+
+#include "Easysocket.h"
 #include "usbcan.h"
 
 #include <mutex> // std::mutex, std::unique_lock
@@ -62,9 +70,9 @@ private:
                          INT WaitTime);
 
 private:
-  int connect(const std::string &host, const std::string &service, int timeout);
-  int connect2(const std::string &host, const std::string &service);
-  void disconnect();
+  // int connect(const std::string &host, const std::string &service, int timeout);
+  // int connect2(const std::string &host, const std::string &service);
+  // void disconnect();
 
   int write_line(const char *p, size_t len) const;
   int write_line(const std::string &line) const;
@@ -79,7 +87,8 @@ private:
   boost::atomic_bool _connected;
   std::string _str_sock_addr;
   std::string _str_sock_port;
-  sockfd_t _socket;
+  SocketLib::DataSocket _socket;
+  // sockfd_t _socket;
 
   std::mutex _buffer_mutex;
 

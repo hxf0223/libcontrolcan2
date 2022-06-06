@@ -2,6 +2,7 @@
 
 #include <algorithm> // std::for_each
 #include <cstdint>
+#include <cstring>
 #include <iomanip>
 #include <ostream>
 #include <sstream> // std::ostringstream
@@ -96,8 +97,8 @@ struct bin2hex {
   template <typename... Args>
   static size_t bin2hex_fast(const char *dst, const char *const src, Args... rest) {
     auto ptr_dst = const_cast<char *>(dst);
-    size_t src_bytes = std::strlen(src);
-    std::memcpy(ptr_dst, src, src_bytes);
+    size_t src_bytes = ::strlen(src);
+    ::memcpy(ptr_dst, src, src_bytes);
 
     auto rest_size = bin2hex_fast(ptr_dst + src_bytes, rest...);
     return (src_bytes + rest_size);
@@ -108,8 +109,8 @@ struct bin2hex {
     using rm_ref_t = std::remove_reference_t<T &>;
     using decay2_t = std::remove_const_t<std::remove_reference_t<T &>>;
     static_assert(std::is_pod<decay2_t>::value, "Not a POD type."); // do NOT use std::decay<T>::type
-    size_t bytes = (std::is_pointer<T>::value) ? sizeof(std::remove_pointer<T>::type) : sizeof(T);
-    uint8_t *psrc = (uint8_t *)ptr_of(head, std::is_pointer<T>::type());
+    uint8_t *psrc = (uint8_t *)ptr_of(head, typename std::is_pointer<rm_ref_t>::type());
+    const size_t bytes = sizeof(decay2_t);
 
     auto pdst = const_cast<char *>(dst);
     do_conv(pdst, psrc, bytes);

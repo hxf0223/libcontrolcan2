@@ -1,12 +1,13 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/bind.hpp>
-#include <boost/chrono.hpp>
+// #include <boost/chrono.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/lambda/bind.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/system/system_error.hpp>
 #include <boost/thread.hpp>
+#include <cstdint>
 #include <iostream>
 #include <vector>
 
@@ -19,18 +20,18 @@
 #ifdef _WIN32
 #pragma warning(disable : 4101)
 #pragma warning(disable : 4819)
-#endif
 
 // Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "Mswsock.lib")
 #pragma comment(lib, "AdvApi32.lib")
+#endif
 
 using namespace boost::xpressive;
 using namespace boost::placeholders; // avoid message BOOST_BIND_GLOBAL_PLACEHOLDERS
-using boost::lambda::_1;
+/*using boost::lambda::_1;
 using boost::lambda::bind;
-using boost::lambda::var;
+using boost::lambda::var;*/
 
 typedef Ini<> ini_t;
 #define TCP_WRITE_TIMEOUT 200
@@ -38,7 +39,6 @@ typedef Ini<> ini_t;
 #include <chrono>
 #include <iostream>
 
-using std::chrono::duration_cast;
 using std::chrono::microseconds;
 
 boost::xpressive::sregex CanImpCanNet::_hex_str_pattern(sregex::compile("^(?:[0-9a-fA-F][0-9a-fA-F])+$"));
@@ -48,7 +48,7 @@ boost::regex CanImpCanNet::_receive_line_feed_pattern("^VCI_Receive[0-9a-fA-F]{3
 std::string CanImpCanNet::_empty_string;
 int CanImpCanNet::_conn_timeout_ms = 300;
 
-CanImpCanNet::CanImpCanNet() : _connected(false), _str_sock_addr(""), _str_sock_port(""), _socket(INVALID_SOCKET) {
+CanImpCanNet::CanImpCanNet() : _connected(false), _str_sock_addr(""), _str_sock_port(""), _socket(-1) {
   const auto dir_path = getexepath().parent_path();
   boost::filesystem::path ini_path(dir_path / "control_can.ini");
 
@@ -66,7 +66,7 @@ CanImpCanNet::CanImpCanNet() : _connected(false), _str_sock_addr(""), _str_sock_
 
 CanImpCanNet::~CanImpCanNet() {
   if (_connected.load()) {
-    disconnect();
+    _socket.Close();
   }
 }
 
@@ -77,15 +77,28 @@ vciReturnType CanImpCanNet::VCI_OpenDevice(DWORD DeviceType, DWORD DeviceInd, DW
     return vciReturnType::STATUS_NET_CONN_FAIL;
   }
 
-  auto ierror = connect(_str_sock_addr, _str_sock_port, _conn_timeout_ms);
-  if (!_connected.load()) return vciReturnType::STATUS_NET_CONN_FAIL;
+  if (!_connected.load()) {
+    auto ip_address = boost::lexical_cast<uint32_t>(_str_sock_addr);
+    auto serv_port = boost::lexical_cast<uint16_t>(_str_sock_port);
+    _socket.Connect(ip_address, serv_port);
+    auto is_connected = _socket.IsConnected();
+    _connected.store(is_connected);
+  }
+  if (!_connected.load()) {
+    return vciReturnType::STATUS_NET_CONN_FAIL;
+  }
 
   char buff[128];
   const char *head = "VCI_OpenDevice,", *lr = "\n";
+  can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType);
+  can::utils::bin2hex::bin2hex_fast(buff, &DeviceType, lr);
+  can::utils::bin2hex::bin2hex_fast(buff, &DeviceInd);
+  can::utils::bin2hex::bin2hex_fast(buff, &Reserved);
+  can::utils::bin2hex::bin2hex_fast(buff, lr);
   auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, &Reserved, lr);
 
   // std::cout << "VCI_OpenDevice: " << data << std::endl;
-  ierror = write_line(buff, size);
+  auto ierror = write_line(buff, size);
   if (size != ierror) {
     // std::cout << "VCI_OpenDevice: write fail" << std::endl;
     return vciReturnType::STATUS_ERR;
@@ -106,7 +119,8 @@ vciReturnType CanImpCanNet::VCI_CloseDevice(DWORD DeviceType, DWORD DeviceInd) {
     return vciReturnType::STATUS_ERR;
   }
 
-  disconnect();
+  _socket.Close();
+  _connected.store(false);
   return vciReturnType::STATUS_OK;
 }
 
@@ -268,6 +282,7 @@ ULONG CanImpCanNet::vci_receive_tool(DWORD DeviceType, DWORD DeviceInd, DWORD CA
   return Len;
 }
 
+#if 0
 int CanImpCanNet::connect(const std::string &host, const std::string &service, int timeout) {
   struct addrinfo *result = nullptr;
   WSADATA wsa_data;
@@ -303,7 +318,7 @@ int CanImpCanNet::connect(const std::string &host, const std::string &service, i
   for (auto ptr = result; ptr != nullptr; ptr = ptr->ai_next) {
     // Create a SOCKET for connecting to server
     _socket = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
-    if (_socket == INVALID_SOCKET) {
+    if (_socket == INV_SOCKET) {
       // std::cout << "socket failed with error: " << WSAGetLastError() << std::endl;
       WSACleanup();
       _connected.store(false);
@@ -319,7 +334,7 @@ int CanImpCanNet::connect(const std::string &host, const std::string &service, i
     if (ierror == SOCKET_ERROR) {
       if (WSAGetLastError() != WSAEWOULDBLOCK) {
         closesocket(_socket);
-        _socket = INVALID_SOCKET;
+        _socket = INV_SOCKET;
         continue;
       }
 
@@ -332,14 +347,14 @@ int CanImpCanNet::connect(const std::string &host, const std::string &service, i
 
       if (0 == select(_socket + 1, nullptr, &set, nullptr, &tm)) {
         closesocket(_socket);
-        _socket = INVALID_SOCKET;
+        _socket = INV_SOCKET;
         continue;
       }
 
       if (FD_ISSET(_socket, &set)) {
         if (getsockopt(_socket, SOL_SOCKET, SO_ERROR, (char *)&async_error, &async_error_len) < 0) {
           closesocket(_socket);
-          _socket = INVALID_SOCKET;
+          _socket = INV_SOCKET;
         } else {
           async_mode = 0;
           ioctlsocket(_socket, FIONBIO, &async_mode); // ����Ϊ����ģʽ
@@ -347,12 +362,12 @@ int CanImpCanNet::connect(const std::string &host, const std::string &service, i
         }
       } else {
         closesocket(_socket);
-        _socket = INVALID_SOCKET;
+        _socket = INV_SOCKET;
       }
     }
   }
 
-  if (_socket == INVALID_SOCKET) {
+  if (_socket == INV_SOCKET) {
     // std::cout << "Unable to connect to server!" << std::endl;
     WSACleanup();
     _connected.store(false);
@@ -371,7 +386,9 @@ int CanImpCanNet::connect(const std::string &host, const std::string &service, i
   _connected.store(true);
   return 0;
 }
+#endif
 
+#if 0
 int CanImpCanNet::connect2(const std::string &host, const std::string &service) {
   uint32_t port;
   disconnect();
@@ -382,7 +399,7 @@ int CanImpCanNet::connect2(const std::string &host, const std::string &service) 
   }
 
   _socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  if (_socket == INVALID_SOCKET) {
+  if (_socket == INV_SOCKET) {
     auto wsa_err = WSAGetLastError();
     _connected.store(false);
     return -1;
@@ -423,30 +440,32 @@ int CanImpCanNet::connect2(const std::string &host, const std::string &service) 
   if (!ret) {
     closesocket(_socket);
     _connected.store(false);
-    _socket = INVALID_SOCKET;
+    _socket = INV_SOCKET;
     return -1;
   }
 
   _connected.store(true);
   return 0;
 }
+#endif
 
+#if 0
 void CanImpCanNet::disconnect() {
-  if (_socket != INVALID_SOCKET) {
+  if (_socket != INV_SOCKET) {
     closesocket(_socket);
     WSACleanup();
 
-    _socket = INVALID_SOCKET;
+    _socket = INV_SOCKET;
   }
 
   _connected.store(false);
 }
+#endif
 
 int CanImpCanNet::write_line(const char *p, size_t len) const {
-  auto const ierror = send(_socket, p, (int)(len), 0);
-  if (ierror == SOCKET_ERROR) {
-    std::cout << "write_line error: " << WSAGetLastError() << std::endl;
-    return -1;
+  auto const ierror = _socket.Send(p, (int)len);
+  if (ierror != 0) {
+    std::cout << "write_line error: " << ierror << std::endl;
   }
 
   return ierror;
@@ -467,30 +486,7 @@ std::string CanImpCanNet::read_line(int timeout) {
       return line;
   }
 
-#if 0
-    if ( setsockopt(_socket, SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<char*>(&dw_timeout), sizeof(dw_timeout)) ) {
-        std::cout << "setsockopt SO_RCVTIMEO fail: " << WSAGetLastError() << std::endl;
-        return _empty_string;
-    }
-#else
-  FD_SET readfds;
-  FD_ZERO(&readfds);
-  FD_SET(_socket, &readfds);
-
-  timeval tv_timeout{};
-  tv_timeout.tv_sec = timeout / 1000;
-  tv_timeout.tv_usec = (timeout - tv_timeout.tv_sec * 1000) * 1000;
-
-  const auto select_ret = select(_socket + 1, &readfds, nullptr, nullptr, &tv_timeout);
-  if (select_ret == 0) return _empty_string;
-  if (select_ret == SOCKET_ERROR) {
-    const auto err_code = WSAGetLastError();
-    std::cout << "CanImpCanNet::read_line select error: " << err_code << std::endl;
-    return _empty_string;
-  }
-#endif
-
-  auto const bytes_read = recv(_socket, buff, sizeof(buff), 0);
+  auto const bytes_read = _socket.Receive(buff, sizeof(buff));
   if (bytes_read > 0 && buff[bytes_read - 1] == '\n') {
     return read_line_post_process(buff, bytes_read); // lock
   }

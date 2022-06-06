@@ -7,12 +7,14 @@ add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 add_definitions(-DWIN32_LEAN_AND_MEAN)
 add_definitions(-D_WINSOCK_DEPRECATED_NO_WARNINGS)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/easy_socket)
 
 # set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
 # set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
 
-file(GLOB LIB_CTRL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc)
+file(GLOB LIB_CTRL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc ${CMAKE_CURRENT_SOURCE_DIR}/easy_socket/*.cc)
 add_library(libControlCAN SHARED ${LIB_CTRL_SRCS})
+target_link_libraries(libControlCAN dl boost_filesystem boost_chrono)
 set(libControlCAN ${libControlCAN} PARENT_SCOPE)
 
 if (WIN32)
