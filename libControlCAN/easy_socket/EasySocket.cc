@@ -124,23 +124,17 @@ DataSocket::DataSocket(sock p_socket) : Socket(p_socket), m_connected(false) {
 //              if the socket is already connected, or the server
 //              rejects the connection.
 // ====================================================================
-void DataSocket::Connect(ipaddress p_addr, port p_port) {
-  int err;
-
+int DataSocket::Connect(ipaddress p_addr, port p_port) {
   // if the socket is already connected...
   if (m_connected == true) {
-    throw Exception(EAlreadyConnected);
+    return -1;
   }
 
   // first try to obtain a socket descriptor from the OS, if
   // there isn't already one.
   if (m_sock == -1) {
     m_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-
-    // throw an exception if the socket could not be created
-    if (m_sock == -1) {
-      throw Exception(GetError());
-    }
+    if (m_sock == -1) return (int)(GetError());
   }
 
   // set up the socket address structure
@@ -151,18 +145,16 @@ void DataSocket::Connect(ipaddress p_addr, port p_port) {
 
   // now the socket is created, so connect it.
   socklen_t s = sizeof(struct sockaddr);
-  err = connect(m_sock, (struct sockaddr *)(&m_remoteinfo), s);
-  if (err == -1) {
-    throw Exception(GetError());
-  }
+  auto err = ::connect(m_sock, (struct sockaddr *)(&m_remoteinfo), s);
+  if (err == -1) return GetError();
 
   m_connected = true;
 
   // to get the local port, you need to do a little more work
   err = getsockname(m_sock, (struct sockaddr *)(&m_localinfo), &s);
-  if (err != 0) {
-    throw Exception(GetError());
-  }
+  if (err != 0) return (int)(GetError());
+
+  return 0;
 }
 
 // ====================================================================

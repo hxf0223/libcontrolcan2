@@ -111,7 +111,7 @@ public:
   //              if the socket is already connected, or the server
   //              rejects the connection.
   // ====================================================================
-  void Connect(ipaddress p_addr, port p_port);
+  int Connect(ipaddress p_addr, port p_port);
 
   // ====================================================================
   // Function:    Send

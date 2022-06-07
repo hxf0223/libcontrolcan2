@@ -1,17 +1,19 @@
 #pragma once
 
+#include "boost/asio/io_service.hpp"
+#include "boost/asio/ip/tcp.hpp"
 #ifdef _WIN32
 #include <sdkddkver.h> // avoid boost.asio warning: Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately
 #endif
 
 #include "Easysocket.h"
+#include "lib_control_can_imp.h"
 #include "usbcan.h"
 
 #include <mutex> // std::mutex, std::unique_lock
 #include <string>
 #include <vector>
 
-#include "lib_control_can_imp.h"
 #include <boost/asio.hpp>
 #include <boost/atomic.hpp>
 #include <boost/regex.hpp>
@@ -52,6 +54,7 @@ private:
                          INT WaitTime);
 
 private:
+  int connect(const std::string &host, const std::string &service, int timeoutMs);
   // int connect(const std::string &host, const std::string &service, int timeout);
   // int connect2(const std::string &host, const std::string &service);
   // void disconnect();
@@ -69,6 +72,9 @@ private:
   boost::atomic_bool _connected;
   std::string _str_sock_addr;
   std::string _str_sock_port;
+  boost::asio::io_service io_service_;
+  boost::asio::io_context io_context_;
+  boost::asio::ip::tcp::socket client_socket_;
   SocketLib::DataSocket _socket;
   // sockfd_t _socket;
 

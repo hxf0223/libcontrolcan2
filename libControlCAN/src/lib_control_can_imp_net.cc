@@ -4,10 +4,13 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/system/system_error.hpp>
 #include <boost/thread.hpp>
+#include <chrono>
 #include <cstdint>
 #include <iostream>
 #include <vector>
 
+#include "boost/asio/ip/tcp.hpp"
+#include "boost/asio/steady_timer.hpp"
 #include "hex_dump.hpp"
 #include "ini.h"
 #include "lib_control_can_imp_net.hpp"
@@ -42,7 +45,8 @@ boost::regex CanImpCanNet::_receive_line_feed_pattern("^VCI_Receive[0-9a-fA-F]{3
 std::string CanImpCanNet::_empty_string;
 int CanImpCanNet::_conn_timeout_ms = 300;
 
-CanImpCanNet::CanImpCanNet() : _connected(false), _str_sock_addr(""), _str_sock_port(""), _socket(-1) {
+CanImpCanNet::CanImpCanNet()
+  : _connected(false), _str_sock_addr(""), _str_sock_port(""), _socket(-1), client_socket_(io_service_) {
   const auto dir_path = getexepath().parent_path();
   boost::filesystem::path ini_path(dir_path / "control_can.ini");
 
@@ -74,6 +78,7 @@ vciReturnType CanImpCanNet::VCI_OpenDevice(DWORD DeviceType, DWORD DeviceInd, DW
   if (!_connected.load()) {
     auto ip_address = boost::lexical_cast<uint32_t>(_str_sock_addr);
     auto serv_port = boost::lexical_cast<uint16_t>(_str_sock_port);
+
     _socket.Connect(ip_address, serv_port);
     auto is_connected = _socket.IsConnected();
     _connected.store(is_connected);
@@ -274,6 +279,55 @@ ULONG CanImpCanNet::vci_receive_tool(DWORD DeviceType, DWORD DeviceInd, DWORD CA
 
   memcpy(pReceive, v.data(), sizeof(VCI_CAN_OBJ) * Len);
   return Len;
+}
+
+int CanImpCanNet::connect(const std::string &host, const std::string &service, int timeoutMs) {
+  // https://www.boost.org/doc/libs/1_53_0/doc/html/boost_asio/example/timeouts/blocking_tcp_client.cpp
+  // https://www.boost.org/doc/libs/1_79_0/doc/html/boost_asio/example/cpp03/timeouts/async_tcp_client.cpp
+  // https://www.geeksforgeeks.org/synchronous-chatting-application-using-c-boostasio/
+  using boost::asio::ip::tcp;
+  using boost::lambda::_1;
+  using boost::lambda::var;
+
+  // Resolve the host name and service to a list of endpoints.
+  tcp::resolver::query query(host, service);
+  tcp::resolver::iterator iter = tcp::resolver(io_service_).resolve(query);
+
+  // Set a deadline for the asynchronous operation. As a host name may
+  // resolve to multiple endpoints, this function uses the composed operation
+  // async_connect. The deadline applies to the entire operation, rather than
+  // individual connection attempts.
+  boost::asio::steady_timer deadline_(io_context_);
+  deadline_.expires_from_now(std::chrono::milliseconds(timeoutMs));
+  deadline_.wait(); // https://www.boost.org/doc/libs/1_79_0/doc/html/boost_asio/reference/steady_timer.html
+
+  // Set up the variable that receives the result of the asynchronous
+  // operation. The error code is set to would_block to signal that the
+  // operation is incomplete. Asio guarantees that its asynchronous
+  // operations will never fail with would_block, so any other value in
+  // ec indicates completion.
+  boost::system::error_code ec = boost::asio::error::would_block;
+
+  // Start the asynchronous operation itself. The boost::lambda function
+  // object is used as a callback and will update the ec variable when the
+  // operation completes. The blocking_udp_client.cpp example shows how you
+  // can use boost::bind rather than boost::lambda.
+  boost::asio::async_connect(client_socket_, iter, var(ec) = _1);
+
+  // Block until the asynchronous operation has completed.
+  do {
+    io_service_.run_one();
+  } while (ec == boost::asio::error::would_block);
+
+  // Determine whether a connection was successfully established. The
+  // deadline actor may have had a chance to run and close our socket, even
+  // though the connect operation notionally succeeded. Therefore we must
+  // check whether the socket is still open before deciding if we succeeded
+  // or failed.
+  if (ec || !client_socket_.is_open())
+    throw boost::system::system_error(ec ? ec : boost::asio::error::operation_aborted);
+
+  return -1;
 }
 
 #if 0
