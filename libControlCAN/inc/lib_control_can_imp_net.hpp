@@ -4,24 +4,6 @@
 #include <sdkddkver.h> // avoid boost.asio warning: Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately
 #endif
 
-#if 0
-
-#ifdef _WIN32
-#include <winsock2.h>
-#include <ws2tcpip.h>
-typedef SOCKET sockfd_t;
-#define INV_SOCKET INVALID_SOCKET
-#elif defined(__linux__)
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-typedef int sockfd_t;
-#define INV_SOCKET (-1)
-#define SOCKET_ERROR (-1)
-#endif
-
-#endif
-
 #include "Easysocket.h"
 #include "usbcan.h"
 

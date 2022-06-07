@@ -1,8 +1,5 @@
 #include <boost/algorithm/string.hpp>
-#include <boost/bind.hpp>
-// #include <boost/chrono.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/lambda/bind.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/system/system_error.hpp>
@@ -29,9 +26,6 @@
 
 using namespace boost::xpressive;
 using namespace boost::placeholders; // avoid message BOOST_BIND_GLOBAL_PLACEHOLDERS
-/*using boost::lambda::_1;
-using boost::lambda::bind;
-using boost::lambda::var;*/
 
 typedef Ini<> ini_t;
 #define TCP_WRITE_TIMEOUT 200
