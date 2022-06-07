@@ -299,7 +299,7 @@ int CanImpCanNet::connect(const std::string &host, const std::string &service, i
   // individual connection attempts.
   boost::asio::steady_timer deadline_(io_context_);
   deadline_.expires_from_now(std::chrono::milliseconds(timeoutMs));
-  deadline_.wait(); // https://www.boost.org/doc/libs/1_79_0/doc/html/boost_asio/reference/steady_timer.html
+  // deadline_.wait(); https://www.boost.org/doc/libs/1_79_0/doc/html/boost_asio/reference/steady_timer.html
 
   // Set up the variable that receives the result of the asynchronous
   // operation. The error code is set to would_block to signal that the
@@ -324,10 +324,12 @@ int CanImpCanNet::connect(const std::string &host, const std::string &service, i
   // though the connect operation notionally succeeded. Therefore we must
   // check whether the socket is still open before deciding if we succeeded
   // or failed.
-  if (ec || !client_socket_.is_open())
-    throw boost::system::system_error(ec ? ec : boost::asio::error::operation_aborted);
+  if (ec || !client_socket_.is_open()) {
+    // throw boost::system::system_error(ec ? ec : boost::asio::error::operation_aborted);
+    return (ec ? ec.value() : (int)(boost::asio::error::operation_aborted));
+  }
 
-  return -1;
+  return 0;
 }
 
 #if 0

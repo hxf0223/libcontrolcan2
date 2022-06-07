@@ -34,24 +34,24 @@ typedef ULONG(__stdcall *fVCI_Receive)(DWORD DeviceType, DWORD DeviceInd, DWORD 
 #define vci_call_conv
 #endif
 
-using vci_open_device_t = std::function<vci_call_conv DWORD(DWORD, DWORD, DWORD)>;
-using vci_close_device_t = std::function<vci_call_conv DWORD(DWORD, DWORD)>;
-using vci_reset_can_t = std::function<vci_call_conv DWORD(DWORD, DWORD, DWORD)>;
-using vci_init_can_t = std::function<vci_call_conv DWORD(DWORD, DWORD, DWORD, PVCI_INIT_CONFIG)>;
-using vci_read_board_info_t = std::function<vci_call_conv DWORD(DWORD, DWORD, PVCI_BOARD_INFO)>;
+using vci_open_device_t = std::function<DWORD vci_call_conv(DWORD, DWORD, DWORD)>;
+using vci_close_device_t = std::function<DWORD vci_call_conv(DWORD, DWORD)>;
+using vci_reset_can_t = std::function<DWORD vci_call_conv(DWORD, DWORD, DWORD)>;
+using vci_init_can_t = std::function<DWORD vci_call_conv(DWORD, DWORD, DWORD, PVCI_INIT_CONFIG)>;
+using vci_read_board_info_t = std::function<DWORD vci_call_conv(DWORD, DWORD, PVCI_BOARD_INFO)>;
 
-using vci_read_err_info_t = std::function<vci_call_conv DWORD(DWORD, DWORD, DWORD, PVCI_ERR_INFO)>;
-using vci_read_can_status_t = std::function<vci_call_conv DWORD(DWORD, DWORD, DWORD, PVCI_CAN_STATUS)>;
+using vci_read_err_info_t = std::function<DWORD vci_call_conv(DWORD, DWORD, DWORD, PVCI_ERR_INFO)>;
+using vci_read_can_status_t = std::function<DWORD vci_call_conv(DWORD, DWORD, DWORD, PVCI_CAN_STATUS)>;
 
-using vci_get_reference_t = std::function<vci_call_conv DWORD(DWORD, DWORD, DWORD, DWORD, PVOID)>;
-using vci_set_reference_t = std::function<vci_call_conv DWORD(DWORD, DWORD, DWORD, DWORD, PVOID)>;
+using vci_get_reference_t = std::function<DWORD vci_call_conv(DWORD, DWORD, DWORD, DWORD, PVOID)>;
+using vci_set_reference_t = std::function<DWORD vci_call_conv(DWORD, DWORD, DWORD, DWORD, PVOID)>;
 
-using vci_get_receive_num_t = std::function<vci_call_conv ULONG(DWORD, DWORD, DWORD)>;
-using vci_clear_buffer_t = std::function<vci_call_conv DWORD(DWORD, DWORD, DWORD)>;
+using vci_get_receive_num_t = std::function<ULONG vci_call_conv(DWORD, DWORD, DWORD)>;
+using vci_clear_buffer_t = std::function<DWORD vci_call_conv(DWORD, DWORD, DWORD)>;
 
-using vci_start_can_t = std::function<vci_call_conv DWORD(DWORD, DWORD, DWORD)>;
-using vci_transmit_t = std::function<vci_call_conv ULONG(DWORD, DWORD, DWORD, PVCI_CAN_OBJ, ULONG)>;
-using vci_receive_t = std::function<vci_call_conv ULONG(DWORD, DWORD, DWORD, PVCI_CAN_OBJ, ULONG, INT)>;
+using vci_start_can_t = std::function<DWORD vci_call_conv(DWORD, DWORD, DWORD)>;
+using vci_transmit_t = std::function<ULONG vci_call_conv(DWORD, DWORD, DWORD, PVCI_CAN_OBJ, ULONG)>;
+using vci_receive_t = std::function<ULONG vci_call_conv(DWORD, DWORD, DWORD, PVCI_CAN_OBJ, ULONG, INT)>;
 
 struct dll_load_dll_type {
   dll_load_dll_type(const std::string &dsoPath) : dll_(dsoPath), path(dsoPath) {

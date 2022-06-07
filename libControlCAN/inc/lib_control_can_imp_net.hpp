@@ -1,7 +1,5 @@
 #pragma once
 
-#include "boost/asio/io_service.hpp"
-#include "boost/asio/ip/tcp.hpp"
 #ifdef _WIN32
 #include <sdkddkver.h> // avoid boost.asio warning: Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately
 #endif
@@ -14,6 +12,8 @@
 #include <string>
 #include <vector>
 
+#include "boost/asio/io_service.hpp"
+#include "boost/asio/ip/tcp.hpp"
 #include <boost/asio.hpp>
 #include <boost/atomic.hpp>
 #include <boost/regex.hpp>
