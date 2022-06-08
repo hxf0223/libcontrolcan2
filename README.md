@@ -30,6 +30,7 @@ cmake .. -G "Visual Studio 17 2022" -A Win32 -DCMAKE_BUILD_TYPE="Release" -DBUIL
 - [周立功 USBCAN Linux资料](https://www.zlg.cn/Index/Search/search?key=linux)
 - [windows临界区与std::lock_guargd性能对比](https://gitee.com/vaughnHuang/cs_lock_perf_test)
 - [concurrentqueue](https://github.com/cameron314/concurrentqueue)
+- [Boost ASIO例程](https://www.boost.org/doc/libs/1_79_0/doc/html/boost_asio/examples/cpp11_examples.html)
 
 ### template相关参考
 - [泛化之美--C++11可变模版参数的妙用](https://www.cnblogs.com/qicosmos/p/4325949.html)
