@@ -48,42 +48,23 @@ public:
                     INT WaitTime) override;
 
 private:
-  ULONG vci_receive_tool(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_CAN_OBJ pReceive, ULONG Len,
-                         INT WaitTime);
-
-private:
   int connect(const std::string &host, const std::string &service, int timeoutMs);
-  void io_context_run(std::chrono::steady_clock::duration timeout);
-  // int connect(const std::string &host, const std::string &service, int timeout);
-  // int connect2(const std::string &host, const std::string &service);
-  // void disconnect();
+  void io_context_run(const std::chrono::steady_clock::duration &timeout);
 
-  int write_line(const char *p, size_t len) const;
-  int write_line(const std::string &line) const;
-  std::string read_line(int timeout);
-  std::string read_line_post_process(const char *buffer, size_t len);
-
-  void buffer_list_init();
-  void buffer_list_push(const std::string &line);
-  bool buffer_list_pop(std::string &line);
+  std::string read_line(const std::chrono::steady_clock::duration &timeout);
+  inline int write_line(const char *p, size_t len);
 
 private:
   boost::atomic_bool _connected;
   std::string _str_sock_addr;
   std::string _str_sock_port;
+
   boost::asio::io_context io_context_;
   boost::asio::ip::tcp::socket client_socket_{io_context_};
-  SocketLib::DataSocket _socket{-1};
-
-  std::mutex _buffer_mutex;
-
-  std::list<std::string> _buffer_list;
-  std::vector<char> _join_buffer;
-  boost::atomic_bool _buffer_list_empty;
+  std::string input_buffer_;
 
 private:
   static boost::xpressive::sregex _hex_str_pattern;
   static boost::xpressive::sregex _receive_pattern;
   static boost::regex _receive_line_feed_pattern;
-  static std::string _empty_string;
 };

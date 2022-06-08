@@ -40,7 +40,6 @@ boost::xpressive::sregex CanImpCanNet::_hex_str_pattern(sregex::compile("^(?:[0-
 // boost::xpressive::sregex CanImpCanNet::_receive_pattern(sregex::compile("^VCI_Receive[0-9a-fA-F]{32},"));
 boost::xpressive::sregex CanImpCanNet::_receive_pattern(sregex::compile("^(VCI_Receive|VCI_Transmit)[0-9a-fA-F]{32},"));
 boost::regex CanImpCanNet::_receive_line_feed_pattern("^VCI_Receive[0-9a-fA-F]{32},");
-std::string CanImpCanNet::_empty_string;
 
 CanImpCanNet::CanImpCanNet() : _connected(false), _str_sock_addr(""), _str_sock_port("") {
   const auto dir_path = getexepath().parent_path();
@@ -51,11 +50,8 @@ CanImpCanNet::CanImpCanNet() : _connected(false), _str_sock_addr(""), _str_sock_
     _str_sock_addr = ini["Server"]["IpAddr"];
     _str_sock_port = ini["Server"]["IpPort"];
   } else {
-    // std::cout << "CanImpCanNet ctor: " << ini_file_name << " not exist." << std::endl;
+    std::cout << "CanImpCanNet ctor: " << ini_path << " not exist." << std::endl;
   }
-
-  _join_buffer.reserve(1024);
-  buffer_list_init(); // init at end of ctor
 }
 
 CanImpCanNet::~CanImpCanNet() {
@@ -65,8 +61,6 @@ CanImpCanNet::~CanImpCanNet() {
 }
 
 vciReturnType CanImpCanNet::VCI_OpenDevice(DWORD DeviceType, DWORD DeviceInd, DWORD Reserved) {
-  buffer_list_init();
-
   if (_str_sock_addr.length() <= 0 || _str_sock_port.length() <= 0) {
     return vciReturnType::STATUS_NET_CONN_FAIL;
   }
@@ -74,6 +68,7 @@ vciReturnType CanImpCanNet::VCI_OpenDevice(DWORD DeviceType, DWORD DeviceInd, DW
   if (!_connected.load()) {
     auto ec = this->connect(_str_sock_addr, _str_sock_port, 400);
     if (0 != ec) return vciReturnType::STATUS_NET_CONN_FAIL;
+    _connected.store(true);
   }
 
   char buff[128];
@@ -219,45 +214,23 @@ vciReturnType CanImpCanNet::VCI_Transmit(DWORD DeviceType, DWORD DeviceInd, DWOR
 
 ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_CAN_OBJ pReceive, ULONG Len,
                                 INT WaitTime) {
-  const auto start = boost::chrono::high_resolution_clock::now();
-  boost::chrono::milliseconds ms;
-  ULONG receive_num;
-
-  do {
-    receive_num = vci_receive_tool(DeviceType, DeviceInd, CANInd, pReceive, Len, WaitTime);
-    ms = boost::chrono::duration_cast<boost::chrono::milliseconds>(boost::chrono::high_resolution_clock::now() - start);
-    // std::cout << "VCI_Receive read time " << ms.count() << ", receive num " << receive_num << std::endl;
-    // OutputDebugStringA("CanImpCanNet::VCI_Receive\n");
-  } while (receive_num == 0 && ms.count() < WaitTime);
-
-  return receive_num;
-}
-
-ULONG CanImpCanNet::vci_receive_tool(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_CAN_OBJ pReceive, ULONG Len,
-                                     INT WaitTime) {
-  static std::string prefix_str("VCI_Receive,");
   if (!_connected.load() || nullptr == pReceive) return 0;
 
-  auto rec_str = read_line(WaitTime);
-  if (rec_str.empty()) return 0;
-  // std::cout << "rec_str len: " << rec_str.length() << rec_str << std::endl;
-  // OutputDebugStringA("CanImpCanNet::vci_receive_tool\n");
+  ULONG recv_line_cnt = 0;
+  const auto t0 = std::chrono::steady_clock::now();
+  while (recv_line_cnt < Len) {
+    auto rec_str = read_line(std::chrono::milliseconds(WaitTime));
+    if (rec_str.empty()) break;
 
-  const sregex_iterator end;
-  const sregex_iterator it(rec_str.begin(), rec_str.end(), _receive_pattern);
-  if (it == end || (*it)[0].second == rec_str.end()) return 0;
+    auto v = can::utils::hex_string_to_bin_fastest(rec_str);
+    memcpy(pReceive + recv_line_cnt, v.data(), sizeof(VCI_CAN_OBJ));
+    recv_line_cnt++;
 
-  auto data_str = rec_str.substr((*it)[0].second - rec_str.begin());
-  // std::cout << "data_str len:" << data_str.length() << "data: " << data_str << std::endl;
+    const auto t1 = std::chrono::steady_clock::now();
+    if (std::chrono::duration<double, std::milli>(t1 - t0).count() > WaitTime) break;
+  }
 
-  const sregex_iterator it2(data_str.begin(), data_str.end(), _hex_str_pattern);
-  if (it2 == end) return 0;
-
-  auto v = can::utils::hex_string_to_bin_fastest(data_str);
-  if (Len > (v.size() / sizeof(VCI_CAN_OBJ))) Len = v.size() / sizeof(VCI_CAN_OBJ);
-
-  memcpy(pReceive, v.data(), sizeof(VCI_CAN_OBJ) * Len);
-  return Len;
+  return recv_line_cnt;
 }
 
 int CanImpCanNet::connect(const std::string &host, const std::string &service, int timeoutMs) {
@@ -285,7 +258,7 @@ int CanImpCanNet::connect(const std::string &host, const std::string &service, i
   return 0;
 }
 
-void CanImpCanNet::io_context_run(std::chrono::steady_clock::duration timeout) {
+void CanImpCanNet::io_context_run(const std::chrono::steady_clock::duration &timeout) {
   // Restart the io_context, as it may have been left in the "stopped" state
   // by a previous operation.
   io_context_.restart();
@@ -308,107 +281,52 @@ void CanImpCanNet::io_context_run(std::chrono::steady_clock::duration timeout) {
   }
 }
 
-int CanImpCanNet::write_line(const char *p, size_t len) const {
-  auto const ierror = _socket.Send(p, (int)len);
-  if (ierror != 0) {
-    std::cout << "write_line error: " << ierror << std::endl;
+std::string CanImpCanNet::read_line(const std::chrono::steady_clock::duration &timeout) {
+  // Start the asynchronous operation. The lambda that is used as a callback
+  // will update the error and n variables when the operation completes. The
+  // blocking_udp_client.cpp example shows how you can use std::bind rather
+  // than a lambda.
+  boost::system::error_code error;
+  std::size_t n = 0;
+  boost::asio::async_read_until(client_socket_, boost::asio::dynamic_buffer(input_buffer_), '\n',
+                                [&](const boost::system::error_code &result_error, std::size_t result_n) {
+                                  error = result_error;
+                                  n = result_n;
+                                });
+
+  // Run the operation until it completes, or until the timeout.
+  io_context_run(timeout);
+
+  // Determine whether the read completed successfully.
+  if (error) { // throw std::system_error(error);
+    return std::string();
   }
 
-  return ierror;
+  std::string line(input_buffer_.substr(0, n - 1));
+  input_buffer_.erase(0, n);
+  return line;
 }
 
-int CanImpCanNet::write_line(const std::string &line) const { return write_line(line.data(), line.size()); }
+int CanImpCanNet::write_line(const char *p, size_t len) {
+  // Start the asynchronous operation itself. The lambda that is used as a
+  // callback will update the error variable when the operation completes.
+  // The blocking_udp_client.cpp example shows how you can use std::bind
+  // rather than a lambda.
+  boost::system::error_code error;
+  boost::asio::async_write(
+    client_socket_, boost::asio::buffer(p, len),
+    [&](const boost::system::error_code &result_error, std::size_t /*result_n*/) { error = result_error; });
 
-/* socket peek:
- * https://stackoverflow.com/questions/12984816/get-the-number-of-bytes-available-in-socket-by-recv-with-msg-peek-in-c
- */
-std::string CanImpCanNet::read_line(int timeout) {
-  char buff[256] = {0};
-  std::string line;
-  DWORD dw_timeout = timeout;
+  // Run the operation until it completes, or until the timeout.
+  std::chrono::steady_clock::duration timeout{std::chrono::milliseconds(30)};
+  io_context_run(timeout);
 
-  if (!_buffer_list_empty.load()) {
-    if (buffer_list_pop(line)) // lock
-      return line;
+  // Determine whether the read completed successfully.
+  if (error) { // throw std::system_error(error);
+    return error.value();
   }
 
-  auto const bytes_read = _socket.Receive(buff, sizeof(buff));
-  if (bytes_read > 0 && buff[bytes_read - 1] == '\n') {
-    return read_line_post_process(buff, bytes_read); // lock
-  }
-
-  if (bytes_read > 0) {
-    std::string join_str;
-    {
-      std::lock_guard lk(_buffer_mutex);
-      std::copy(buff, buff + bytes_read, std::back_inserter(_join_buffer));
-      join_str = std::string(_join_buffer.begin(), _join_buffer.end());
-
-      if (!_join_buffer.empty()) {
-        _join_buffer.erase(_join_buffer.begin(), _join_buffer.end());
-      }
-    }
-
-    return read_line_post_process(join_str.c_str(), join_str.length()); // lock
-  }
-
-  return _empty_string;
-}
-
-std::string CanImpCanNet::read_line_post_process(const char *buffer, size_t len) {
-  if (len <= 0) return _empty_string;
-
-  std::vector<std::string> vec_line;
-  auto const buff_end_with_feed = (buffer[len - 1] == '\n');
-  boost::split(vec_line, buffer, boost::is_any_of("\n"));
-
-  if (!vec_line.empty()) {
-    auto &first_str = vec_line.at(0);
-    for (auto it = vec_line.begin() + 1; it != vec_line.end(); ++it) {
-      if (!(*it).empty()) buffer_list_push(*it);
-    }
-
-    if (!buff_end_with_feed) {
-      std::lock_guard lk(_buffer_mutex);
-      auto &left_str = vec_line.at(vec_line.size() - 1);
-      std::copy(left_str.begin(), left_str.end(), std::back_inserter(_join_buffer));
-    }
-
-    return first_str;
-  }
-
-  return _empty_string;
-}
-
-void CanImpCanNet::buffer_list_init() {
-  std::lock_guard lk(_buffer_mutex);
-  _buffer_list.clear();
-  if (!_join_buffer.empty()) _join_buffer.erase(_join_buffer.begin(), _join_buffer.end());
-
-  _buffer_list_empty.store(true);
-}
-
-void CanImpCanNet::buffer_list_push(const std::string &line) {
-  std::lock_guard lk(_buffer_mutex);
-  _buffer_list.push_back(line);
-  _buffer_list_empty.store(false);
-}
-
-bool CanImpCanNet::buffer_list_pop(std::string &line) {
-  std::lock_guard lk(_buffer_mutex);
-  if (_buffer_list.empty()) {
-    _buffer_list_empty.store(true);
-    return false;
-  }
-
-  line = _buffer_list.front();
-  _buffer_list.pop_front();
-
-  if (_buffer_list.empty()) {
-    _buffer_list_empty.store(true);
-  }
-
-  return true;
+  return len;
 }
 
 #include "lib_control_can_imp.h"
