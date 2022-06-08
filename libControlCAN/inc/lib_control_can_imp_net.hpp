@@ -12,8 +12,6 @@
 #include <string>
 #include <vector>
 
-#include "boost/asio/io_service.hpp"
-#include "boost/asio/ip/tcp.hpp"
 #include <boost/asio.hpp>
 #include <boost/atomic.hpp>
 #include <boost/regex.hpp>
@@ -55,6 +53,7 @@ private:
 
 private:
   int connect(const std::string &host, const std::string &service, int timeoutMs);
+  void io_context_run(std::chrono::steady_clock::duration timeout);
   // int connect(const std::string &host, const std::string &service, int timeout);
   // int connect2(const std::string &host, const std::string &service);
   // void disconnect();
@@ -72,11 +71,9 @@ private:
   boost::atomic_bool _connected;
   std::string _str_sock_addr;
   std::string _str_sock_port;
-  boost::asio::io_service io_service_;
   boost::asio::io_context io_context_;
-  boost::asio::ip::tcp::socket client_socket_;
-  SocketLib::DataSocket _socket;
-  // sockfd_t _socket;
+  boost::asio::ip::tcp::socket client_socket_{io_context_};
+  SocketLib::DataSocket _socket{-1};
 
   std::mutex _buffer_mutex;
 
@@ -89,5 +86,4 @@ private:
   static boost::xpressive::sregex _receive_pattern;
   static boost::regex _receive_line_feed_pattern;
   static std::string _empty_string;
-  static int _conn_timeout_ms;
 };

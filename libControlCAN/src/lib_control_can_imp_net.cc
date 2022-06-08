@@ -9,8 +9,6 @@
 #include <iostream>
 #include <vector>
 
-#include "boost/asio/ip/tcp.hpp"
-#include "boost/asio/steady_timer.hpp"
 #include "hex_dump.hpp"
 #include "ini.h"
 #include "lib_control_can_imp_net.hpp"
@@ -43,10 +41,8 @@ boost::xpressive::sregex CanImpCanNet::_hex_str_pattern(sregex::compile("^(?:[0-
 boost::xpressive::sregex CanImpCanNet::_receive_pattern(sregex::compile("^(VCI_Receive|VCI_Transmit)[0-9a-fA-F]{32},"));
 boost::regex CanImpCanNet::_receive_line_feed_pattern("^VCI_Receive[0-9a-fA-F]{32},");
 std::string CanImpCanNet::_empty_string;
-int CanImpCanNet::_conn_timeout_ms = 300;
 
-CanImpCanNet::CanImpCanNet()
-  : _connected(false), _str_sock_addr(""), _str_sock_port(""), _socket(-1), client_socket_(io_service_) {
+CanImpCanNet::CanImpCanNet() : _connected(false), _str_sock_addr(""), _str_sock_port("") {
   const auto dir_path = getexepath().parent_path();
   boost::filesystem::path ini_path(dir_path / "control_can.ini");
 
@@ -64,7 +60,7 @@ CanImpCanNet::CanImpCanNet()
 
 CanImpCanNet::~CanImpCanNet() {
   if (_connected.load()) {
-    _socket.Close();
+    client_socket_.close();
   }
 }
 
@@ -76,32 +72,17 @@ vciReturnType CanImpCanNet::VCI_OpenDevice(DWORD DeviceType, DWORD DeviceInd, DW
   }
 
   if (!_connected.load()) {
-    auto ip_address = boost::lexical_cast<uint32_t>(_str_sock_addr);
-    auto serv_port = boost::lexical_cast<uint16_t>(_str_sock_port);
-
-    _socket.Connect(ip_address, serv_port);
-    auto is_connected = _socket.IsConnected();
-    _connected.store(is_connected);
-  }
-  if (!_connected.load()) {
-    return vciReturnType::STATUS_NET_CONN_FAIL;
+    auto ec = this->connect(_str_sock_addr, _str_sock_port, 400);
+    if (0 != ec) return vciReturnType::STATUS_NET_CONN_FAIL;
   }
 
   char buff[128];
   const char *head = "VCI_OpenDevice,", *lr = "\n";
-  can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType);
-  can::utils::bin2hex::bin2hex_fast(buff, &DeviceType, lr);
-  can::utils::bin2hex::bin2hex_fast(buff, &DeviceInd);
-  can::utils::bin2hex::bin2hex_fast(buff, &Reserved);
-  can::utils::bin2hex::bin2hex_fast(buff, lr);
   auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, &Reserved, lr);
 
   // std::cout << "VCI_OpenDevice: " << data << std::endl;
   auto ierror = write_line(buff, size);
-  if (size != ierror) {
-    // std::cout << "VCI_OpenDevice: write fail" << std::endl;
-    return vciReturnType::STATUS_ERR;
-  }
+  if (size != ierror) return vciReturnType::STATUS_ERR;
 
   return vciReturnType::STATUS_OK;
 }
@@ -114,11 +95,9 @@ vciReturnType CanImpCanNet::VCI_CloseDevice(DWORD DeviceType, DWORD DeviceInd) {
   auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, lr);
 
   auto const ierror = write_line(buff, size);
-  if (size != ierror) {
-    return vciReturnType::STATUS_ERR;
-  }
+  if (size != ierror) return vciReturnType::STATUS_ERR;
 
-  _socket.Close();
+  client_socket_.close();
   _connected.store(false);
   return vciReturnType::STATUS_OK;
 }
@@ -282,235 +261,52 @@ ULONG CanImpCanNet::vci_receive_tool(DWORD DeviceType, DWORD DeviceInd, DWORD CA
 }
 
 int CanImpCanNet::connect(const std::string &host, const std::string &service, int timeoutMs) {
-  // https://www.boost.org/doc/libs/1_53_0/doc/html/boost_asio/example/timeouts/blocking_tcp_client.cpp
-  // https://www.boost.org/doc/libs/1_79_0/doc/html/boost_asio/example/cpp03/timeouts/async_tcp_client.cpp
-  // https://www.geeksforgeeks.org/synchronous-chatting-application-using-c-boostasio/
   using boost::asio::ip::tcp;
-  using boost::lambda::_1;
-  using boost::lambda::var;
-
   // Resolve the host name and service to a list of endpoints.
-  tcp::resolver::query query(host, service);
-  tcp::resolver::iterator iter = tcp::resolver(io_service_).resolve(query);
+  auto endpoints = tcp::resolver(io_context_).resolve(host, service);
 
-  // Set a deadline for the asynchronous operation. As a host name may
-  // resolve to multiple endpoints, this function uses the composed operation
-  // async_connect. The deadline applies to the entire operation, rather than
-  // individual connection attempts.
-  boost::asio::steady_timer deadline_(io_context_);
-  deadline_.expires_from_now(std::chrono::milliseconds(timeoutMs));
-  // deadline_.wait(); https://www.boost.org/doc/libs/1_79_0/doc/html/boost_asio/reference/steady_timer.html
+  // Start the asynchronous operation itself. The lambda that is used as a
+  // callback will update the error variable when the operation completes.
+  // The blocking_udp_client.cpp example shows how you can use std::bind
+  // rather than a lambda.
+  boost::system::error_code error;
+  boost::asio::async_connect(client_socket_, endpoints,
+                             [&](const boost::system::error_code &result_error,
+                                 const tcp::endpoint & /*result_endpoint*/) { error = result_error; });
 
-  // Set up the variable that receives the result of the asynchronous
-  // operation. The error code is set to would_block to signal that the
-  // operation is incomplete. Asio guarantees that its asynchronous
-  // operations will never fail with would_block, so any other value in
-  // ec indicates completion.
-  boost::system::error_code ec = boost::asio::error::would_block;
+  // Run the operation until it completes, or until the timeout.
+  io_context_run(std::chrono::milliseconds(timeoutMs));
 
-  // Start the asynchronous operation itself. The boost::lambda function
-  // object is used as a callback and will update the ec variable when the
-  // operation completes. The blocking_udp_client.cpp example shows how you
-  // can use boost::bind rather than boost::lambda.
-  boost::asio::async_connect(client_socket_, iter, var(ec) = _1);
-
-  // Block until the asynchronous operation has completed.
-  do {
-    io_service_.run_one();
-  } while (ec == boost::asio::error::would_block);
-
-  // Determine whether a connection was successfully established. The
-  // deadline actor may have had a chance to run and close our socket, even
-  // though the connect operation notionally succeeded. Therefore we must
-  // check whether the socket is still open before deciding if we succeeded
-  // or failed.
-  if (ec || !client_socket_.is_open()) {
-    // throw boost::system::system_error(ec ? ec : boost::asio::error::operation_aborted);
-    return (ec ? ec.value() : (int)(boost::asio::error::operation_aborted));
+  // Determine whether a connection was successfully established.
+  if (error) { // throw std::system_error(error);
+    return error.value();
   }
 
   return 0;
 }
 
-#if 0
-int CanImpCanNet::connect(const std::string &host, const std::string &service, int timeout) {
-  struct addrinfo *result = nullptr;
-  WSADATA wsa_data;
+void CanImpCanNet::io_context_run(std::chrono::steady_clock::duration timeout) {
+  // Restart the io_context, as it may have been left in the "stopped" state
+  // by a previous operation.
+  io_context_.restart();
 
-  // Initialize Winsock
-  auto ierror = WSAStartup(MAKEWORD(2, 2), &wsa_data);
-  if (ierror != 0) {
-    std::cout << "WSAStartup failed with error: " << ierror << std::endl;
-    _connected.store(false);
-    return -1;
+  // Block until the asynchronous operation has completed, or timed out. If
+  // the pending asynchronous operation is a composed operation, the deadline
+  // applies to the entire operation, rather than individual operations on
+  // the socket.
+  io_context_.run_for(timeout);
+
+  // If the asynchronous operation completed successfully then the io_context
+  // would have been stopped due to running out of work. If it was not
+  // stopped, then the io_context::run_for call must have timed out.
+  if (!io_context_.stopped()) {
+    // Close the socket to cancel the outstanding asynchronous operation.
+    client_socket_.close();
+
+    // Run the io_context again until the operation completes.
+    io_context_.run();
   }
-
-  struct addrinfo hints;
-  ZeroMemory(&hints, sizeof(hints));
-  hints.ai_family = AF_UNSPEC;
-  hints.ai_socktype = SOCK_STREAM;
-  hints.ai_protocol = IPPROTO_TCP;
-
-  // Resolve the server address and port
-  ierror = getaddrinfo(host.c_str(), service.c_str(), &hints, &result);
-  if (ierror != 0) {
-    // std::cout << "getaddrinfo failed with error: " << ierror << std::endl;
-    WSACleanup();
-    _connected.store(false);
-    return -1;
-  }
-
-  int async_error = -1;
-  int async_error_len = sizeof(int);
-  fd_set set;
-
-  // Attempt to connect to an address until one succeeds
-  for (auto ptr = result; ptr != nullptr; ptr = ptr->ai_next) {
-    // Create a SOCKET for connecting to server
-    _socket = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
-    if (_socket == INV_SOCKET) {
-      // std::cout << "socket failed with error: " << WSAGetLastError() << std::endl;
-      WSACleanup();
-      _connected.store(false);
-      return -1;
-    }
-
-    // set the socket in non-blocking
-    unsigned long async_mode = 1;
-    ioctlsocket(_socket, FIONBIO, &async_mode);
-
-    // Connect to server.
-    ierror = ::connect(_socket, ptr->ai_addr, static_cast<int>(ptr->ai_addrlen));
-    if (ierror == SOCKET_ERROR) {
-      if (WSAGetLastError() != WSAEWOULDBLOCK) {
-        closesocket(_socket);
-        _socket = INV_SOCKET;
-        continue;
-      }
-
-      timeval tm{};
-      tm.tv_sec = 0;
-      tm.tv_usec = 1000 * 120;
-
-      FD_ZERO(&set);
-      FD_SET(_socket, &set);
-
-      if (0 == select(_socket + 1, nullptr, &set, nullptr, &tm)) {
-        closesocket(_socket);
-        _socket = INV_SOCKET;
-        continue;
-      }
-
-      if (FD_ISSET(_socket, &set)) {
-        if (getsockopt(_socket, SOL_SOCKET, SO_ERROR, (char *)&async_error, &async_error_len) < 0) {
-          closesocket(_socket);
-          _socket = INV_SOCKET;
-        } else {
-          async_mode = 0;
-          ioctlsocket(_socket, FIONBIO, &async_mode); // ����Ϊ����ģʽ
-          break;
-        }
-      } else {
-        closesocket(_socket);
-        _socket = INV_SOCKET;
-      }
-    }
-  }
-
-  if (_socket == INV_SOCKET) {
-    // std::cout << "Unable to connect to server!" << std::endl;
-    WSACleanup();
-    _connected.store(false);
-    return -1;
-  }
-
-  DWORD dw_timeout = timeout;
-  if (setsockopt(_socket, SOL_SOCKET, SO_SNDTIMEO, reinterpret_cast<char *>(&dw_timeout), sizeof(dw_timeout))) {
-    std::cout << "setsockopt SO_SNDTIMEO fail: " << WSAGetLastError() << std::endl;
-  }
-
-  DWORD n_zero = 0; // set send without buffer
-  setsockopt(_socket, SOL_SOCKET, SO_SNDBUF, reinterpret_cast<char *>(&n_zero), sizeof(n_zero));
-
-  freeaddrinfo(result);
-  _connected.store(true);
-  return 0;
 }
-#endif
-
-#if 0
-int CanImpCanNet::connect2(const std::string &host, const std::string &service) {
-  uint32_t port;
-  disconnect();
-
-  if (!boost::conversion::try_lexical_convert<uint32_t>(service, port)) {
-    _connected.store(false);
-    return -1;
-  }
-
-  _socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  if (_socket == INV_SOCKET) {
-    auto wsa_err = WSAGetLastError();
-    _connected.store(false);
-    return -1;
-  }
-
-  struct sockaddr_in serv_addr {};
-
-  // �Է�������ַ���ṹserv_addr
-  serv_addr.sin_family = AF_INET;
-  serv_addr.sin_addr.s_addr = inet_addr(host.c_str());
-  serv_addr.sin_port = htons(port);
-
-  timeval tm;
-  int async_error = -1;
-  int async_error_len = sizeof(int);
-  fd_set set;
-
-  unsigned long async_mode = 1;
-  ioctlsocket(_socket, FIONBIO, &async_mode); // ����Ϊ������ģʽ
-
-  auto ret = true;
-  if (::connect(_socket, reinterpret_cast<struct sockaddr *>(&serv_addr), sizeof(serv_addr)) == -1) {
-    ret = false;
-    tm.tv_sec = 0;
-    tm.tv_usec = 1000 * 120;
-
-    FD_ZERO(&set);
-    FD_SET(_socket, &set);
-
-    if (select(_socket + 1, nullptr, &set, nullptr, &tm) > 0) {
-      getsockopt(_socket, SOL_SOCKET, SO_ERROR, reinterpret_cast<char *>(&async_error), &async_error_len);
-      ret = async_error == 0;
-    }
-  }
-
-  async_mode = 0;
-  ioctlsocket(_socket, FIONBIO, &async_mode); // ����Ϊ����ģʽ
-  if (!ret) {
-    closesocket(_socket);
-    _connected.store(false);
-    _socket = INV_SOCKET;
-    return -1;
-  }
-
-  _connected.store(true);
-  return 0;
-}
-#endif
-
-#if 0
-void CanImpCanNet::disconnect() {
-  if (_socket != INV_SOCKET) {
-    closesocket(_socket);
-    WSACleanup();
-
-    _socket = INV_SOCKET;
-  }
-
-  _connected.store(false);
-}
-#endif
 
 int CanImpCanNet::write_line(const char *p, size_t len) const {
   auto const ierror = _socket.Send(p, (int)len);
