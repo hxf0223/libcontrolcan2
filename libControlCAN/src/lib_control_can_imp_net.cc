@@ -226,17 +226,11 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
     auto rec_str = read_line(std::chrono::milliseconds(WaitTime));
     dur = std::chrono::steady_clock::now() - t0;
     const sregex_iterator it(rec_str.begin(), rec_str.end(), _receive_pattern);
-    if (it == end || (*it)[0].second == rec_str.end()) {
-      std::cout << "size: " << rec_str.size() << ", " << rec_str << std::endl;
-      continue;
-    }
+    if (it == end || (*it)[0].second == rec_str.end()) continue;
 
     auto data_str = rec_str.substr((*it)[0].second - rec_str.begin());
     const sregex_iterator it2(data_str.begin(), data_str.end(), _hex_str_pattern);
-    if (it2 == end || data_str.size() < (sizeof(VCI_CAN_OBJ) * 2)) {
-      std::cout << "size: " << rec_str.size() << ", " << rec_str << std::endl;
-      continue;
-    }
+    if (it2 == end || data_str.size() < (sizeof(VCI_CAN_OBJ) * 2)) continue;
 
     auto v = can::utils::hex_string_to_bin_fastest(data_str);
     memcpy(pReceive + recv_line_cnt, v.data(), sizeof(VCI_CAN_OBJ));
