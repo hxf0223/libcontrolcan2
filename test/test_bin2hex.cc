@@ -34,6 +34,7 @@ TEST(CAN, bin2hex_template) {
   VCI_CAN_OBJ can_obj{};
   size = bin2hex::bin2hex_fast(buffer, can_obj);
   LOG(INFO) << "bin2hex size: " << size << ", can_obj: " << buffer;
+  LOG(INFO) << "VCI_CAN_OBJ size: " << sizeof(VCI_CAN_OBJ);
 
   size = bin2hex::bin2hex_fast(buffer, ".const string.", &can_obj);
   LOG(INFO) << "bin2hex size: " << size << ", const char* + can_obj address: " << buffer;

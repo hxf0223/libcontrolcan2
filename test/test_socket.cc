@@ -1,3 +1,4 @@
+#include <cstdint>
 #ifdef _WIN32
 #include <sdkddkver.h> // avoid boost.asio warning: Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately
 #endif
@@ -33,12 +34,13 @@ TEST(Socket, perfServer) {
     char send_buff[256];
     while (true) {
       VCI_CAN_OBJ can_obj{};
+      *(uint64_t *)(can_obj.Data) = send_count;
       auto dur = std::chrono::system_clock::now().time_since_epoch();
-      uint64_t now = std::chrono::duration_cast<std::chrono::nanoseconds>(dur).count();
+      uint64_t now = std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
 
       auto size = can::utils::bin2hex::bin2hex_fast(send_buff, cmd_recv, &send_count, &now, &can_obj, "\n");
       LOG(INFO) << "size: " << size << ", data: " << send_buff;
-      getchar();
+      // getchar();
 
       boost::asio::write(server_socket, boost::asio::buffer(send_buff, size));
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -54,19 +56,17 @@ TEST(Socket, perfClient) {
   auto client_proc = [](std::shared_ptr<CanImpInterface> canDc) {
     constexpr DWORD rec_buff_size = 100;
     VCI_CAN_OBJ can_recv_buff[rec_buff_size];
+    const size_t recv_cnt_max = 10000 * 100;
     ULONG recv_frame_cnt = 0;
 
     auto tm0 = std::chrono::steady_clock::now();
-    while (true) {
+    while (recv_frame_cnt < recv_cnt_max) {
       auto recv_frame_num = canDc->VCI_Receive(devtype, devid, channel, can_recv_buff, rec_buff_size, 100);
       for (ULONG i = 0; i < recv_frame_num; i++) {
         std::string str = can::utils::bin2hex_dump(can_recv_buff[i].Data, 8);
-        LOG(INFO) << "<<<===: " << str;
+        LOG(INFO) << recv_frame_cnt << ": " << str;
+        recv_frame_cnt++;
       }
-
-      auto tm1 = std::chrono::steady_clock::now();
-      std::chrono::duration<double, std::milli> dur = tm1 - tm0;
-      if (dur.count() > 120 * 1000) break;
     }
 
     auto tm2 = std::chrono::steady_clock::now();

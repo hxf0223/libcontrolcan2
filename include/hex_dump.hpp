@@ -106,11 +106,11 @@ struct bin2hex {
 
   template <typename T, typename... Args>
   static size_t bin2hex_fast(const char *dst, const T &head, Args... rest) {
-    using rm_ref_t = std::remove_reference_t<T &>;
-    using decay2_t = std::remove_const_t<std::remove_reference_t<T &>>;
+    using rm_ref_t = std::remove_reference_t<T>;
+    using decay2_t = std::remove_const_t<std::remove_reference_t<T>>;
     static_assert(std::is_pod<decay2_t>::value, "Not a POD type."); // do NOT use std::decay<T>::type
     uint8_t *psrc = (uint8_t *)ptr_of(head, typename std::is_pointer<rm_ref_t>::type());
-    const size_t bytes = sizeof(decay2_t);
+    const size_t bytes = sizeof(std::remove_const_t<std::remove_reference_t<std::remove_pointer_t<T>>>);
 
     auto pdst = const_cast<char *>(dst);
     do_conv(pdst, psrc, bytes);
