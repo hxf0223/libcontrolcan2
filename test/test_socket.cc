@@ -56,7 +56,7 @@ TEST(Socket, perfClient) {
   auto client_proc = [](std::shared_ptr<CanImpInterface> canDc) {
     constexpr DWORD rec_buff_size = 100;
     VCI_CAN_OBJ can_recv_buff[rec_buff_size];
-    const size_t recv_cnt_max = 10000 * 100;
+    const size_t recv_cnt_max = 10000 * 30;
     ULONG recv_frame_cnt = 0;
 
     auto tm0 = std::chrono::steady_clock::now();
