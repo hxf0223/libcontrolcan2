@@ -29,10 +29,12 @@ TEST(Socket, perfServer) {
     tcp::socket server_socket(io_service); // Creating socket object
     acceptor_server.accept(server_socket); // waiting for connection
 
+    boost::system::error_code ec{};
     const char *cmd_recv = "VCI_Receive";
     uint64_t send_count = 0;
     char send_buff[256];
-    while (true) {
+
+    while (!ec) {
       VCI_CAN_OBJ can_obj{};
       *(uint64_t *)(can_obj.Data) = send_count;
       auto dur = std::chrono::system_clock::now().time_since_epoch();
@@ -42,10 +44,12 @@ TEST(Socket, perfServer) {
       LOG(INFO) << "size: " << size << ", data: " << send_buff;
       // getchar();
 
-      boost::asio::write(server_socket, boost::asio::buffer(send_buff, size));
+      boost::asio::write(server_socket, boost::asio::buffer(send_buff, size), ec);
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
       send_count++;
     }
+
+    LOG(INFO) << "exit with boost asio error_code: " << ec.message();
   }; // server_proc
 
   std::thread server_thread(server_proc);
@@ -76,7 +80,7 @@ TEST(Socket, perfClient) {
 
   std::shared_ptr<CanImpInterface> can_dc(createCanNet());
   auto result = can_dc->VCI_OpenDevice(devtype, 0, 0);
-  CHECK(result != 0) << "CAN NET VCI_OpenDevice fail.";
+  CHECK(result == vciReturnType::STATUS_OK) << "CAN NET VCI_OpenDevice fail: " << result;
 
   VCI_INIT_CONFIG cfg{};
   cfg.Timing0 = 0x00;
@@ -87,10 +91,10 @@ TEST(Socket, perfClient) {
   cfg.Mode = 0;
   cfg.Reserved = 0;
   result = can_dc->VCI_InitCAN(devtype, devid, channel, &cfg);
-  CHECK(result != 0) << "CAN NET VCI_InitCAN fail.";
+  CHECK(result == vciReturnType::STATUS_OK) << "CAN NET VCI_InitCAN fail: " << result;
 
   result = can_dc->VCI_StartCAN(devtype, devid, channel);
-  CHECK(result != 0) << "CAN NET VCI_StartCAN fail.";
+  CHECK(result == vciReturnType::STATUS_OK) << "CAN NET VCI_StartCAN fail: " << result;
 
   std::thread client_thread(client_proc, can_dc);
   client_thread.join();

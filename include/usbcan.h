@@ -4,6 +4,7 @@
 #if defined WIN32 || defined _WIN32 || defined _WINDOWS
 #include <windows.h>
 #else
+#include <ostream>
 #include <stdint.h>
 
 typedef uint16_t USHORT;
@@ -79,8 +80,12 @@ enum class vciDevType : DWORD {
 // return error
 enum class vciReturnType { STATUS_OK = 1, STATUS_ERR = 0, STATUS_NET_CONN_FAIL = -1 };
 
-inline bool operator!=(const vciReturnType &lhs, const DWORD &rhs) {
-  return (static_cast<DWORD>(lhs) != rhs);
+inline bool operator!=(const vciReturnType &lhs, const DWORD &rhs) { return (static_cast<DWORD>(lhs) != rhs); }
+
+template <typename T>
+inline std::ostream &operator<<(typename std::enable_if<std::is_enum<T>::value, std::ostream>::type &stream,
+                                const T &e) {
+  return stream << static_cast<typename std::underlying_type<T>::type>(e);
 }
 
 typedef struct _VCI_BOARD_INFO {

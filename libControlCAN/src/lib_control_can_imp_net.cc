@@ -232,8 +232,8 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
     const sregex_iterator it2(data_str.begin(), data_str.end(), _hex_str_pattern);
     if (it2 == end || data_str.size() < (sizeof(VCI_CAN_OBJ) * 2)) continue;
 
-    auto v = can::utils::hex_string_to_bin_fastest(data_str);
-    memcpy(pReceive + recv_line_cnt, v.data(), sizeof(VCI_CAN_OBJ));
+    auto pdst = (uint8_t *)(pReceive + recv_line_cnt);
+    can::utils::hex_string_to_bin_fastest(data_str, pdst);
     recv_line_cnt++;
   }
 

@@ -159,9 +159,8 @@ static std::vector<unsigned char> hex_string_to_bin(std::string str) {
   return v;
 }
 
-static std::vector<unsigned char> hex_string_to_bin_fastest(std::string str) {
-  // mapping of ASCII characters to hex values
-  static uint8_t hashmap[] = {
+static inline void hex_string_to_bin_fastest(const std::string &str, uint8_t *out) {
+  const static uint8_t hashmap[] = {
     0,  0,  0,  0,  0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // gap before first hex digit
     0,  0,  0,  0,  0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0,  0,  0,  0,  0,  0,  0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, // 0123456789
@@ -172,16 +171,18 @@ static std::vector<unsigned char> hex_string_to_bin_fastest(std::string str) {
     10, 11, 12, 13, 14, 15                                               // abcdef
   };
 
-  std::vector<unsigned char> v;
   const auto len = str.length();
-  v.reserve(len / 2);
-
+  const auto pstr = str.data();
   for (size_t pos = 0; pos < len; pos += 2) {
-    const size_t idx0 = static_cast<uint8_t>(str[pos + 0]);
-    const size_t idx1 = static_cast<uint8_t>(str[pos + 1]);
-    v.push_back(static_cast<uint8_t>(hashmap[idx0] << 4) | hashmap[idx1]);
+    const size_t idx0 = static_cast<uint8_t>(pstr[pos + 0]);
+    const size_t idx1 = static_cast<uint8_t>(pstr[pos + 1]);
+    out[pos >> 1] = (static_cast<uint8_t>(hashmap[idx0] << 4) | hashmap[idx1]);
   }
+}
 
+static inline std::vector<unsigned char> hex_string_to_bin_fastest(const std::string &str) {
+  std::vector<uint8_t> v(str.length() / 2);
+  hex_string_to_bin_fastest(str, v.data());
   return v;
 }
 
