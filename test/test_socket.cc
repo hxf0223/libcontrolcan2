@@ -42,14 +42,14 @@ TEST(Socket, perfServer) {
 
       auto size = can::utils::bin2hex::bin2hex_fast(send_buff, cmd_recv, &send_count, &now, &can_obj, "\n");
       LOG(INFO) << "size: " << size << ", data: " << send_buff;
-      // getchar();
+      getchar();
 
       boost::asio::write(server_socket, boost::asio::buffer(send_buff, size), ec);
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
       send_count++;
     }
 
-    LOG(INFO) << "exit with boost asio error_code: " << ec.message();
+    LOG(INFO) << "exit with boost asio error_code: " << ec.value() << ": " << ec.message();
   }; // server_proc
 
   std::thread server_thread(server_proc);
@@ -65,7 +65,7 @@ TEST(Socket, perfClient) {
 
     auto tm0 = std::chrono::steady_clock::now();
     while (recv_frame_cnt < recv_cnt_max) {
-      auto recv_frame_num = canDc->VCI_Receive(devtype, devid, channel, can_recv_buff, rec_buff_size, 100);
+      auto recv_frame_num = canDc->VCI_Receive(devtype, devid, channel, can_recv_buff, rec_buff_size, 10);
       for (ULONG i = 0; i < recv_frame_num; i++) {
         std::string str = can::utils::bin2hex_dump(can_recv_buff[i].Data, 8);
         LOG(INFO) << recv_frame_cnt << ": " << str;

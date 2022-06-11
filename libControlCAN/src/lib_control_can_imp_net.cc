@@ -5,10 +5,14 @@
 #include <boost/system/system_error.hpp>
 #include <boost/thread.hpp>
 #include <chrono>
+#include <cmath>
 #include <cstdint>
 #include <iostream>
 #include <vector>
 
+#include "boost/asio/error.hpp"
+#include "boost/system/detail/errc.hpp"
+#include "boost/system/detail/error_code.hpp"
 #include "hex_dump.hpp"
 #include "ini.h"
 #include "lib_control_can_imp_net.hpp"
@@ -67,7 +71,7 @@ vciReturnType CanImpCanNet::VCI_OpenDevice(DWORD DeviceType, DWORD DeviceInd, DW
   }
 
   if (!_connected.load()) {
-    auto ec = this->connect(_str_sock_addr, _str_sock_port, 400);
+    auto ec = connect(_str_sock_addr, _str_sock_port, 400);
     if (0 != ec) return vciReturnType::STATUS_NET_CONN_FAIL;
     _connected.store(true);
   }
@@ -215,15 +219,18 @@ vciReturnType CanImpCanNet::VCI_Transmit(DWORD DeviceType, DWORD DeviceInd, DWOR
 
 ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_CAN_OBJ pReceive, ULONG Len,
                                 INT WaitTime) {
+  using namespace boost::asio::error;
   if (!_connected.load() || nullptr == pReceive) return 0;
 
   ULONG recv_line_cnt = 0;
   const sregex_iterator end;
+  const std::chrono::milliseconds to(WaitTime);
   const auto t0 = std::chrono::steady_clock::now();
-  std::chrono::duration<double, std::milli> dur;
+  std::chrono::duration<double, std::milli> dur(0);
+  boost::system::error_code ec;
 
-  while (recv_line_cnt < Len && dur.count() < WaitTime) {
-    auto rec_str = read_line(std::chrono::milliseconds(WaitTime));
+  while (!ec && recv_line_cnt < Len && dur.count() < WaitTime) {
+    auto rec_str = read_line(to, ec);
     dur = std::chrono::steady_clock::now() - t0;
     const sregex_iterator it(rec_str.begin(), rec_str.end(), _receive_pattern);
     if (it == end || (*it)[0].second == rec_str.end()) continue;
@@ -235,6 +242,13 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
     auto pdst = (uint8_t *)(pReceive + recv_line_cnt);
     can::utils::hex_string_to_bin_fastest(data_str, pdst);
     recv_line_cnt++;
+  }
+
+  const auto ec_val = ec.value();
+  if (ec_val != boost::system::errc::operation_canceled) {
+    std::cout << "close socket on error: " << ec_val << ":" << ec.message() << std::endl;
+    _connected.store(false);
+    client_socket_.close();
   }
 
   return recv_line_cnt;
@@ -259,6 +273,7 @@ int CanImpCanNet::connect(const std::string &host, const std::string &service, i
 
   // Determine whether a connection was successfully established.
   if (error) { // throw std::system_error(error);
+    std::cout << "connect fail: " << error.value() << ": " << error.message() << std::endl;
     return error.value();
   }
 
@@ -288,16 +303,15 @@ void CanImpCanNet::io_context_run(const std::chrono::steady_clock::duration &tim
   }
 }
 
-std::string CanImpCanNet::read_line(const std::chrono::steady_clock::duration &timeout) {
+std::string CanImpCanNet::read_line(const std::chrono::steady_clock::duration &timeout, boost::system::error_code &ec) {
   // Start the asynchronous operation. The lambda that is used as a callback
   // will update the error and n variables when the operation completes. The
   // blocking_udp_client.cpp example shows how you can use std::bind rather
   // than a lambda.
-  boost::system::error_code error;
   std::size_t n = 0;
   boost::asio::async_read_until(client_socket_, boost::asio::dynamic_buffer(input_buffer_), '\n',
                                 [&](const boost::system::error_code &result_error, std::size_t result_n) {
-                                  error = result_error;
+                                  ec = result_error;
                                   n = result_n;
                                 });
 
@@ -305,7 +319,7 @@ std::string CanImpCanNet::read_line(const std::chrono::steady_clock::duration &t
   io_context_run(timeout);
 
   // Determine whether the read completed successfully.
-  if (error) { // throw std::system_error(error);
+  if (ec) { // throw std::system_error(ec);
     return std::string();
   }
 
@@ -330,7 +344,7 @@ int CanImpCanNet::write_line(const char *p, size_t len) {
 
   // Determine whether the read completed successfully.
   if (error) { // throw std::system_error(error);
-    return error.value();
+    return -std::abs(error.value());
   }
 
   return len;

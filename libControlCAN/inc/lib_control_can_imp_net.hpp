@@ -51,7 +51,7 @@ private:
   int connect(const std::string &host, const std::string &service, int timeoutMs);
   void io_context_run(const std::chrono::steady_clock::duration &timeout);
 
-  std::string read_line(const std::chrono::steady_clock::duration &timeout);
+  std::string read_line(const std::chrono::steady_clock::duration &timeout, boost::system::error_code &ec);
   inline int write_line(const char *p, size_t len);
 
 private:
