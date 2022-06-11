@@ -81,9 +81,14 @@ vciReturnType CanImpCanNet::VCI_OpenDevice(DWORD DeviceType, DWORD DeviceInd, DW
   auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, &Reserved, lr);
 
   // std::cout << "VCI_OpenDevice: " << data << std::endl;
-  auto ierror = write_line(buff, size);
-  if (size != ierror) return vciReturnType::STATUS_ERR;
+  boost::system::error_code ec;
+  auto ierror = write_line(buff, size, ec);
+  if (ec) {
+    _connected.store(false);
+    client_socket_.close();
+  }
 
+  if (size != ierror) return vciReturnType::STATUS_ERR;
   return vciReturnType::STATUS_OK;
 }
 
@@ -94,7 +99,13 @@ vciReturnType CanImpCanNet::VCI_CloseDevice(DWORD DeviceType, DWORD DeviceInd) {
   const char *head = "VCI_CloseDevice", *lr = "\n";
   auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, lr);
 
-  auto const ierror = write_line(buff, size);
+  boost::system::error_code ec;
+  auto const ierror = write_line(buff, size, ec);
+  if (ec) {
+    _connected.store(false);
+    client_socket_.close();
+  }
+
   if (size != ierror) return vciReturnType::STATUS_ERR;
 
   client_socket_.close();
@@ -114,9 +125,14 @@ vciReturnType CanImpCanNet::VCI_InitCAN(DWORD DeviceType, DWORD DeviceInd, DWORD
   auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, &CANInd, pInitConfig, lr);
 
   // std::cout << "VCI_InitCAN: " << data;
-  auto const ierror = write_line(buff, size);
-  if (size != ierror) return vciReturnType::STATUS_ERR;
+  boost::system::error_code ec;
+  auto const ierror = write_line(buff, size, ec);
+  if (ec) {
+    _connected.store(false);
+    client_socket_.close();
+  }
 
+  if (size != ierror) return vciReturnType::STATUS_ERR;
   return vciReturnType::STATUS_OK;
 }
 
@@ -127,9 +143,14 @@ vciReturnType CanImpCanNet::VCI_ReadErrInfo(DWORD DeviceType, DWORD DeviceInd, D
   const char *head = "VCI_ReadErrInfo", *lr = "\n";
   auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, &CANInd, pErrInfo, lr);
 
-  auto const ierror = write_line(buff, size);
-  if (size != ierror) return vciReturnType::STATUS_ERR;
+  boost::system::error_code ec;
+  auto const ierror = write_line(buff, size, ec);
+  if (ec) {
+    _connected.store(false);
+    client_socket_.close();
+  }
 
+  if (size != ierror) return vciReturnType::STATUS_ERR;
   return vciReturnType::STATUS_OK;
 }
 
@@ -157,9 +178,14 @@ vciReturnType CanImpCanNet::VCI_ClearBuffer(DWORD DeviceType, DWORD DeviceInd, D
   const char *head = "VCI_ClearBuffer", *lr = "\n";
   auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, &CANInd, lr);
 
-  auto const ierror = write_line(buff, size);
-  if (size != ierror) return vciReturnType::STATUS_ERR;
+  boost::system::error_code ec;
+  auto const ierror = write_line(buff, size, ec);
+  if (ec) {
+    _connected.store(false);
+    client_socket_.close();
+  }
 
+  if (size != ierror) return vciReturnType::STATUS_ERR;
   return vciReturnType::STATUS_OK;
 }
 
@@ -170,9 +196,14 @@ vciReturnType CanImpCanNet::VCI_StartCAN(DWORD DeviceType, DWORD DeviceInd, DWOR
   const char *head = "VCI_StartCAN", *lr = "\n";
   auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, &CANInd, lr);
 
-  auto const ierror = write_line(buff, size);
-  if (size != ierror) return vciReturnType::STATUS_ERR;
+  boost::system::error_code ec;
+  auto const ierror = write_line(buff, size, ec);
+  if (ec) {
+    _connected.store(false);
+    client_socket_.close();
+  }
 
+  if (size != ierror) return vciReturnType::STATUS_ERR;
   return vciReturnType::STATUS_OK;
 }
 
@@ -183,34 +214,32 @@ vciReturnType CanImpCanNet::VCI_ResetCAN(DWORD DeviceType, DWORD DeviceInd, DWOR
   const char *head = "VCI_ResetCAN", *lr = "\n";
   auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, &CANInd, lr);
 
-  auto const ierror = write_line(buff, size);
-  if (size != ierror) return vciReturnType::STATUS_ERR;
+  boost::system::error_code ec;
+  auto const ierror = write_line(buff, size, ec);
+  if (ec) {
+    _connected.store(false);
+    client_socket_.close();
+  }
 
+  if (size != ierror) return vciReturnType::STATUS_ERR;
   return vciReturnType::STATUS_OK;
 }
 
 vciReturnType CanImpCanNet::VCI_Transmit(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_CAN_OBJ pSend,
                                          ULONG Len) {
   if (!_connected.load()) return vciReturnType::STATUS_ERR;
-
+  boost::system::error_code ec;
   const char *head = "VCI_Transmit", *lr = "\n";
+  char line_buff[256];
 
-  if (1 == Len) {
-    char line_buff[256];
-    auto write_len = can::utils::bin2hex::bin2hex_fast(line_buff, head, &DeviceType, &DeviceInd, &CANInd, pSend, lr);
-    const auto e = write_line(line_buff, write_len);
-    if (e != write_len) return vciReturnType::STATUS_ERR;
-  } else if (Len > 1) {
-    char *line_buff = new char[128 + 2 * sizeof(VCI_CAN_OBJ)];
-    auto write_len = can::utils::bin2hex::bin2hex_fast(line_buff, head, &DeviceType, &DeviceInd, &CANInd);
-    for (ULONG i = 0; i < Len; i++) {
-      VCI_CAN_OBJ *ptr_can_obj = pSend + i;
-      write_len += can::utils::bin2hex::bin2hex_fast(line_buff + write_len, ptr_can_obj);
+  for (ULONG i = 0; i < Len; i++) {
+    PVCI_CAN_OBJ p = pSend + i;
+    auto write_len = can::utils::bin2hex::bin2hex_fast(line_buff, head, &DeviceType, &DeviceInd, &CANInd, p, lr);
+    const auto e = write_line(line_buff, write_len, ec);
+    if (ec) {
+      _connected.store(false);
+      client_socket_.close();
     }
-    line_buff[write_len++] = '\n';
-    line_buff[write_len] = '\0';
-
-    const auto e = write_line(line_buff, write_len);
     if (e != write_len) return vciReturnType::STATUS_ERR;
   }
 
@@ -219,7 +248,7 @@ vciReturnType CanImpCanNet::VCI_Transmit(DWORD DeviceType, DWORD DeviceInd, DWOR
 
 ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_CAN_OBJ pReceive, ULONG Len,
                                 INT WaitTime) {
-  using namespace boost::asio::error;
+  using namespace boost::system;
   if (!_connected.load() || nullptr == pReceive) return 0;
 
   ULONG recv_line_cnt = 0;
@@ -245,8 +274,8 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
   }
 
   const auto ec_val = ec.value();
-  if (ec_val != boost::system::errc::operation_canceled) {
-    std::cout << "close socket on error: " << ec_val << ":" << ec.message() << std::endl;
+  if (ec && ec_val != errc::operation_canceled) {
+    std::cout << "VCI_Receive close socket on error: " << ec_val << ":" << ec.message() << std::endl;
     _connected.store(false);
     client_socket_.close();
   }
@@ -328,23 +357,23 @@ std::string CanImpCanNet::read_line(const std::chrono::steady_clock::duration &t
   return line;
 }
 
-int CanImpCanNet::write_line(const char *p, size_t len) {
+int CanImpCanNet::write_line(const char *p, size_t len, boost::system::error_code &ec) {
   // Start the asynchronous operation itself. The lambda that is used as a
   // callback will update the error variable when the operation completes.
   // The blocking_udp_client.cpp example shows how you can use std::bind
   // rather than a lambda.
-  boost::system::error_code error;
   boost::asio::async_write(
     client_socket_, boost::asio::buffer(p, len),
-    [&](const boost::system::error_code &result_error, std::size_t /*result_n*/) { error = result_error; });
+    [&](const boost::system::error_code &result_error, std::size_t /*result_n*/) { ec = result_error; });
 
   // Run the operation until it completes, or until the timeout.
   std::chrono::steady_clock::duration timeout{std::chrono::milliseconds(30)};
   io_context_run(timeout);
 
   // Determine whether the read completed successfully.
-  if (error) { // throw std::system_error(error);
-    return -std::abs(error.value());
+  if (ec) { // throw std::system_error(ec);
+    std::cout << "write_line error: " << ec.value() << ", " << ec.message() << std::endl;
+    return -std::abs(ec.value());
   }
 
   return len;
