@@ -135,7 +135,7 @@ private:
       *pdst++ = hexmap[psrc[i] & 0x0F];
     }
   }
-};
+}; // struct bin2hex
 
 static std::vector<unsigned char> hex_string_to_bin(std::string str) {
   // mapping of ASCII characters to hex values
