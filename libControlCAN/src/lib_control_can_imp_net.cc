@@ -325,7 +325,8 @@ void CanImpCanNet::io_context_run(const std::chrono::steady_clock::duration &tim
   // stopped, then the io_context::run_for call must have timed out.
   if (!io_context_.stopped()) {
     // Close the socket to cancel the outstanding asynchronous operation.
-    client_socket_.close();
+    boost::system::error_code ec;
+    client_socket_.cancel(ec); // .close();
 
     // Run the io_context again until the operation completes.
     io_context_.run();
