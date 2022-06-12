@@ -10,15 +10,15 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/easy_socket)
 
 file(GLOB LIB_CTRL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc ${CMAKE_CURRENT_SOURCE_DIR}/easy_socket/*.cc)
-add_library(libControlCAN SHARED ${LIB_CTRL_SRCS})
+add_library(ControlCAN SHARED ${LIB_CTRL_SRCS})
 if (CMAKE_HOST_UNIX)
-	target_link_libraries(libControlCAN dl boost_filesystem boost_chrono)
+	target_link_libraries(ControlCAN dl boost_filesystem boost_chrono)
 endif()
 
-#set_target_properties( libControlCAN PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin )
-set(libControlCAN ${libControlCAN} PARENT_SCOPE)
+#set_target_properties( ControlCAN PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin )
+set(ControlCAN ${ControlCAN} PARENT_SCOPE)
 
 if (CMAKE_HOST_WIN32)
-	set_property(TARGET libControlCAN PROPERTY
+	set_property(TARGET ControlCAN PROPERTY
 		MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 endif()

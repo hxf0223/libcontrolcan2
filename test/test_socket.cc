@@ -42,7 +42,7 @@ TEST(Socket, perfServer) {
 
       auto size = can::utils::bin2hex::bin2hex_fast(send_buff, cmd_recv, &send_count, &now, &can_obj, "\n");
       LOG(INFO) << "size: " << size << ", data: " << send_buff;
-      getchar();
+      // getchar();
 
       boost::asio::write(server_socket, boost::asio::buffer(send_buff, size), ec);
       std::this_thread::sleep_for(std::chrono::milliseconds(1));

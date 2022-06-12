@@ -353,7 +353,7 @@ std::string CanImpCanNet::read_line(const std::chrono::steady_clock::duration &t
     return std::string();
   }
 
-  std::string line(input_buffer_.substr(0, n - 1));
+  std::string line(input_buffer_.substr(0, n - 1)); // remove last \n
   input_buffer_.erase(0, n);
   return line;
 }
