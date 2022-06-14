@@ -2,6 +2,7 @@
 
 #include <algorithm> // std::for_each
 #include <cstdint>
+#include <cstring>
 #include <iomanip>
 #include <ostream>
 #include <sstream> // std::ostringstream
@@ -94,10 +95,10 @@ struct bin2hex {
   }
 
   template <typename... Args>
-  static size_t bin2hex_fast(const char *dst, const char *src, Args... rest) {
+  static size_t bin2hex_fast(const char *dst, const char *const src, Args... rest) {
     auto ptr_dst = const_cast<char *>(dst);
-    size_t src_bytes = std::strlen(src);
-    std::memcpy(ptr_dst, src, src_bytes);
+    size_t src_bytes = ::strlen(src);
+    ::memcpy(ptr_dst, src, src_bytes);
 
     auto rest_size = bin2hex_fast(ptr_dst + src_bytes, rest...);
     return (src_bytes + rest_size);
@@ -105,17 +106,17 @@ struct bin2hex {
 
   template <typename T, typename... Args>
   static size_t bin2hex_fast(const char *dst, const T &head, Args... rest) {
-    using rm_ref_t = std::remove_reference_t<T &>;
-    using decay2_t = std::remove_const_t<std::remove_reference_t<T &>>;
+    using rm_ref_t = std::remove_reference_t<T>;
+    using decay2_t = std::remove_const_t<std::remove_reference_t<T>>;
     static_assert(std::is_pod<decay2_t>::value, "Not a POD type."); // do NOT use std::decay<T>::type
-    size_t bytes = (std::is_pointer<T>::value) ? sizeof(std::remove_pointer<T>::type) : sizeof(T);
-    uint8_t *psrc = (uint8_t *)ptr_of(head, std::is_pointer<T>::type());
+    uint8_t *psrc = (uint8_t *)ptr_of(head, typename std::is_pointer<rm_ref_t>::type());
+    const size_t bytes = sizeof(std::remove_const_t<std::remove_reference_t<std::remove_pointer_t<T>>>);
 
     auto pdst = const_cast<char *>(dst);
     do_conv(pdst, psrc, bytes);
 
     auto rest_size = bin2hex_fast(pdst + bytes * 2, rest...);
-    return (bytes + rest_size);
+    return (bytes * 2 + rest_size);
   }
 
   static std::string bin2hex_fast(void *const p, size_t len) {
@@ -134,7 +135,7 @@ private:
       *pdst++ = hexmap[psrc[i] & 0x0F];
     }
   }
-};
+}; // struct bin2hex
 
 static std::vector<unsigned char> hex_string_to_bin(std::string str) {
   // mapping of ASCII characters to hex values
@@ -158,9 +159,8 @@ static std::vector<unsigned char> hex_string_to_bin(std::string str) {
   return v;
 }
 
-static std::vector<unsigned char> hex_string_to_bin_fastest(std::string str) {
-  // mapping of ASCII characters to hex values
-  static uint8_t hashmap[] = {
+static inline void hex_string_to_bin_fastest(const std::string &str, uint8_t *out) {
+  const static uint8_t hashmap[] = {
     0,  0,  0,  0,  0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // gap before first hex digit
     0,  0,  0,  0,  0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0,  0,  0,  0,  0,  0,  0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, // 0123456789
@@ -171,16 +171,18 @@ static std::vector<unsigned char> hex_string_to_bin_fastest(std::string str) {
     10, 11, 12, 13, 14, 15                                               // abcdef
   };
 
-  std::vector<unsigned char> v;
   const auto len = str.length();
-  v.reserve(len / 2);
-
+  const auto pstr = str.data();
   for (size_t pos = 0; pos < len; pos += 2) {
-    const size_t idx0 = static_cast<uint8_t>(str[pos + 0]);
-    const size_t idx1 = static_cast<uint8_t>(str[pos + 1]);
-    v.push_back(static_cast<uint8_t>(hashmap[idx0] << 4) | hashmap[idx1]);
+    const size_t idx0 = static_cast<uint8_t>(pstr[pos + 0]);
+    const size_t idx1 = static_cast<uint8_t>(pstr[pos + 1]);
+    out[pos >> 1] = (static_cast<uint8_t>(hashmap[idx0] << 4) | hashmap[idx1]);
   }
+}
 
+static inline std::vector<unsigned char> hex_string_to_bin_fastest(const std::string &str) {
+  std::vector<uint8_t> v(str.length() / 2);
+  hex_string_to_bin_fastest(str, v.data());
   return v;
 }
 

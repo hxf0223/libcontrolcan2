@@ -5,15 +5,15 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "gdb for dump client",
+            "name": "gdb for can test",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/home/hxf0223/tmp/hcp_x86/bin/tests_npu",
+            "program": "${workspaceFolder}/bin/can_test",
             "args": [
-                "--gtest_filter=NPU_PROF.F001_P0"
+                "--gtest_filter=Socket.perfClient"
             ],
             "stopAtEntry": false,
-            "cwd": "/home/hxf0223/tmp/hcp_x86/bin",
+            "cwd": "${workspaceFolder}/bin",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
@@ -25,7 +25,7 @@
                 },
                 {
                     "description": "libs for gdb",
-                    "text": "set environment LD_LIBRARY_PATH=/home/hxf0223/tmp/hcp_x86/bin:$LD_LIBRARY_PATH",
+                    "text": "set environment LD_LIBRARY_PATH=${workspaceFolder}/bin:$LD_LIBRARY_PATH",
                     "ignoreFailures": false
                 },
                 {

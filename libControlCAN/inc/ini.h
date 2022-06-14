@@ -18,6 +18,8 @@ http://code.google.com/p/feather-ini-parser/wiki/Tutorials
 
 #pragma once
 
+#define __STDC_WANT_LIB_EXT1__ 1 // needed by strncpy_s
+#include <cstring>
 #include <fstream>
 #include <ostream>
 #include <sstream>
@@ -123,18 +125,14 @@ public:
 
   /// Constuctor/Destructor
   // Specify the filename to associate and whether to parse immediately
-  Ini(const std::string filename, const bool doParse) : filename(filename) {
-    init(source_file, doParse);
-  }
+  Ini(const std::string filename, const bool doParse) : filename(filename) { init(source_file, doParse); }
 
   // Used for loading INI from memory
   Ini(void *data, const size_t dataSize, bool doParse) : data((data_t *)data), dataSize(dataSize) {
     init(source_memory, doParse);
   }
 
-  ~Ini() {
-    clear();
-  }
+  ~Ini() { clear(); }
 
   /// Access Content
   // Provide bracket access to section contents
@@ -276,7 +274,7 @@ public:
               --length;
 
             auto ssection = static_cast<fini_char_t *>(calloc(CHAR_SIZE, length + 1));
-            strncpy_s(ssection, length + 1, line + 1, length); // Count after first bracket
+            std::strncpy(ssection, line + 1, length); // Count after first bracket
 
             current = new keys_t;
 
@@ -301,8 +299,7 @@ public:
                 index++;
 
               if (index != 0) // Has preceeding white space
-                // strncpy(skey, skey + index, skey_len - index);
-                strncpy_s(skey, strlen(skey), skey + index, skey_len - index);
+                std::strncpy(skey, skey + index, skey_len - index);
 
               out << skey;
               converters::GetLine(out, key);
@@ -576,15 +573,11 @@ inline void converters::GetLine(fini_sstream_t &out, T &value) {
   out >> value;
 }
 
-inline void converters::GetLine(fini_sstream_t &out, fini_string_t &value) {
-  std::getline(out, value);
-}
+inline void converters::GetLine(fini_sstream_t &out, fini_string_t &value) { std::getline(out, value); }
 
 template <typename T>
 inline size_t converters::GetDataSize(T &value) {
   return sizeof(value);
 }
 
-inline size_t converters::GetDataSize(fini_string_t value) {
-  return value.size() + 1;
-}
+inline size_t converters::GetDataSize(fini_string_t value) { return value.size() + 1; }
