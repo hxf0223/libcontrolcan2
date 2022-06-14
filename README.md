@@ -7,7 +7,7 @@
 - 使用gtest源码 [v1.11.0](https://github.com/google/googletest/releases/tag/release-1.11.0)；
 - 使用glog源码 [v0.6.0](https://github.com/google/glog/releases/tag/v0.6.0)。
 
-gtest更新的版本需要 Abseil编译，可能会比较麻烦。
+gtest v1.11.0 之后的版本需要 Abseil 编译，可能会比较麻烦。
 gtest源码目录相对于官方gtest仓库修改：
 - googletest/CMakeLists.txt：set(GOOGLETEST_VERSION 1.11.0)，否则找不到GOOGLETEST_VERSION会报错；
 - googletest/cmake/internal_utils.cmake：函数cxx_library_with_type中更改RUNTIME_OUTPUT_DIRECTORY等变量的路径为CMAKE_ARCHIVE_OUTPUT_DIRECTORY，使输出路径与父CMakeLists.txt保持一致。
@@ -18,6 +18,13 @@ glog源码相对于官方glog的修改：
 - glog/CMakeLists.txt： set(BUILD_TESTING OFF)，禁用编译glog的测试用例；
 - glog/CMakeLists.txt：set(glog ${glog} PARENT_SCOPE)；
 - 添加 glog/include/glog目录，将install得到的头文件拷贝到此目录下。
+
+boost编译适用于libControlCAN.so的静态库：[Linux Windows Boost编译命令](https://www.cnblogs.com/vaughnhuang/p/15848139.html)
+```bash
+./boostrap.sh
+./b2 -layout=versioned variant=release cxxflags='-fPIC -std=c++17' runtime-link=static link=static threading=multi
+sudo ./b2 install
+```
 
 ### 官方glog使用vs2022编译命令
 ```bash
