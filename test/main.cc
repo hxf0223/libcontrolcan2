@@ -4,6 +4,7 @@
 
 #include "hex_dump.hpp"
 #include "lib_control_can.h"
+#include "test_helper.hpp"
 
 #define BOOST_THREAD_USES_CHRONO
 #include <boost/algorithm/string.hpp>
@@ -25,15 +26,7 @@ TEST(CAN, F001_P0) {
   auto result = VCI_OpenDevice(devtype, 0, 0);
   CHECK(1 == result) << "VCI_OpenDevice fail: " << result;
 
-  VCI_INIT_CONFIG cfg{};
-  cfg.Timing0 = 0x00;
-  cfg.Timing1 = 0x1C;
-  cfg.Filter = 0;
-  cfg.AccMask = 0xffffffff;
-  cfg.AccCode = 0;
-  cfg.Mode = 0;
-  cfg.Reserved = 0;
-
+  auto cfg = test::helper::create_vci_init_cfg(0x00, 0x1C, 0xffffffff);
   result = VCI_InitCAN(devtype, devid, channel, &cfg);
   result = VCI_StartCAN(devtype, devid, channel);
 
@@ -72,14 +65,7 @@ TEST(CAN, F002_P0) {
   auto result = VCI_OpenDevice(devtype, 0, 0);
   CHECK(1 == result) << "VCI_OpenDevice fail: " << result;
 
-  VCI_INIT_CONFIG cfg{};
-  cfg.Timing0 = 0x00;
-  cfg.Timing1 = 0x1C;
-  cfg.Filter = 0;
-  cfg.AccMask = 0xffffffff;
-  cfg.AccCode = 0;
-  cfg.Mode = 0;
-  cfg.Reserved = 0;
+  auto cfg = test::helper::create_vci_init_cfg(0x00, 0x1C, 0xffffffff);
   result = VCI_InitCAN(devtype, devid, channel, &cfg);
 
   VCI_CAN_OBJ can_recv_buff[100];

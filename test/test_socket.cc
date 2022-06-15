@@ -13,6 +13,7 @@
 
 #include "hex_dump.hpp"
 #include "lib_control_can_imp.h"
+#include "test_helper.hpp"
 #include "usbcan.h"
 
 constexpr DWORD devtype = 4;
@@ -35,7 +36,7 @@ TEST(Socket, perfServer) {
     char send_buff[256];
 
     while (!ec) {
-      VCI_CAN_OBJ can_obj{};
+      VCI_CAN_OBJ can_obj;
       *(uint64_t *)(can_obj.Data) = send_count;
       auto dur = std::chrono::system_clock::now().time_since_epoch();
       uint64_t now = std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
@@ -82,14 +83,7 @@ TEST(Socket, perfClient) {
   auto result = can_dc->VCI_OpenDevice(devtype, 0, 0);
   CHECK(result == vciReturnType::STATUS_OK) << "CAN NET VCI_OpenDevice fail: " << result;
 
-  VCI_INIT_CONFIG cfg{};
-  cfg.Timing0 = 0x00;
-  cfg.Timing1 = 0x1C;
-  cfg.Filter = 0;
-  cfg.AccMask = 0xffffffff;
-  cfg.AccCode = 0;
-  cfg.Mode = 0;
-  cfg.Reserved = 0;
+  auto cfg = test::helper::create_vci_init_cfg(0x00, 0x1C, 0xffffffff);
   result = can_dc->VCI_InitCAN(devtype, devid, channel, &cfg);
   CHECK(result == vciReturnType::STATUS_OK) << "CAN NET VCI_InitCAN fail: " << result;
 
