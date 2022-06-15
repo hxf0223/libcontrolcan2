@@ -25,6 +25,11 @@ boost编译适用于libControlCAN.so的静态库：[Linux Windows Boost编译命
 ./b2 -layout=versioned variant=release cxxflags='-fPIC -std=c++17' runtime-link=static link=static threading=multi
 sudo ./b2 install
 ```
+```bash
+# 删除系统安装的boost
+sudo apt-get --purge remove libboost-dev
+sudo apt-get --purge remove libboost-all-dev
+```
 
 ### 官方glog使用vs2022编译命令
 ```bash
