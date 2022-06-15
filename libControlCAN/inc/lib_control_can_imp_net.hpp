@@ -1,10 +1,5 @@
 #pragma once
 
-#ifdef _WIN32
-#include <sdkddkver.h> // avoid boost.asio warning: Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately
-#endif
-
-#include "Easysocket.h"
 #include "lib_control_can_imp.h"
 #include "usbcan.h"
 

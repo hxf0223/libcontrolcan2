@@ -2,6 +2,8 @@
 #define USB_CAN_H
 
 #if defined WIN32 || defined _WIN32 || defined _WINDOWS
+#include <ostream>
+#include <stdint.h>
 #include <windows.h>
 #else
 #include <ostream>
