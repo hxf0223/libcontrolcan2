@@ -237,10 +237,14 @@ vciReturnType CanImpCanNet::VCI_Transmit(DWORD DeviceType, DWORD DeviceInd, DWOR
     auto write_len = can::utils::bin2hex::bin2hex_fast(line_buff, head, &DeviceType, &DeviceInd, &CANInd, p, lr);
     const auto e = write_line(line_buff, write_len, ec);
     if (ec) {
+      std::cout << "write_line err: " << ec.value() << ", " << ec.message() << std::endl;
       _connected.store(false);
       client_socket_.close();
     }
-    if (e != write_len) return vciReturnType::STATUS_ERR;
+    if (e != write_len) {
+      std::cout << "write_line return " << e << ", write len: " << write_len << std::endl;
+      return vciReturnType::STATUS_ERR;
+    }
   }
 
   return vciReturnType::STATUS_OK;
@@ -359,6 +363,10 @@ std::string CanImpCanNet::read_line(const std::chrono::steady_clock::duration &t
 }
 
 int CanImpCanNet::write_line(const char *p, size_t len, boost::system::error_code &ec) {
+  // Run the operation until it completes, or until the timeout.
+  std::chrono::steady_clock::duration timeout{std::chrono::milliseconds(100)};
+  io_context_run(timeout);
+
   // Start the asynchronous operation itself. The lambda that is used as a
   // callback will update the error variable when the operation completes.
   // The blocking_udp_client.cpp example shows how you can use std::bind
@@ -366,10 +374,6 @@ int CanImpCanNet::write_line(const char *p, size_t len, boost::system::error_cod
   boost::asio::async_write(
     client_socket_, boost::asio::buffer(p, len),
     [&](const boost::system::error_code &result_error, std::size_t /*result_n*/) { ec = result_error; });
-
-  // Run the operation until it completes, or until the timeout.
-  std::chrono::steady_clock::duration timeout{std::chrono::milliseconds(30)};
-  io_context_run(timeout);
 
   // Determine whether the read completed successfully.
   if (ec) { // throw std::system_error(ec);
