@@ -335,7 +335,7 @@ void CanImpCanNet::io_context_run(const std::chrono::steady_clock::duration &tim
 
 std::string CanImpCanNet::read_line(const std::chrono::steady_clock::duration &timeout, boost::system::error_code &ec) {
   // Run the operation until it completes, or until the timeout.
-  io_context_run(timeout);
+  io_context_run(timeout); // NOTICE: should run io service before async read
 
   // Start the asynchronous operation. The lambda that is used as a callback
   // will update the error and n variables when the operation completes. The
