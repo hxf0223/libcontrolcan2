@@ -334,6 +334,9 @@ void CanImpCanNet::io_context_run(const std::chrono::steady_clock::duration &tim
 }
 
 std::string CanImpCanNet::read_line(const std::chrono::steady_clock::duration &timeout, boost::system::error_code &ec) {
+  // Run the operation until it completes, or until the timeout.
+  io_context_run(timeout);
+
   // Start the asynchronous operation. The lambda that is used as a callback
   // will update the error and n variables when the operation completes. The
   // blocking_udp_client.cpp example shows how you can use std::bind rather
@@ -344,9 +347,6 @@ std::string CanImpCanNet::read_line(const std::chrono::steady_clock::duration &t
                                   ec = result_error;
                                   n = result_n;
                                 });
-
-  // Run the operation until it completes, or until the timeout.
-  io_context_run(timeout);
 
   // Determine whether the read completed successfully.
   if (ec) { // throw std::system_error(ec);
