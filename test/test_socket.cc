@@ -2,6 +2,7 @@
 #include <boost/asio/read.hpp>
 #include <boost/asio/read_until.hpp>
 #include <cstdint>
+#include <cstdio>
 #include <ratio>
 #ifdef _WIN32
 #include <sdkddkver.h> // avoid boost.asio warning: Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately
@@ -130,10 +131,8 @@ TEST(Socket, perfServer2) {
       VCI_CAN_OBJ can_obj;
       auto read_num = boost::asio::read_until(server_socket, read_buffer, "\n", ec);
       std::string data((std::istreambuf_iterator<char>(&read_buffer)), std::istreambuf_iterator<char>());
+      LOG(INFO) << "len: " << data.length() << ": " << data;
       read_buffer.consume(read_num); // remove data that was read
-
-      auto str = can::utils::bin2hex::bin2hex_fast(data.data(), data.size());
-      LOG(INFO) << "read num: " << data.size() << ", " << str;
     }
 
     LOG(INFO) << "exit with boost asio error_code: " << ec.value() << ": " << ec.message();
@@ -163,7 +162,7 @@ TEST(Socket, perfClient2) {
 
       auto e = canDc->VCI_Transmit(devtype, devid, channel, can_tx_buff, can_tx_buff_size);
       CHECK(e == vciReturnType::STATUS_OK) << "VCI_Transmit return " << e;
-      std::this_thread::sleep_for(5ms);
+      std::this_thread::sleep_for(1000ms);
       send_count++;
     }
 

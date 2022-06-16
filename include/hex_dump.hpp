@@ -119,7 +119,7 @@ struct bin2hex {
     return (bytes * 2 + rest_size);
   }
 
-  static std::string bin2hex_fast(void *const p, size_t len) {
+  static std::string bin2hex_fast2(void *const p, size_t len) {
     std::string str(len * 2, ' ');
     const auto psrc = static_cast<unsigned char *>(p);
     do_conv(const_cast<char *>(str.data()), psrc, len);
