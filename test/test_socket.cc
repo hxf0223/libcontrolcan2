@@ -157,12 +157,9 @@ TEST(Socket, perfClient2) {
     auto tm0 = std::chrono::steady_clock::now();
     while (send_count < recv_cnt_max) {
       *(uint64_t *)(can_tx_buff[0].Data) = send_count;
-      auto dur = std::chrono::system_clock::now().time_since_epoch();
-      uint64_t now = std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
-
       auto e = canDc->VCI_Transmit(devtype, devid, channel, can_tx_buff, can_tx_buff_size);
       CHECK(e == vciReturnType::STATUS_OK) << "VCI_Transmit return " << e;
-      std::this_thread::sleep_for(1000ms);
+      // std::this_thread::sleep_for(1000ms);
       send_count++;
     }
 
