@@ -235,14 +235,14 @@ vciReturnType CanImpCanNet::VCI_Transmit(DWORD DeviceType, DWORD DeviceInd, DWOR
   for (ULONG i = 0; i < Len; i++) {
     PVCI_CAN_OBJ p = pSend + i;
     auto write_len = can::utils::bin2hex::bin2hex_fast(line_buff, head, &DeviceType, &DeviceInd, &CANInd, p, lr);
-    const auto e = write_line(line_buff, write_len, ec);
-    if (ec) {
+    const auto ret = write_line(line_buff, write_len, ec);
+    if (ec && ret < 0) {
       std::cout << "write_line err: " << ec.value() << ", " << ec.message() << std::endl;
       _connected.store(false);
       client_socket_.close();
     }
-    if (e != write_len) {
-      std::cout << "write_line return " << e << ", write len: " << write_len << std::endl;
+
+    if (ret != write_len) {
       return vciReturnType::STATUS_ERR;
     }
   }
@@ -375,13 +375,15 @@ int CanImpCanNet::write_line(const char *p, size_t len, boost::system::error_cod
     client_socket_, boost::asio::buffer(p, len),
     [&](const boost::system::error_code &result_error, std::size_t /*result_n*/) { ec = result_error; });
 
-  // Determine whether the read completed successfully.
-  if (ec) { // throw std::system_error(ec);
+  if (!ec) return len;
+
+  auto ec_code = ec.value();
+  if (ec_code != 125) { // throw std::system_error(ec);
     std::cout << "write_line error: " << ec.value() << ", " << ec.message() << std::endl;
     return -std::abs(ec.value());
   }
 
-  return len;
+  return 0;
 }
 
 #include "lib_control_can_imp.h"

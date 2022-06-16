@@ -1,6 +1,8 @@
+#include <boost/asio/buffers_iterator.hpp>
 #include <boost/asio/read.hpp>
 #include <boost/asio/read_until.hpp>
 #include <cstdint>
+#include <ratio>
 #ifdef _WIN32
 #include <sdkddkver.h> // avoid boost.asio warning: Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately
 #endif
@@ -127,11 +129,11 @@ TEST(Socket, perfServer2) {
     while (!ec) {
       VCI_CAN_OBJ can_obj;
       auto read_num = boost::asio::read_until(server_socket, read_buffer, "\n", ec);
-      auto data = make_string(read_buffer);
+      std::string data((std::istreambuf_iterator<char>(&read_buffer)), std::istreambuf_iterator<char>());
       read_buffer.consume(read_num); // remove data that was read
 
       auto str = can::utils::bin2hex::bin2hex_fast(data.data(), data.size());
-      LOG(INFO) << str;
+      LOG(INFO) << "read num: " << data.size() << ", " << str;
     }
 
     LOG(INFO) << "exit with boost asio error_code: " << ec.value() << ": " << ec.message();
@@ -146,6 +148,7 @@ TEST(Socket, perfServer2) {
  * CAN Object帧消息。
  */
 TEST(Socket, perfClient2) {
+  using namespace std::chrono_literals;
   auto client_proc = [](std::shared_ptr<CanImpInterface> canDc) {
     constexpr DWORD can_tx_buff_size = 1;
     VCI_CAN_OBJ can_tx_buff[can_tx_buff_size];
@@ -160,6 +163,7 @@ TEST(Socket, perfClient2) {
 
       auto e = canDc->VCI_Transmit(devtype, devid, channel, can_tx_buff, can_tx_buff_size);
       CHECK(e == vciReturnType::STATUS_OK) << "VCI_Transmit return " << e;
+      std::this_thread::sleep_for(5ms);
       send_count++;
     }
 
