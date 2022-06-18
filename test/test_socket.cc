@@ -1,9 +1,11 @@
+#include <boost/asio/buffer.hpp>
 #include <boost/asio/buffers_iterator.hpp>
 #include <boost/asio/read.hpp>
 #include <boost/asio/read_until.hpp>
 #include <cstdint>
 #include <cstdio>
 #include <ratio>
+#include <string>
 #ifdef _WIN32
 #include <sdkddkver.h> // avoid boost.asio warning: Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately
 #endif
@@ -31,6 +33,7 @@ constexpr DWORD channel = 0;
 TEST(Socket, perfServer) {
   using namespace boost::asio;
   using namespace boost::asio::ip;
+  using namespace std::literals::chrono_literals;
 
   auto server_proc = []() {
     io_service io_service;
@@ -54,7 +57,7 @@ TEST(Socket, perfServer) {
       // getchar();
 
       boost::asio::write(server_socket, boost::asio::buffer(send_buff, size), ec);
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      std::this_thread::sleep_for(1000ms);
       send_count++;
     }
 
@@ -125,14 +128,20 @@ TEST(Socket, perfServer2) {
     acceptor_server.accept(server_socket); // waiting for connection
 
     boost::system::error_code ec{};
-    boost::asio::streambuf read_buffer;
+    std::string input_buffer;
 
     while (!ec) {
       VCI_CAN_OBJ can_obj;
-      auto read_num = boost::asio::read_until(server_socket, read_buffer, "\n", ec);
-      std::string data((std::istreambuf_iterator<char>(&read_buffer)), std::istreambuf_iterator<char>());
+      auto read_num = boost::asio::read_until(server_socket, boost::asio::dynamic_buffer(input_buffer), "\n", ec);
+      if (ec) continue;
+
+      const auto pos = input_buffer.find('\n');
+      if (pos == std::string::npos) continue;
+
+      std::string data(input_buffer.begin(), input_buffer.begin() + pos);
+      input_buffer.erase(0, pos + 1);
+
       LOG(INFO) << "len: " << data.length() << ": " << data;
-      read_buffer.consume(read_num); // remove data that was read
     }
 
     LOG(INFO) << "exit with boost asio error_code: " << ec.value() << ": " << ec.message();
@@ -159,7 +168,7 @@ TEST(Socket, perfClient2) {
       *(uint64_t *)(can_tx_buff[0].Data) = send_count;
       auto e = canDc->VCI_Transmit(devtype, devid, channel, can_tx_buff, can_tx_buff_size);
       CHECK(e == vciReturnType::STATUS_OK) << "VCI_Transmit return " << e;
-      // std::this_thread::sleep_for(1000ms);
+      std::this_thread::sleep_for(1000ms);
       send_count++;
     }
 

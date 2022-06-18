@@ -1,4 +1,5 @@
 #include <boost/algorithm/string.hpp>
+#include <boost/asio/buffer.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/lexical_cast.hpp>
@@ -8,6 +9,7 @@
 #include <cmath>
 #include <cstdint>
 #include <iostream>
+#include <string>
 #include <vector>
 
 #include "boost/asio/error.hpp"
@@ -80,8 +82,7 @@ vciReturnType CanImpCanNet::VCI_OpenDevice(DWORD DeviceType, DWORD DeviceInd, DW
   const char *head = "VCI_OpenDevice", *lr = "\n";
   auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, &Reserved, lr);
 
-  // std::cout << "VCI_OpenDevice: " << data << std::endl;
-  boost::system::error_code ec;
+  error_code_t ec;
   auto ierror = write_line(buff, size, ec);
   if (ec) {
     _connected.store(false);
@@ -99,7 +100,7 @@ vciReturnType CanImpCanNet::VCI_CloseDevice(DWORD DeviceType, DWORD DeviceInd) {
   const char *head = "VCI_CloseDevice", *lr = "\n";
   auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, lr);
 
-  boost::system::error_code ec;
+  error_code_t ec;
   auto const ierror = write_line(buff, size, ec);
   if (ec) {
     _connected.store(false);
@@ -125,7 +126,7 @@ vciReturnType CanImpCanNet::VCI_InitCAN(DWORD DeviceType, DWORD DeviceInd, DWORD
   auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, &CANInd, pInitConfig, lr);
 
   // std::cout << "VCI_InitCAN: " << data;
-  boost::system::error_code ec;
+  error_code_t ec;
   auto const ierror = write_line(buff, size, ec);
   if (ec) {
     _connected.store(false);
@@ -143,7 +144,7 @@ vciReturnType CanImpCanNet::VCI_ReadErrInfo(DWORD DeviceType, DWORD DeviceInd, D
   const char *head = "VCI_ReadErrInfo", *lr = "\n";
   auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, &CANInd, pErrInfo, lr);
 
-  boost::system::error_code ec;
+  error_code_t ec;
   auto const ierror = write_line(buff, size, ec);
   if (ec) {
     _connected.store(false);
@@ -178,7 +179,7 @@ vciReturnType CanImpCanNet::VCI_ClearBuffer(DWORD DeviceType, DWORD DeviceInd, D
   const char *head = "VCI_ClearBuffer", *lr = "\n";
   auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, &CANInd, lr);
 
-  boost::system::error_code ec;
+  error_code_t ec;
   auto const ierror = write_line(buff, size, ec);
   if (ec) {
     _connected.store(false);
@@ -196,7 +197,7 @@ vciReturnType CanImpCanNet::VCI_StartCAN(DWORD DeviceType, DWORD DeviceInd, DWOR
   const char *head = "VCI_StartCAN", *lr = "\n";
   auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, &CANInd, lr);
 
-  boost::system::error_code ec;
+  error_code_t ec;
   auto const ierror = write_line(buff, size, ec);
   if (ec) {
     _connected.store(false);
@@ -214,7 +215,7 @@ vciReturnType CanImpCanNet::VCI_ResetCAN(DWORD DeviceType, DWORD DeviceInd, DWOR
   const char *head = "VCI_ResetCAN", *lr = "\n";
   auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, &CANInd, lr);
 
-  boost::system::error_code ec;
+  error_code_t ec;
   auto const ierror = write_line(buff, size, ec);
   if (ec) {
     _connected.store(false);
@@ -228,7 +229,7 @@ vciReturnType CanImpCanNet::VCI_ResetCAN(DWORD DeviceType, DWORD DeviceInd, DWOR
 vciReturnType CanImpCanNet::VCI_Transmit(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_CAN_OBJ pSend,
                                          ULONG Len) {
   if (!_connected.load()) return vciReturnType::STATUS_ERR;
-  boost::system::error_code ec;
+  error_code_t ec;
   const char *head = "VCI_Transmit", *lr = "\n";
   char line_buff[256];
 
@@ -260,7 +261,7 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
   const std::chrono::milliseconds to(WaitTime);
   const auto t0 = std::chrono::steady_clock::now();
   std::chrono::duration<double, std::milli> dur(0);
-  boost::system::error_code ec;
+  error_code_t ec;
 
   while (!ec && recv_line_cnt < Len && dur.count() < WaitTime) {
     auto rec_str = read_line(to, ec);
@@ -296,10 +297,10 @@ int CanImpCanNet::connect(const std::string &host, const std::string &service, i
   // callback will update the error variable when the operation completes.
   // The blocking_udp_client.cpp example shows how you can use std::bind
   // rather than a lambda.
-  boost::system::error_code error;
-  boost::asio::async_connect(client_socket_, endpoints,
-                             [&](const boost::system::error_code &result_error,
-                                 const tcp::endpoint & /*result_endpoint*/) { error = result_error; });
+  error_code_t error;
+  boost::asio::async_connect(
+    client_socket_, endpoints,
+    [&](const error_code_t &result_error, const tcp::endpoint & /*result_endpoint*/) { error = result_error; });
 
   // Run the operation until it completes, or until the timeout.
   io_context_run(std::chrono::milliseconds(timeoutMs));
@@ -313,7 +314,7 @@ int CanImpCanNet::connect(const std::string &host, const std::string &service, i
   return 0;
 }
 
-void CanImpCanNet::io_context_run(const std::chrono::steady_clock::duration &timeout) {
+void CanImpCanNet::io_context_run(const dur_t &timeout) {
   // Restart the io_context, as it may have been left in the "stopped" state
   // by a previous operation.
   io_context_.restart();
@@ -329,7 +330,7 @@ void CanImpCanNet::io_context_run(const std::chrono::steady_clock::duration &tim
   // stopped, then the io_context::run_for call must have timed out.
   if (!io_context_.stopped()) {
     // Close the socket to cancel the outstanding asynchronous operation.
-    boost::system::error_code ec;
+    error_code_t ec;
     client_socket_.cancel(ec); // .close();
 
     // Run the io_context again until the operation completes.
@@ -337,7 +338,20 @@ void CanImpCanNet::io_context_run(const std::chrono::steady_clock::duration &tim
   }
 }
 
-std::string CanImpCanNet::read_line(const std::chrono::steady_clock::duration &timeout, boost::system::error_code &ec) {
+void CanImpCanNet::read_line(char *buff, size_t buffSize, const dur_t &timeout, error_code_t &ec) {
+  io_context_run(timeout);
+
+  std::size_t n = 0;
+  boost::asio::async_read(client_socket_, boost::asio::buffer(buff, buffSize), boost::asio::transfer_exactly(buffSize),
+                          [&](const error_code_t &result_error, std::size_t result_n) {
+                            ec = result_error;
+                            n = result_n;
+                          });
+
+  io_context_run(timeout);
+}
+
+std::string CanImpCanNet::read_line(const dur_t &timeout, error_code_t &ec) {
   // Run the operation until it completes, or until the timeout.
   io_context_run(timeout); // NOTICE: should run io service before async read
 
@@ -347,33 +361,37 @@ std::string CanImpCanNet::read_line(const std::chrono::steady_clock::duration &t
   // than a lambda.
   std::size_t n = 0;
   boost::asio::async_read_until(client_socket_, boost::asio::dynamic_buffer(input_buffer_), '\n',
-                                [&](const boost::system::error_code &result_error, std::size_t result_n) {
+                                [&](const error_code_t &result_error, std::size_t result_n) {
                                   ec = result_error;
                                   n = result_n;
                                 });
 
+  io_context_run(timeout); // FIXME: why need io context run before and after?
+
   // Determine whether the read completed successfully.
-  if (ec) { // throw std::system_error(ec);
+  if (ec || n == 0) { // throw std::system_error(ec);
     return std::string();
   }
 
-  std::string line(input_buffer_.substr(0, n - 1)); // remove last \n
-  input_buffer_.erase(0, n);
+  const auto pos = input_buffer_.find('\n');
+  if (pos == std::string::npos) return std::string();
+
+  std::string line(input_buffer_.begin(), input_buffer_.begin() + pos); // remove last \n
+  input_buffer_.erase(0, pos + 1);
   return line;
 }
 
-int CanImpCanNet::write_line(const char *p, size_t len, boost::system::error_code &ec) {
+int CanImpCanNet::write_line(const char *p, size_t len, error_code_t &ec) {
   // Run the operation until it completes, or until the timeout.
-  std::chrono::steady_clock::duration timeout{std::chrono::milliseconds(100)};
+  dur_t timeout{std::chrono::milliseconds(100)};
   io_context_run(timeout);
 
   // Start the asynchronous operation itself. The lambda that is used as a
   // callback will update the error variable when the operation completes.
   // The blocking_udp_client.cpp example shows how you can use std::bind
   // rather than a lambda.
-  boost::asio::async_write(
-    client_socket_, boost::asio::buffer(p, len),
-    [&](const boost::system::error_code &result_error, std::size_t /*result_n*/) { ec = result_error; });
+  boost::asio::async_write(client_socket_, boost::asio::buffer(p, len),
+                           [&](const error_code_t &result_error, std::size_t /*result_n*/) { ec = result_error; });
 
   if (!ec) return len;
 

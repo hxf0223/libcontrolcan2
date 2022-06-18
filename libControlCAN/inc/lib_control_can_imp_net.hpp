@@ -3,6 +3,7 @@
 #include "lib_control_can_imp.h"
 #include "usbcan.h"
 
+#include <boost/system/detail/error_code.hpp>
 #include <mutex> // std::mutex, std::unique_lock
 #include <string>
 #include <vector>
@@ -13,6 +14,9 @@
 #include <boost/xpressive/xpressive.hpp>
 
 class CanImpCanNet : public CanImpInterface {
+  using dur_t = std::chrono::steady_clock::duration;
+  using error_code_t = boost::system::error_code;
+
 public:
   CanImpCanNet();
   virtual ~CanImpCanNet();
@@ -44,10 +48,11 @@ public:
 
 private:
   int connect(const std::string &host, const std::string &service, int timeoutMs);
-  void io_context_run(const std::chrono::steady_clock::duration &timeout);
+  void io_context_run(const dur_t &timeout);
 
-  std::string read_line(const std::chrono::steady_clock::duration &timeout, boost::system::error_code &ec);
-  inline int write_line(const char *p, size_t len, boost::system::error_code &ec);
+  void read_line(char *buff, size_t buffSize, const dur_t &timeout, error_code_t &ec);
+  std::string read_line(const dur_t &timeout, error_code_t &ec);
+  inline int write_line(const char *p, size_t len, error_code_t &ec);
 
 private:
   boost::atomic_bool _connected;
