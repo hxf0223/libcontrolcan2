@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "usbcan.h"
 #include "lib_control_can_exp.h"
+#include "usbcan.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,5 +32,3 @@ ULONG LIBCC_EXPORT_CALL VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CAN
 #ifdef __cplusplus
 }
 #endif
-
-

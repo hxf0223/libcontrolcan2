@@ -1,4 +1,4 @@
-﻿cmake_minimum_required (VERSION 3.15)
+cmake_minimum_required (VERSION 3.15)
 message(STATUS "Select CMake build type: ${CMAKE_BUILD_TYPE}")
 
 add_definitions(-DBUILDING_LIBCC_DLL)

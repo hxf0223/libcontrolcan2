@@ -1,8 +1,8 @@
-﻿#include <iostream>
-#include <memory>
-#include <vector>
 #include <csignal>
+#include <iostream>
+#include <memory>
 #include <thread>
+#include <vector>
 
 #include "hex_dump.hpp"
 #include "lib_control_can_imp.h"
@@ -21,13 +21,11 @@ constexpr DWORD devid = 0;
 constexpr DWORD channel = 0;
 
 namespace {
-volatile std::sig_atomic_t gSignalStatus; 
+volatile std::sig_atomic_t gSignalStatus;
 }
 
-//https://en.cppreference.com/w/cpp/utility/program/signal
-void signal_handler(int signal) {
-  gSignalStatus = signal;
-}
+// https://en.cppreference.com/w/cpp/utility/program/signal
+void signal_handler(int signal) { gSignalStatus = signal; }
 
 int main(int argc, char **argv) {
   std::shared_ptr<CanImpInterface> can_dc(createCanDC());
@@ -53,7 +51,7 @@ int main(int argc, char **argv) {
 
   std::signal(SIGINT, signal_handler);
   result = can_dc->VCI_StartCAN(devtype, devid, channel);
-  
+
   auto recv_func = [](std::shared_ptr<CanImpInterface> canDc) {
     constexpr DWORD rec_buff_size = 100;
     VCI_CAN_OBJ can_recv_buff[rec_buff_size];
@@ -67,9 +65,8 @@ int main(int argc, char **argv) {
         uint64_t now =
           std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch())
             .count();
-        std::cout << "VCI_Receive: " << std::hex << can_recv_buff[i].ID << ", time: " << now
-                  << ", data: " << str << std::endl;
-        
+        std::cout << "VCI_Receive: " << std::hex << can_recv_buff[i].ID << ", time: " << now << ", data: " << str
+                  << std::endl;
       }
     }
   };

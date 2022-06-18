@@ -1,4 +1,4 @@
-﻿cmake_minimum_required (VERSION 3.15)
+cmake_minimum_required (VERSION 3.15)
 
 include(${PROJECT_SOURCE_DIR}/cmake/platform_include.cmake)
 
