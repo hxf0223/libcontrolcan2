@@ -353,11 +353,6 @@ void CanImpCanNet::read_line(char *buff, size_t buffSize, const dur_t &timeout, 
 }
 
 std::string CanImpCanNet::read_line(const dur_t &timeout, error_code_t &ec) {
-#ifdef __linux__
-  // Run the operation until it completes, or until the timeout.
-  io_context_run(timeout); // NOTICE: should run io service before async read
-#endif
-
   // Start the asynchronous operation. The lambda that is used as a callback
   // will update the error and n variables when the operation completes. The
   // blocking_udp_client.cpp example shows how you can use std::bind rather
@@ -369,9 +364,7 @@ std::string CanImpCanNet::read_line(const dur_t &timeout, error_code_t &ec) {
                                   n = result_n;
                                 });
 
-#ifdef _WIN32
   io_context_run(timeout); // FIXME: for windows, why io context run after async read
-#endif
 
   // Determine whether the read completed successfully.
   if (ec || n == 0) { // throw std::system_error(ec);

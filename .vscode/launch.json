@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/bin/can_test",
             "args": [
-                "--gtest_filter=Socket.perfServer2"
+                "--gtest_filter=Socket.perfClient"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/bin",
