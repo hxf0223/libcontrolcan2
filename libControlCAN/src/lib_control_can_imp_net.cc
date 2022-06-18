@@ -253,6 +253,7 @@ vciReturnType CanImpCanNet::VCI_Transmit(DWORD DeviceType, DWORD DeviceInd, DWOR
 
 ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_CAN_OBJ pReceive, ULONG Len,
                                 INT WaitTime) {
+  using namespace boost::asio::error;
   using namespace boost::system;
   if (!_connected.load() || nullptr == pReceive) return 0;
 
@@ -279,7 +280,7 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
   }
 
   const auto ec_val = ec.value();
-  if (ec && ec_val != errc::operation_canceled) {
+  if (ec && ec_val != errc::operation_canceled && ec_val != operation_aborted) {
     std::cout << "VCI_Receive close socket on error: " << ec_val << ":" << ec.message() << std::endl;
     _connected.store(false);
     client_socket_.close();
@@ -348,12 +349,14 @@ void CanImpCanNet::read_line(char *buff, size_t buffSize, const dur_t &timeout, 
                             n = result_n;
                           });
 
-  io_context_run(timeout);
+  // io_context_run(timeout);
 }
 
 std::string CanImpCanNet::read_line(const dur_t &timeout, error_code_t &ec) {
+#ifdef __linux__
   // Run the operation until it completes, or until the timeout.
   io_context_run(timeout); // NOTICE: should run io service before async read
+#endif
 
   // Start the asynchronous operation. The lambda that is used as a callback
   // will update the error and n variables when the operation completes. The
@@ -366,7 +369,9 @@ std::string CanImpCanNet::read_line(const dur_t &timeout, error_code_t &ec) {
                                   n = result_n;
                                 });
 
-  io_context_run(timeout); // FIXME: why need io context run before and after?
+#ifdef _WIN32
+  io_context_run(timeout); // FIXME: for windows, why io context run after async read
+#endif
 
   // Determine whether the read completed successfully.
   if (ec || n == 0) { // throw std::system_error(ec);
@@ -382,9 +387,14 @@ std::string CanImpCanNet::read_line(const dur_t &timeout, error_code_t &ec) {
 }
 
 int CanImpCanNet::write_line(const char *p, size_t len, error_code_t &ec) {
+  using namespace boost::asio::error;
+  using namespace boost::system;
+
   // Run the operation until it completes, or until the timeout.
   dur_t timeout{std::chrono::milliseconds(100)};
+#ifdef __linux__
   io_context_run(timeout);
+#endif
 
   // Start the asynchronous operation itself. The lambda that is used as a
   // callback will update the error variable when the operation completes.
@@ -393,10 +403,14 @@ int CanImpCanNet::write_line(const char *p, size_t len, error_code_t &ec) {
   boost::asio::async_write(client_socket_, boost::asio::buffer(p, len),
                            [&](const error_code_t &result_error, std::size_t /*result_n*/) { ec = result_error; });
 
+#ifdef _WIN32
+  io_context_run(timeout);
+#endif
+
   if (!ec) return len;
 
   auto ec_code = ec.value();
-  if (ec_code != 125) { // throw std::system_error(ec);
+  if (ec_code != errc::operation_canceled) { // throw std::system_error(ec);
     std::cout << "write_line error: " << ec.value() << ", " << ec.message() << std::endl;
     return -std::abs(ec.value());
   }

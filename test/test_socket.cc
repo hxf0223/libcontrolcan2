@@ -40,6 +40,7 @@ TEST(Socket, perfServer) {
     tcp::acceptor acceptor_server(io_service, tcp::endpoint(tcp::v4(), 9999));
     tcp::socket server_socket(io_service); // Creating socket object
     acceptor_server.accept(server_socket); // waiting for connection
+    LOG(INFO) << "wait for client connect and send VCI_Receive frame to client.";
 
     boost::system::error_code ec{};
     const char *cmd_recv = "VCI_Receive";
@@ -47,17 +48,16 @@ TEST(Socket, perfServer) {
     char send_buff[256];
 
     while (!ec) {
-      VCI_CAN_OBJ can_obj;
+      VCI_CAN_OBJ can_obj{};
       *(uint64_t *)(can_obj.Data) = send_count;
       auto dur = std::chrono::system_clock::now().time_since_epoch();
       uint64_t now = std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
 
       auto size = can::utils::bin2hex::bin2hex_fast(send_buff, cmd_recv, &send_count, &now, &can_obj, "\n");
       LOG(INFO) << "size: " << size << ", data: " << send_buff;
-      // getchar();
 
       boost::asio::write(server_socket, boost::asio::buffer(send_buff, size), ec);
-      std::this_thread::sleep_for(1000ms);
+      std::this_thread::sleep_for(10ms);
       send_count++;
     }
 
@@ -126,6 +126,7 @@ TEST(Socket, perfServer2) {
     tcp::acceptor acceptor_server(io_service, tcp::endpoint(tcp::v4(), 9999));
     tcp::socket server_socket(io_service); // Creating socket object
     acceptor_server.accept(server_socket); // waiting for connection
+    LOG(INFO) << "Wait for client connect and recive client's VCI_Transmit frame data.";
 
     boost::system::error_code ec{};
     std::string input_buffer;
@@ -168,7 +169,7 @@ TEST(Socket, perfClient2) {
       *(uint64_t *)(can_tx_buff[0].Data) = send_count;
       auto e = canDc->VCI_Transmit(devtype, devid, channel, can_tx_buff, can_tx_buff_size);
       CHECK(e == vciReturnType::STATUS_OK) << "VCI_Transmit return " << e;
-      std::this_thread::sleep_for(1000ms);
+      std::this_thread::sleep_for(10ms);
       send_count++;
     }
 
