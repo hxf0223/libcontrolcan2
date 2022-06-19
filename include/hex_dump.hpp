@@ -159,7 +159,7 @@ static std::vector<unsigned char> hex_string_to_bin(std::string str) {
   return v;
 }
 
-static inline void hex_string_to_bin_fastest(const std::string &str, uint8_t *out) {
+static inline void hex_string_to_bin_fastest(const char *src, size_t srcLen, uint8_t *out) {
   const static uint8_t hashmap[] = {
     0,  0,  0,  0,  0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // gap before first hex digit
     0,  0,  0,  0,  0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -171,13 +171,15 @@ static inline void hex_string_to_bin_fastest(const std::string &str, uint8_t *ou
     10, 11, 12, 13, 14, 15                                               // abcdef
   };
 
-  const auto len = str.length();
-  const auto pstr = str.data();
-  for (size_t pos = 0; pos < len; pos += 2) {
-    const size_t idx0 = static_cast<uint8_t>(pstr[pos + 0]);
-    const size_t idx1 = static_cast<uint8_t>(pstr[pos + 1]);
+  for (size_t pos = 0; pos < srcLen; pos += 2) {
+    const size_t idx0 = static_cast<uint8_t>(src[pos + 0]);
+    const size_t idx1 = static_cast<uint8_t>(src[pos + 1]);
     out[pos >> 1] = (static_cast<uint8_t>(hashmap[idx0] << 4) | hashmap[idx1]);
   }
+}
+
+static inline void hex_string_to_bin_fastest(const std::string &str, uint8_t *out) {
+  return hex_string_to_bin_fastest(str.data(), str.length(), out);
 }
 
 static inline std::vector<unsigned char> hex_string_to_bin_fastest(const std::string &str) {

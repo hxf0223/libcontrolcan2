@@ -5,11 +5,14 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/system/system_error.hpp>
 #include <boost/thread.hpp>
+#include <boost/xpressive/xpressive_fwd.hpp>
 #include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <iostream>
+#include <regex>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "boost/asio/error.hpp"
@@ -47,6 +50,9 @@ boost::xpressive::sregex CanImpCanNet::_hex_str_pattern(sregex::compile("^(?:[0-
 // boost::xpressive::sregex CanImpCanNet::_receive_pattern(sregex::compile("^VCI_Receive[0-9a-fA-F]{32},"));
 boost::xpressive::sregex CanImpCanNet::_receive_pattern(sregex::compile("^(VCI_Receive|VCI_Transmit)[0-9a-fA-F]{32}"));
 boost::regex CanImpCanNet::_receive_line_feed_pattern("^VCI_Receive[0-9a-fA-F]{32},");
+
+std::regex CanImpCanNet::_receive_pattern2("^(VCI_Receive|VCI_Transmit)[0-9a-fA-F]{32}");
+std::regex CanImpCanNet::_hex_str_pattern2("^(?:[0-9a-fA-F][0-9a-fA-F])+$");
 
 CanImpCanNet::CanImpCanNet() : _connected(false), _str_sock_addr(""), _str_sock_port("") {
   const auto dir_path = getexepath().parent_path();
@@ -255,7 +261,21 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
                                 INT WaitTime) {
   using namespace boost::asio::error;
   using namespace boost::system;
-  if (!_connected.load() || nullptr == pReceive) return 0;
+  if (!_connected.load() || !pReceive) return 0;
+
+  auto f = [&](const std::string_view &str, VCI_CAN_OBJ *dst) -> int {
+    auto end = std::cregex_iterator();
+    const std::cregex_iterator it(str.begin(), str.end(), _receive_pattern2);
+    if (it == end || (*it)[0].second == str.end()) return -1;
+
+    auto data_str = std::string_view((*it)[0].second); // TODO: does it right???
+    const std::cregex_iterator it2(data_str.begin(), data_str.end(), _hex_str_pattern2);
+    if (it2 == end || data_str.size() < (sizeof(VCI_CAN_OBJ) * 2)) return -1;
+
+    const auto psrc = (const char *)(&data_str[0]);
+    can::utils::hex_string_to_bin_fastest(psrc, data_str.length(), (uint8_t *)dst);
+    return 0;
+  };
 
   ULONG recv_line_cnt = 0;
   const sregex_iterator end;

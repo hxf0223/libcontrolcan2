@@ -4,7 +4,9 @@
 #include "usbcan.h"
 
 #include <boost/system/detail/error_code.hpp>
+#include <iterator>
 #include <mutex> // std::mutex, std::unique_lock
+#include <regex>
 #include <string>
 #include <vector>
 
@@ -64,6 +66,9 @@ private:
   std::string input_buffer_;
 
 private:
+  static std::regex _hex_str_pattern2;
+  static std::regex _receive_pattern2;
+
   static boost::xpressive::sregex _hex_str_pattern;
   static boost::xpressive::sregex _receive_pattern;
   static boost::regex _receive_line_feed_pattern;
