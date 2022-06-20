@@ -5,7 +5,6 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/system/system_error.hpp>
 #include <boost/thread.hpp>
-#include <boost/xpressive/xpressive_fwd.hpp>
 #include <chrono>
 #include <cmath>
 #include <cstdint>
@@ -34,9 +33,6 @@
 #pragma comment(lib, "Mswsock.lib")
 #pragma comment(lib, "AdvApi32.lib")
 #endif
-
-using namespace boost::xpressive;
-using namespace boost::placeholders; // avoid message BOOST_BIND_GLOBAL_PLACEHOLDERS
 
 typedef Ini<> ini_t;
 #define TCP_WRITE_TIMEOUT 200
@@ -255,17 +251,20 @@ vciReturnType CanImpCanNet::VCI_Transmit(DWORD DeviceType, DWORD DeviceInd, DWOR
 
 ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_CAN_OBJ pReceive, ULONG Len,
                                 INT WaitTime) {
+  using sv_regex_iter_t = std::regex_iterator<std::string_view::const_iterator>;
   using namespace boost::asio::error;
   using namespace boost::system;
   if (!_connected.load() || !pReceive) return 0;
 
   auto f = [&](const std::string_view &str, VCI_CAN_OBJ *dst) -> int {
-    const auto end = std::cregex_iterator();
-    const std::cregex_iterator it(str.begin(), str.end(), _receive_pattern2);
+    const auto end = sv_regex_iter_t();
+    const sv_regex_iter_t it(str.begin(), str.end(), _receive_pattern2);
     if (it == end || (*it)[0].second == str.end()) return -1;
 
-    auto data_str = std::string_view((*it)[0].second); // TODO: does it right???
-    const std::cregex_iterator it2(data_str.begin(), data_str.end(), _hex_str_pattern2);
+    auto ptr = str.data() + ((*it)[0].second - str.begin());
+    const auto left_len = str.end() - (*it)[0].second;
+    auto data_str = std::string_view(ptr, left_len);
+    const sv_regex_iter_t it2(data_str.begin(), data_str.end(), _hex_str_pattern2);
     if (it2 == end || data_str.size() < (sizeof(VCI_CAN_OBJ) * 2)) return -1;
 
     const auto psrc = (const char *)(&data_str[0]);
@@ -274,14 +273,16 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
   };
 
   ULONG recv_line_cnt = 0;
-  const sregex_iterator end;
+  // const sregex_iterator end;
   const std::chrono::milliseconds to(WaitTime);
   const auto t0 = std::chrono::steady_clock::now();
   std::chrono::duration<double, std::milli> dur(0);
   error_code_t ec;
 
+  const dur_t dur1(WaitTime);
+  read_line_cb_t func = f;
   while (!ec && recv_line_cnt < Len && dur.count() < WaitTime) {
-    auto n = read_line(to, f, pReceive + recv_line_cnt, ec);
+    auto n = read_line(dur1, func, pReceive + recv_line_cnt, ec);
     dur = std::chrono::steady_clock::now() - t0;
     if (n > 0) recv_line_cnt++;
   }
@@ -359,7 +360,7 @@ void CanImpCanNet::read_line(char *buff, size_t buffSize, const dur_t &timeout, 
   // io_context_run(timeout);
 }
 
-size_t CanImpCanNet::read_line(const dur_t &timeout, const read_line_cb_t &cb, VCI_CAN_OBJ *obj, error_code_t ec) {
+size_t CanImpCanNet::read_line(const dur_t &timeout, read_line_cb_t &cb, VCI_CAN_OBJ *obj, error_code_t ec) {
   // Start the asynchronous operation. The lambda that is used as a callback
   // will update the error and n variables when the operation completes. The
   // blocking_udp_client.cpp example shows how you can use std::bind rather
@@ -382,6 +383,7 @@ size_t CanImpCanNet::read_line(const dur_t &timeout, const read_line_cb_t &cb, V
   if (pos == std::string::npos) return 0;
 
   std::string_view line(input_buffer_.data(), pos); // remove last \n
+  if (cb(line, obj) < 0) n = 0;
   input_buffer_.erase(0, pos + 1);
   return n;
 }

@@ -13,8 +13,6 @@
 
 #include <boost/asio.hpp>
 #include <boost/atomic.hpp>
-#include <boost/regex.hpp>
-#include <boost/xpressive/xpressive.hpp>
 
 class CanImpCanNet : public CanImpInterface {
   using read_line_cb_t = std::function<int(const std::string_view &, VCI_CAN_OBJ *)>;
@@ -55,7 +53,7 @@ private:
   void io_context_run(const dur_t &timeout);
 
   void read_line(char *buff, size_t buffSize, const dur_t &timeout, error_code_t &ec);
-  size_t read_line(const dur_t &timeout, const read_line_cb_t &cb, VCI_CAN_OBJ *obj, error_code_t ec);
+  size_t read_line(const dur_t &timeout, read_line_cb_t &cb, VCI_CAN_OBJ *obj, error_code_t ec);
   inline int write_line(const char *p, size_t len, error_code_t &ec);
 
 private:

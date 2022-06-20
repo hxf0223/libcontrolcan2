@@ -6,9 +6,6 @@
 #include <cstdio>
 #include <ratio>
 #include <string>
-#ifdef _WIN32
-#include <sdkddkver.h> // avoid boost.asio warning: Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately
-#endif
 
 #include <boost/asio.hpp>
 #include <chrono>
