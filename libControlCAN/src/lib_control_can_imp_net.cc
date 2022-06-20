@@ -9,6 +9,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstdint>
+
 #include <iostream>
 #include <regex>
 #include <string>
@@ -46,11 +47,6 @@ typedef Ini<> ini_t;
 using std::chrono::microseconds;
 
 // _receive_pattern match frame head. _hex_str_pattern match VCI_CAN_OBJ, boost::read_until will remove last \n
-boost::xpressive::sregex CanImpCanNet::_hex_str_pattern(sregex::compile("^(?:[0-9a-fA-F][0-9a-fA-F])+$"));
-// boost::xpressive::sregex CanImpCanNet::_receive_pattern(sregex::compile("^VCI_Receive[0-9a-fA-F]{32},"));
-boost::xpressive::sregex CanImpCanNet::_receive_pattern(sregex::compile("^(VCI_Receive|VCI_Transmit)[0-9a-fA-F]{32}"));
-boost::regex CanImpCanNet::_receive_line_feed_pattern("^VCI_Receive[0-9a-fA-F]{32},");
-
 std::regex CanImpCanNet::_receive_pattern2("^(VCI_Receive|VCI_Transmit)[0-9a-fA-F]{32}");
 std::regex CanImpCanNet::_hex_str_pattern2("^(?:[0-9a-fA-F][0-9a-fA-F])+$");
 
@@ -264,7 +260,7 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
   if (!_connected.load() || !pReceive) return 0;
 
   auto f = [&](const std::string_view &str, VCI_CAN_OBJ *dst) -> int {
-    auto end = std::cregex_iterator();
+    const auto end = std::cregex_iterator();
     const std::cregex_iterator it(str.begin(), str.end(), _receive_pattern2);
     if (it == end || (*it)[0].second == str.end()) return -1;
 
@@ -285,18 +281,9 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
   error_code_t ec;
 
   while (!ec && recv_line_cnt < Len && dur.count() < WaitTime) {
-    auto rec_str = read_line(to, ec);
+    auto n = read_line(to, f, pReceive + recv_line_cnt, ec);
     dur = std::chrono::steady_clock::now() - t0;
-    const sregex_iterator it(rec_str.begin(), rec_str.end(), _receive_pattern);
-    if (it == end || (*it)[0].second == rec_str.end()) continue;
-
-    auto data_str = rec_str.substr((*it)[0].second - rec_str.begin());
-    const sregex_iterator it2(data_str.begin(), data_str.end(), _hex_str_pattern);
-    if (it2 == end || data_str.size() < (sizeof(VCI_CAN_OBJ) * 2)) continue;
-
-    auto pdst = (uint8_t *)(pReceive + recv_line_cnt);
-    can::utils::hex_string_to_bin_fastest(data_str, pdst);
-    recv_line_cnt++;
+    if (n > 0) recv_line_cnt++;
   }
 
   const auto ec_val = ec.value();
@@ -372,7 +359,7 @@ void CanImpCanNet::read_line(char *buff, size_t buffSize, const dur_t &timeout, 
   // io_context_run(timeout);
 }
 
-std::string CanImpCanNet::read_line(const dur_t &timeout, error_code_t &ec) {
+size_t CanImpCanNet::read_line(const dur_t &timeout, const read_line_cb_t &cb, VCI_CAN_OBJ *obj, error_code_t ec) {
   // Start the asynchronous operation. The lambda that is used as a callback
   // will update the error and n variables when the operation completes. The
   // blocking_udp_client.cpp example shows how you can use std::bind rather
@@ -388,15 +375,15 @@ std::string CanImpCanNet::read_line(const dur_t &timeout, error_code_t &ec) {
 
   // Determine whether the read completed successfully.
   if (ec || n == 0) { // throw std::system_error(ec);
-    return std::string();
+    return 0;
   }
 
   const auto pos = input_buffer_.find('\n');
-  if (pos == std::string::npos) return std::string();
+  if (pos == std::string::npos) return 0;
 
-  std::string line(input_buffer_.begin(), input_buffer_.begin() + pos); // remove last \n
+  std::string_view line(input_buffer_.data(), pos); // remove last \n
   input_buffer_.erase(0, pos + 1);
-  return line;
+  return n;
 }
 
 int CanImpCanNet::write_line(const char *p, size_t len, error_code_t &ec) {

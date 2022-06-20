@@ -4,6 +4,7 @@
 #include "usbcan.h"
 
 #include <boost/system/detail/error_code.hpp>
+#include <functional>
 #include <iterator>
 #include <mutex> // std::mutex, std::unique_lock
 #include <regex>
@@ -16,6 +17,7 @@
 #include <boost/xpressive/xpressive.hpp>
 
 class CanImpCanNet : public CanImpInterface {
+  using read_line_cb_t = std::function<int(const std::string_view &, VCI_CAN_OBJ *)>;
   using dur_t = std::chrono::steady_clock::duration;
   using error_code_t = boost::system::error_code;
 
@@ -53,7 +55,7 @@ private:
   void io_context_run(const dur_t &timeout);
 
   void read_line(char *buff, size_t buffSize, const dur_t &timeout, error_code_t &ec);
-  std::string read_line(const dur_t &timeout, error_code_t &ec);
+  size_t read_line(const dur_t &timeout, const read_line_cb_t &cb, VCI_CAN_OBJ *obj, error_code_t ec);
   inline int write_line(const char *p, size_t len, error_code_t &ec);
 
 private:
@@ -68,8 +70,4 @@ private:
 private:
   static std::regex _hex_str_pattern2;
   static std::regex _receive_pattern2;
-
-  static boost::xpressive::sregex _hex_str_pattern;
-  static boost::xpressive::sregex _receive_pattern;
-  static boost::regex _receive_line_feed_pattern;
 };
