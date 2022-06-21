@@ -27,8 +27,8 @@ vciReturnType CanImpDirectCan2::VCI_OpenDevice(DWORD DeviceType, DWORD DeviceInd
   const auto dir_path = getexepath().parent_path();
   boost::filesystem::path ini_path(dir_path / "kerneldlls" / "kerneldll.ini");
 
-  _dev_type.release();
-  _lib.release();
+  _dev_type.reset();
+  _lib.reset();
 
   if (boost::filesystem::exists(ini_path)) {
     ini_t ini(ini_path.string(), true);
@@ -66,14 +66,14 @@ vciReturnType CanImpDirectCan2::VCI_OpenDevice(DWORD DeviceType, DWORD DeviceInd
 vciReturnType CanImpDirectCan2::VCI_CloseDevice(DWORD DeviceType, DWORD DeviceInd) {
   if (_dev_type && _lib && *_dev_type == DeviceType) {
     auto err = _lib->fCloseDevice(DeviceType, DeviceInd);
-    _dev_type.release();
-    _lib.release();
+    _dev_type.reset();
+    _lib.reset();
 
     return static_cast<vciReturnType>(err);
   }
 
-  _dev_type.release();
-  _lib.release();
+  _dev_type.reset();
+  _lib.reset();
 
   return vciReturnType::STATUS_ERR;
 }
