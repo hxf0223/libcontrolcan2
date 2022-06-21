@@ -40,7 +40,7 @@ TEST(Socket, perfServer) {
     LOG(INFO) << "wait for client connect and send VCI_Receive frame to client.";
 
     boost::system::error_code ec{};
-    const char *cmd_recv = "VCI_Receive";
+    const char *cmd_recv = "VCI_Receive,";
     uint64_t send_count = 0;
     char send_buff[256];
 

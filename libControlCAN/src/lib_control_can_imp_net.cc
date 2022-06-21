@@ -43,7 +43,7 @@ typedef Ini<> ini_t;
 using std::chrono::microseconds;
 
 // _receive_pattern match frame head. _hex_str_pattern match VCI_CAN_OBJ, boost::read_until will remove last \n
-std::regex CanImpCanNet::_receive_pattern2("^(VCI_Receive|VCI_Transmit)[0-9a-fA-F]{32}");
+std::regex CanImpCanNet::_receive_pattern2("^(VCI_Receive,|VCI_Transmit,)[0-9a-fA-F]{32}");
 std::regex CanImpCanNet::_hex_str_pattern2("^(?:[0-9a-fA-F][0-9a-fA-F])+$");
 
 CanImpCanNet::CanImpCanNet() : _connected(false), _str_sock_addr(""), _str_sock_port("") {
@@ -77,7 +77,7 @@ vciReturnType CanImpCanNet::VCI_OpenDevice(DWORD DeviceType, DWORD DeviceInd, DW
   }
 
   char buff[128];
-  const char *head = "VCI_OpenDevice", *lr = "\n";
+  const char *head = "VCI_OpenDevice,", *lr = "\n";
   auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, &Reserved, lr);
 
   error_code_t ec;
@@ -95,7 +95,7 @@ vciReturnType CanImpCanNet::VCI_CloseDevice(DWORD DeviceType, DWORD DeviceInd) {
   if (!_connected.load()) return vciReturnType::STATUS_ERR;
 
   char buff[128];
-  const char *head = "VCI_CloseDevice", *lr = "\n";
+  const char *head = "VCI_CloseDevice,", *lr = "\n";
   auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, lr);
 
   error_code_t ec;
@@ -120,7 +120,7 @@ vciReturnType CanImpCanNet::VCI_InitCAN(DWORD DeviceType, DWORD DeviceInd, DWORD
   if (!_connected.load()) return vciReturnType::STATUS_ERR;
 
   char buff[256];
-  const char *head = "VCI_InitCAN", *lr = "\n";
+  const char *head = "VCI_InitCAN,", *lr = "\n";
   auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, &CANInd, pInitConfig, lr);
 
   // std::cout << "VCI_InitCAN: " << data;
@@ -139,7 +139,7 @@ vciReturnType CanImpCanNet::VCI_ReadErrInfo(DWORD DeviceType, DWORD DeviceInd, D
   if (!_connected.load() || !pErrInfo) return vciReturnType::STATUS_ERR;
 
   char buff[256];
-  const char *head = "VCI_ReadErrInfo", *lr = "\n";
+  const char *head = "VCI_ReadErrInfo,", *lr = "\n";
   auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, &CANInd, pErrInfo, lr);
 
   error_code_t ec;
@@ -174,7 +174,7 @@ vciReturnType CanImpCanNet::VCI_ClearBuffer(DWORD DeviceType, DWORD DeviceInd, D
   if (!_connected.load()) return vciReturnType::STATUS_ERR;
 
   char buff[256];
-  const char *head = "VCI_ClearBuffer", *lr = "\n";
+  const char *head = "VCI_ClearBuffer,", *lr = "\n";
   auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, &CANInd, lr);
 
   error_code_t ec;
@@ -192,7 +192,7 @@ vciReturnType CanImpCanNet::VCI_StartCAN(DWORD DeviceType, DWORD DeviceInd, DWOR
   if (!_connected.load()) return vciReturnType::STATUS_ERR;
 
   char buff[256];
-  const char *head = "VCI_StartCAN", *lr = "\n";
+  const char *head = "VCI_StartCAN,", *lr = "\n";
   auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, &CANInd, lr);
 
   error_code_t ec;
@@ -210,7 +210,7 @@ vciReturnType CanImpCanNet::VCI_ResetCAN(DWORD DeviceType, DWORD DeviceInd, DWOR
   if (!_connected.load()) return vciReturnType::STATUS_ERR;
 
   char buff[256];
-  const char *head = "VCI_ResetCAN", *lr = "\n";
+  const char *head = "VCI_ResetCAN,", *lr = "\n";
   auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, &CANInd, lr);
 
   error_code_t ec;
@@ -228,7 +228,7 @@ vciReturnType CanImpCanNet::VCI_Transmit(DWORD DeviceType, DWORD DeviceInd, DWOR
                                          ULONG Len) {
   if (!_connected.load()) return vciReturnType::STATUS_ERR;
   error_code_t ec;
-  const char *head = "VCI_Transmit", *lr = "\n";
+  const char *head = "VCI_Transmit,", *lr = "\n";
   char line_buff[256];
 
   for (ULONG i = 0; i < Len; i++) {
