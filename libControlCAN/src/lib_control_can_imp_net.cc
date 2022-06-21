@@ -1,9 +1,9 @@
 #include <boost/algorithm/string.hpp>
-#include <boost/asio/buffer.hpp>
+#include <boost/asio.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/system/system_error.hpp>
+#include <boost/system.hpp>
 #include <boost/thread.hpp>
 #include <chrono>
 #include <cmath>
@@ -15,9 +15,6 @@
 #include <string_view>
 #include <vector>
 
-#include "boost/asio/error.hpp"
-#include "boost/system/detail/errc.hpp"
-#include "boost/system/detail/error_code.hpp"
 #include "hex_dump.hpp"
 #include "ini.h"
 #include "lib_control_can_imp_net.hpp"

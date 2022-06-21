@@ -3,7 +3,7 @@
 #include "lib_control_can_imp.h"
 #include "usbcan.h"
 
-#include <boost/system/detail/error_code.hpp>
+#include <boost/system.hpp>
 #include <functional>
 #include <iterator>
 #include <mutex> // std::mutex, std::unique_lock

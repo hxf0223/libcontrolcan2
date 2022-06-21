@@ -1,7 +1,3 @@
-#include <boost/asio/buffer.hpp>
-#include <boost/asio/buffers_iterator.hpp>
-#include <boost/asio/read.hpp>
-#include <boost/asio/read_until.hpp>
 #include <cstdint>
 #include <cstdio>
 #include <ratio>
@@ -18,7 +14,6 @@
 #include "hex_dump.hpp"
 #include "lib_control_can_imp.h"
 #include "test_helper.hpp"
-#include "usbcan.h"
 
 constexpr DWORD devtype = 4;
 constexpr DWORD devid = 0;
