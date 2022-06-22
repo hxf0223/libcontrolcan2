@@ -213,6 +213,7 @@ ULONG CanImpDirectCan2::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CAN
 }
 
 dll_load_dll_type *CanImpDirectCan2::load_library(std::string path) {
+  // auto dll_win = dll_load_dll_type_win(path);
   auto dll = new dll_load_dll_type(path);
   return dll;
 }
