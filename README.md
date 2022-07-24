@@ -51,6 +51,10 @@ cmake .. -G "Visual Studio 17 2022" -A Win32 -DCMAKE_BUILD_TYPE="Release" -DBUIL
 - [concurrentqueue](https://github.com/cameron314/concurrentqueue)
 - [Boost ASIO例程](https://www.boost.org/doc/libs/1_79_0/doc/html/boost_asio/examples/cpp11_examples.html)
 
+### 引用第三方库
+
+- [eventpp](https://github.com/wqking/eventpp)
+
 ### template相关参考
 
 - [泛化之美--C++11可变模版参数的妙用](https://www.cnblogs.com/qicosmos/p/4325949.html)

@@ -161,7 +161,7 @@ TEST(Socket, perfClient2) {
       *(uint64_t *)(can_tx_buff[0].Data) = send_count;
       auto e = canDc->VCI_Transmit(devtype, devid, channel, can_tx_buff, can_tx_buff_size);
       CHECK(e == vciReturnType::STATUS_OK) << "VCI_Transmit return " << e;
-      std::this_thread::sleep_for(10ms);
+      std::this_thread::sleep_for(300ms);
       send_count++;
     }
 

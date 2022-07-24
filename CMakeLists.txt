@@ -16,10 +16,12 @@ set (CMAKE_CXX_STANDARD 17)
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin )
 set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin ) # set static lib's output dir
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin ) # set DSO output dir
+add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS) # dismiss compile message about boost placeholders
 
 include_directories("$ENV{BOOST_ROOT}/include")
 link_directories("$ENV{BOOST_ROOT}/lib")
 
+include_directories("${PROJECT_SOURCE_DIR}/3rd/include")
 include_directories("${PROJECT_SOURCE_DIR}/googletest/include")
 #include_directories("${PROJECT_SOURCE_DIR}/install_include")
 include_directories("${PROJECT_SOURCE_DIR}/include")

@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 3.15)
 
-add_executable (can_agent "main.cc")
+file(GLOB_RECURSE srcs *.cc server/*.cc)
+
+add_executable (can_agent ${srcs})
 target_link_libraries(can_agent ControlCAN gtest glog)
 
 if (WIN32)
