@@ -18,6 +18,7 @@ private:
   std::queue<std::string> tx_queue_;
 
 public:
+  boost::asio::ip::tcp::socket &get_socket() { return socket_; }
   Session(boost::asio::io_context &io_context);
   ~Session();
 

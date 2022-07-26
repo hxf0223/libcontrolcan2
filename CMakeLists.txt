@@ -27,6 +27,7 @@ include_directories("${PROJECT_SOURCE_DIR}/googletest/include")
 include_directories("${PROJECT_SOURCE_DIR}/include")
 link_directories("${PROJECT_SOURCE_DIR}/bin")
 
+add_subdirectory("libzmq")
 add_subdirectory("glog")
 add_subdirectory("googletest")
 add_subdirectory("libControlCAN")

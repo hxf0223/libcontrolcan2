@@ -36,6 +36,11 @@ sudo apt-get --purge remove libboost-dev
 sudo apt-get --purge remove libboost-all-dev
 ```
 
+引入libzmq，辅助测试代码引用libzmp：
+- BUILD_TESTS 设置为 OFF；
+- WITH_LIBSODIUM 设置为 OFF；
+- set(ZeroMQ ${ZeroMQ} PARENT_SCOPE) ；
+
 ### 官方glog使用vs2022编译命令
 
 ```bash
@@ -54,6 +59,7 @@ cmake .. -G "Visual Studio 17 2022" -A Win32 -DCMAKE_BUILD_TYPE="Release" -DBUIL
 ### 引用第三方库
 
 - [eventpp](https://github.com/wqking/eventpp)
+- [libzmq](https://github.com/zeromq/libzmq)
 
 ### template相关参考
 

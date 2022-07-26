@@ -1,5 +1,8 @@
 cmake_minimum_required (VERSION 3.15)
 
+include_directories(${PROJECT_SOURCE_DIR}/libzmq/include)
+link_directories(${PROJECT_BINARY_DIR})
+
 file(GLOB_RECURSE srcs *.cc server/*.cc)
 
 add_executable (can_agent ${srcs})
