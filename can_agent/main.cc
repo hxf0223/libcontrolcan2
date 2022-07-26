@@ -13,7 +13,9 @@
 
 #include "boost/asio.hpp"
 #include "server/server.h"
+
 #include "zmq.hpp"
+#include "zmq_addon.hpp"
 
 constexpr DWORD devtype = 4;
 constexpr DWORD devid = 0;
@@ -32,7 +34,6 @@ inline VCI_INIT_CONFIG create_vci_init_cfg(UCHAR timing0, UCHAR timing1, DWORD m
 
 } // namespace
 
-// https://en.cppreference.com/w/cpp/string/basic_string_view/basic_string_view
 static void canReceiveThread(std::atomic_bool &runFlag, zmq::context_t *ctx) {
   auto e = VCI_OpenDevice(devtype, 0, 0);
   auto cfg = create_vci_init_cfg(0x00, 0x1C, 0xffffffff);
@@ -41,6 +42,9 @@ static void canReceiveThread(std::atomic_bool &runFlag, zmq::context_t *ctx) {
 
   zmq::socket_t publisher(*ctx, zmq::socket_type::pub);
   publisher.bind("inproc://#1");
+
+  // Give the subscribers a chance to connect, so they don't lose any messages
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   constexpr DWORD rec_buff_size = 100;
   VCI_CAN_OBJ can_recv_buff[rec_buff_size];
@@ -56,8 +60,7 @@ static void canReceiveThread(std::atomic_bool &runFlag, zmq::context_t *ctx) {
 
       auto &can_obj = can_recv_buff[i];
       auto size = can::utils::bin2hex::bin2hex_fast(send_buff, cmd_recv, &send_count, &now, &can_obj, "\n");
-      std::string_view sv{send_buff};
-      auto sb = zmq::str_buffer(sv);
+      publisher.send(zmq::buffer(std::string_view(send_buff, size)));
 
       send_count++;
     }
@@ -67,9 +70,11 @@ static void canReceiveThread(std::atomic_bool &runFlag, zmq::context_t *ctx) {
 }
 
 int main(int argc, char **argv) {
+  zmq::context_t ctx;
+
   try {
     boost::asio::io_context io_context;
-    Server s = Server(io_context, lisenPort);
+    Server s = Server(io_context, lisenPort, &ctx);
     s.startAccepting();
     io_context.run();
   } catch (boost::system::system_error &ec) {

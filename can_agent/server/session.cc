@@ -6,8 +6,15 @@
 
 #include "hex_dump.hpp"
 #include "lib_control_can_imp.h"
+#include "zmq_addon.hpp"
 
-Session::Session(boost::asio::io_context &io_context) : socket_(io_context), tx_buffer_(1024) {}
+Session::Session(boost::asio::io_context &ioContext, zmq::context_t *ctx)
+  : socket_(ioContext), tx_buffer_(1024), ctx_(ctx), ctx_sub_(*ctx_, ZMQ_SUB) {
+  ctx_sub_.connect("inproc://#1");
+  ctx_sub_.set(zmq::sockopt::subscribe, ""); // subscribe all message types
+  ctx_sub_.set(zmq::sockopt::rcvtimeo, 10);  // receive timeout in ms
+}
+
 Session::~Session() { std::cout << "Session terminated." << std::endl; }
 
 void Session::start() {
@@ -33,6 +40,9 @@ void Session::write_message() {
   const char *cmd_recv = "VCI_Receive,";
   uint64_t send_count = 0;
   char send_buff[256];
+
+  std::vector<zmq::message_t> recv_msgs;
+  zmq::recv_result_t result = zmq::recv_multipart(ctx_sub_, std::back_inserter(recv_msgs));
 
   VCI_CAN_OBJ can_obj{};
   *(uint64_t *)(can_obj.Data) = send_count;

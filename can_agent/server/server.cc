@@ -5,8 +5,8 @@ using boost::asio::ip::tcp;
 
 // Server constructor constructs private acceptor_ variable and gives it io_context object along with endpoint
 // information Without acceptor_, we would not be able to accept and create new sessions with clients
-Server::Server(boost::asio::io_context &ioContext, short port)
-  : acceptor_(ioContext, tcp::endpoint(tcp::v4(), port)), io_context_(ioContext) {
+Server::Server(boost::asio::io_context &ioContext, short port, zmq::context_t *ctx)
+  : acceptor_(ioContext, tcp::endpoint(tcp::v4(), port)), io_context_(ioContext), ctx_(ctx) {
   session_pool_ = std::make_shared<SessionPool>();
 
   std::cout << "STARTING TCP SERVER" << std::endl;
@@ -16,7 +16,7 @@ Server::Server(boost::asio::io_context &ioContext, short port)
 
 // Called when server is ready to start accepting clients
 void Server::startAccepting() {
-  session_ = std::make_shared<Session>(io_context_);
+  session_ = std::make_shared<Session>(io_context_, ctx_);
 
   for (int i = 0; i < session_pool_->get_size(); ++i) {
     std::shared_ptr<Session> selected_session_ = session_pool_->get_session(i);
