@@ -32,5 +32,7 @@ add_subdirectory("libzmq")
 add_subdirectory("glog")
 add_subdirectory("googletest")
 add_subdirectory("libControlCAN")
+
 add_subdirectory("can_agent")
 add_subdirectory ("test")
+add_subdirectory ("test_zmq")
