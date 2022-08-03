@@ -7,7 +7,7 @@ link_directories(${PROJECT_BINARY_DIR})
 file(GLOB_RECURSE srcs *.cc server/*.cc)
 
 add_executable (can_agent ${srcs})
-target_link_libraries(can_agent ControlCAN gtest glog zmq)
+target_link_libraries(can_agent ControlCAN gtest glog -Wl,-Bstatic zmq -Wl,-Bdynamic)
 
 if (WIN32)
 	set_property(TARGET can_agent PROPERTY
