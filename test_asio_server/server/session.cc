@@ -17,7 +17,10 @@ Session::Session(boost::asio::io_context &ioContext, zmq::context_t *ctx)
 #endif
 }
 
-Session::~Session() { std::cout << "Session terminated." << std::endl; }
+Session::~Session() {
+  // std::cout << "debug message" << std::endl;
+  std::cout << "Session terminated." << std::endl;
+}
 
 void Session::start() {
   auto self = shared_from_this();

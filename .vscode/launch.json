@@ -8,10 +8,8 @@
             "name": "gdb for can test",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/bin/can_test",
-            "args": [
-                "--gtest_filter=Socket.perfClient"
-            ],
+            "program": "${workspaceFolder}/bin/test_asio_server",
+            "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/bin",
             "environment": [],
