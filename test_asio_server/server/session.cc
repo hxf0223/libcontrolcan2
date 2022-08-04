@@ -33,15 +33,14 @@ void Session::start() {
 
 void Session::handle_write(const boost::system::error_code &ec, std::size_t bytesTransfered) {
   if (!ec) {
-    std::cout << "write messge ok." << std::endl;
-    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    std::this_thread::sleep_for(std::chrono::milliseconds(30));
     write_message();
   }
 }
 
 void Session::write_message() {
   const char *cmd_recv = "VCI_Receive,";
-  uint64_t send_count = 0;
+  static uint64_t send_count = 0;
   char send_buff[256];
 
   VCI_CAN_OBJ can_obj{};

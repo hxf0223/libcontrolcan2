@@ -25,12 +25,13 @@ void send_msg(const string &msg, boost::asio::ip::tcp::socket &socket) {
 void receive_msg(boost::asio::ip::tcp::socket &socket) {
   boost::system::error_code error;
   streambuf receive_buffer;
-  read(socket, receive_buffer, transfer_all(), error);
+  // read(socket, receive_buffer, transfer_all(), error);
+  boost::asio::read_until(socket, receive_buffer, "\n");
   if (error && error != error::eof) {
     cout << "receive failed: " << error.message() << endl;
   } else {
     const char *data = buffer_cast<const char *>(receive_buffer.data());
-    cout << data << endl;
+    cout << "receive len " << strlen(data) << ": " << data;
   }
 }
 
@@ -50,7 +51,9 @@ int main(int argc, char *argv[]) {
     send_msg(msg, socket);
   }
 #else
-  receive_msg(socket);
+  while (1) {
+    receive_msg(socket);
+  }
 #endif
 
   return EXIT_SUCCESS;
