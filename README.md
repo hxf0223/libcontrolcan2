@@ -38,9 +38,10 @@ sudo apt-get --purge remove libboost-all-dev
 
 引入libzmq，辅助测试代码引用libzmp：
 
-- BUILD_TESTS 设置为 OFF；
-- WITH_LIBSODIUM 设置为 OFF；
-- set(ZeroMQ ${ZeroMQ} PARENT_SCOPE) ；
+- BUILD_TESTS 设置为 OFF;
+- WITH_LIBSODIUM 设置为 OFF;
+- WITH_LIBBSD 设置为 OFF;
+- set(ZeroMQ ${ZeroMQ} PARENT_SCOPE);
 
 ### 官方glog使用vs2022编译命令
 

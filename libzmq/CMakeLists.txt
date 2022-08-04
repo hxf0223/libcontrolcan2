@@ -242,7 +242,7 @@ if(NOT ZMQ_USE_GNUTLS)
 endif()
 
 if(NOT MSVC)
-  option(WITH_LIBBSD "Use libbsd instead of builtin strlcpy" ON)
+  option(WITH_LIBBSD "Use libbsd instead of builtin strlcpy" OFF)
   if(WITH_LIBBSD)
     pkg_check_modules(LIBBSD "libbsd")
     if(LIBBSD_FOUND)
@@ -1319,15 +1319,15 @@ if(MSVC)
   if(BUILD_SHARED)
     # Whole Program Optimization flags. http://msdn.microsoft.com/en-us/magazine/cc301698.aspx
     #
-    # "Finally, there's the subject of libraries. It's possible to create .LIB 
-    # files with code in its IL form. The linker will happily work with these 
-    # .LIB files. Be aware that these libraries will be tied to a specific 
-    # version of the compiler and linker. If you distribute these libraries, 
-    # you'll need to update them if Microsoft changes the format of IL in a 
+    # "Finally, there's the subject of libraries. It's possible to create .LIB
+    # files with code in its IL form. The linker will happily work with these
+    # .LIB files. Be aware that these libraries will be tied to a specific
+    # version of the compiler and linker. If you distribute these libraries,
+    # you'll need to update them if Microsoft changes the format of IL in a
     # future release."
-    # 
-    # /GL and /LTCG can cause problems when libraries built with different 
-    # versions of compiler are later linked into an executable while /LTCG is active. 
+    #
+    # /GL and /LTCG can cause problems when libraries built with different
+    # versions of compiler are later linked into an executable while /LTCG is active.
     # https://social.msdn.microsoft.com/Forums/vstudio/en-US/5c102025-c254-4f02-9a51-c775c6cc9f4b/problem-with-ltcg-when-building-a-static-library-in-vs2005?forum=vcgeneral
     #
     # For this reason, enable only when building a "Release" (e.g. non-DEBUG) DLL.
