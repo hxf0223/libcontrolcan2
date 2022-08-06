@@ -9,7 +9,7 @@ add_executable (test_asio_server ${srcs})
 target_link_libraries(test_asio_server ControlCAN gtest glog -Wl,-Bstatic zmq -Wl,-Bdynamic)
 
 add_executable(test_asio_client client.cc)
-#target_link_libraries(test_asio_client )
+target_link_libraries(test_asio_client pthread)
 
 if (WIN32)
 	set_property(TARGET test_asio_server PROPERTY
