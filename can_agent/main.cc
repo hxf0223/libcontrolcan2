@@ -26,6 +26,11 @@ constexpr short lisenPort = 9999;
 
 namespace {
 
+template <typename T>
+std::ostream &operator<<(std::ostream &os, std::optional<T> const &opt) {
+  return opt ? os << opt.value() : os;
+}
+
 inline VCI_INIT_CONFIG create_vci_init_cfg(UCHAR timing0, UCHAR timing1, DWORD mask) {
   VCI_INIT_CONFIG cfg{};
   cfg.Timing0 = timing0;
@@ -62,13 +67,16 @@ static void can_rx_func(std::atomic_bool *runFlag, zmq::context_t *ctx) {
 
       auto &can_obj = can_recv_buff[i];
       auto size = can::utils::bin2hex::bin2hex_fast(send_buff, cmd_recv, &send_count, &now, &can_obj, "\n");
-      publisher.send(zmq::buffer(std::string_view(send_buff, size)));
+      zmq::send_result_t rc = publisher.send(zmq::buffer(std::string_view(send_buff, size)));
+      std::cout << "publib send result: " << rc << std::endl;
 
       send_count++;
     }
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
   }
+
+  std::cout << "can_rx_func exit." << std::endl;
 }
 
 static void pub_simu_func(std::atomic_bool *runFlag, zmq::context_t *ctx) {
@@ -90,11 +98,14 @@ static void pub_simu_func(std::atomic_bool *runFlag, zmq::context_t *ctx) {
     *(uint64_t *)(can_obj.Data) = send_count;
 
     auto size = can::utils::bin2hex::bin2hex_fast(send_buff, cmd_recv, &send_count, &now, &can_obj, "\n");
-    publisher.send(zmq::buffer(std::string_view(send_buff, size)));
+    zmq::send_result_t rc = publisher.send(zmq::buffer(std::string_view(send_buff, size)));
+    std::cout << "publib send result: " << rc << std::endl;
     send_count++;
 
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
   }
+
+  std::cout << "pub_simu_func exit." << std::endl;
 }
 
 std::atomic_bool run_flag{true};

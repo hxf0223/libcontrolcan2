@@ -33,6 +33,7 @@ void Session::handle_zmq_recv(const boost::system::error_code &ec, std::size_t b
     return;
   }
 
+  std::cout << "handle_zmq_recv received: " << bytesTransfered << std::endl;
   if (0 == bytesTransfered) {
     zsock_.async_recv(boost::asio::buffer(zrx_buff_),
                       boost::bind(&Session::handle_zmq_recv, shared_from_this(), boost::asio::placeholders::error,
