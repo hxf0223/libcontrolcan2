@@ -51,6 +51,7 @@ TEST(asio, udpServer) {
 }
 
 class listener {
+  // http://coliru.stacked-crooked.com/a/ae4b87381182c76b
   using ec_t = boost::system::error_code;
 
 public:
