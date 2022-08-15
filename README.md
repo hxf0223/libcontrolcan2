@@ -28,6 +28,7 @@ glog源码相对于官方glog的修改：
 - WITH_LIBSODIUM 设置为 OFF;
 - WITH_LIBBSD 设置为 OFF;
 - set(ZeroMQ ${ZeroMQ} PARENT_SCOPE);
+- WITH_DOCS 位置为 OFF;
 
 boost编译适用于libControlCAN.so的静态库：[Linux Windows Boost编译命令](https://www.cnblogs.com/vaughnhuang/p/15848139.html)
 

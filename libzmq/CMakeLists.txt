@@ -1251,7 +1251,7 @@ if(MSVC)
     DEPENDS ${nsis-template})
 endif()
 
-option(WITH_DOCS "Build html docs" ON)
+option(WITH_DOCS "Build html docs" OFF)
 if(WITH_DOCS)
   file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc)
   file(

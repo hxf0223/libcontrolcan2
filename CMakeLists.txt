@@ -21,6 +21,7 @@ include_directories("$ENV{BOOST_ROOT}/include")
 link_directories("$ENV{BOOST_ROOT}/lib")
 
 include_directories("${PROJECT_SOURCE_DIR}/3rd/include")
+include_directories("${PROJECT_SOURCE_DIR}/libzmq/include")
 include_directories("${PROJECT_SOURCE_DIR}/3rd/include/cppzmq")
 include_directories("${PROJECT_SOURCE_DIR}/googletest/include")
 #include_directories("${PROJECT_SOURCE_DIR}/install_include")
@@ -36,3 +37,5 @@ add_subdirectory("can_agent")
 add_subdirectory ("test")
 add_subdirectory ("test_zmq")
 add_subdirectory("test_asio_server")
+add_subdirectory("test_asio_udp")
+
