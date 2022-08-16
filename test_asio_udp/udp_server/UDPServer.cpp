@@ -13,7 +13,6 @@ void UDPServer::handleReceive(const boost::system::error_code &error, std::size_
   if (!error || error == boost::asio::error::message_size) {
 
     auto message = std::make_shared<std::string>("Hello, World! (Server)\n");
-
     socket_.send_to(boost::asio::buffer(*message), remoteEndpoint_);
     startReceive();
   }
