@@ -17,7 +17,7 @@ set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin ) # set static lib
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin ) # set DSO output dir
 add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS) # dismiss compile message about boost placeholders
 
-# for windows only
+# for windows compile or cross-platform compile
 include_directories("$ENV{BOOST_ROOT}/include")
 link_directories("$ENV{BOOST_ROOT}/lib")
 
@@ -39,4 +39,5 @@ add_subdirectory ("test")
 add_subdirectory ("test_zmq")
 add_subdirectory("test_asio_server")
 add_subdirectory("test_asio_udp")
+add_subdirectory("asio_example")
 
