@@ -24,6 +24,7 @@ void UDPServer::handleReceive(const boost::system::error_code &error, std::size_
 
 void UDPServer::start_send() {
   std::cout << "start send message." << std::endl;
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
   auto message = std::make_shared<std::string>("Hello, World! (Server)\n");
   socket_.async_send_to(boost::asio::buffer(*message), multicast_endpoint_,
                         boost::bind(&UDPServer::handle_send, this, boost::asio::placeholders::error,
@@ -33,7 +34,6 @@ void UDPServer::start_send() {
 void UDPServer::handle_send(const boost::system::error_code &ec, std::size_t bytesTransfered) {
   if (!ec) {
     std::cout << "send message ok." << std::endl;
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
     start_send();
   } else {
     std::cout << "handle_send: " << ec.what() << std::endl;

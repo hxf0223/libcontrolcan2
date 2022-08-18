@@ -15,7 +15,7 @@ int main() {
   signal(SIGINT, signal_handler);
 
   try {
-    UDPServer server("127.0.0.1", "255.255.255.0", 1111);
+    UDPServer server("127.0.0.1", "255.255.0.0", 1111);
   } catch (const std::exception &ex) {
     std::cerr << ex.what() << std::endl;
   }
