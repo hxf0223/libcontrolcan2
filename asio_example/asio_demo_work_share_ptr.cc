@@ -7,6 +7,7 @@
 #include "gtest/gtest.h"
 
 // https://stackoverflow.com/questions/32258890/c-boost-asio-async-send-to-memory-leak
+// https://stackoverflow.com/questions/15568100/confused-when-boostasioio-service-run-method-blocks-unblocks
 
 class multicast_sender {
 public:
