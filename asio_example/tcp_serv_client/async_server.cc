@@ -18,21 +18,11 @@
 #include <thread>
 #include <utility>
 
-using boost::asio::ip::tcp;
-
 class session : public std::enable_shared_from_this<session> {
 public:
-  ~session() {
-    std::cout << "session closed." << std::endl;
-  }
-
-  session(tcp::socket socket) : socket_(std::move(socket)) {
-  }
-
-  void start() {
-    // do_read();
-    do_write(0);
-  }
+  ~session() { std::cout << "session closed." << std::endl; }
+  session(boost::asio::ip::tcp::socket socket) : socket_(std::move(socket)) {}
+  void start() { do_write(0); }
 
 private:
   void do_read() {
@@ -46,35 +36,37 @@ private:
   }
 
   void do_write(std::size_t length) {
-    sprintf(data_, "hello world from server\n");
-
     auto self(shared_from_this());
-    auto message = std::make_shared<std::string>("Hello, World! (Server)\n");
-    boost::asio::async_write(socket_, boost::asio::buffer(data_, strlen(data_)),
-                             [this, self](boost::system::error_code ec, std::size_t /*length*/) {
+    // std::cout << "do_write thread id: " << std::this_thread::get_id() << std::endl;
+    auto message = std::make_shared<std::string>("hello world from server.\n");
+    boost::asio::async_write(socket_, boost::asio::buffer(*message),
+                             [self](boost::system::error_code ec, std::size_t /*length*/) {
                                if (!ec) {
-                                 // do_read();
-                                 std::cout << "write a message" << std::endl;
+                                 std::cout << "write a message count " << ++self->tx_count_ << std::endl;
+                                 // std::cout << "handler id: " << std::this_thread::get_id() << std::endl;
                                  std::this_thread::sleep_for(std::chrono::milliseconds(500));
-                                 do_write(0);
+                                 self->do_write(0);
                                }
                              });
   }
 
-  tcp::socket socket_;
+private:
+  size_t tx_count_{0};
+  boost::asio::ip::tcp::socket socket_;
   enum { max_length = 1024 };
   char data_[max_length];
 };
 
 class server {
 public:
-  server(boost::asio::io_context &io_context, short port) : acceptor_(io_context, tcp::endpoint(tcp::v4(), port)) {
+  server(boost::asio::io_context &io_context, short port)
+    : acceptor_(io_context, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)) {
     do_accept();
   }
 
 private:
   void do_accept() {
-    acceptor_.async_accept([this](boost::system::error_code ec, tcp::socket socket) {
+    acceptor_.async_accept([this](boost::system::error_code ec, boost::asio::ip::tcp::socket socket) {
       if (!ec) {
         std::cout << "accept a client." << std::endl;
         std::make_shared<session>(std::move(socket))->start();
@@ -84,7 +76,7 @@ private:
     });
   }
 
-  tcp::acceptor acceptor_;
+  boost::asio::ip::tcp::acceptor acceptor_;
 };
 
 int main(int argc, char *argv[]) {
@@ -96,8 +88,8 @@ int main(int argc, char *argv[]) {
 
     boost::asio::io_context io_context;
     server s(io_context, std::atoi(argv[1]));
-
     io_context.run();
+
   } catch (std::exception &e) {
     std::cerr << "Exception: " << e.what() << "\n";
   }
