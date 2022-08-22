@@ -1,5 +1,4 @@
-#ifndef UDPCLIENT_H_
-#define UDPCLIENT_H_
+#pragma once
 
 #include <boost/asio/deadline_timer.hpp>
 #include <boost/asio/io_service.hpp>
@@ -9,12 +8,15 @@
 #include <cstdlib>
 #include <iostream>
 
+namespace asio {
+namespace udp {
+
 using boost::asio::deadline_timer;
 using boost::asio::ip::udp;
 
-class UDPClient {
+class udpClient {
 public:
-  UDPClient(boost::asio::io_service &io_service, const std::string &host, const std::string &port)
+  udpClient(boost::asio::io_service &io_service, const std::string &host, const std::string &port)
     : io_service_(io_service), socket_(io_service, udp::endpoint(udp::v4(), 0)), deadline_(io_service_) {
     udp::resolver resolver(io_service_);
     udp::resolver::query query(udp::v4(), host, port);
@@ -25,7 +27,7 @@ public:
     check_deadline();
   }
 
-  ~UDPClient() { socket_.close(); }
+  ~udpClient() { socket_.close(); }
 
   void send(const std::string &msg);
   std::string receive(boost::posix_time::time_duration timeout, boost::system::error_code &ec);
@@ -47,4 +49,5 @@ private:
   std::string data_;
 };
 
-#endif
+} // namespace udp
+} // namespace asio

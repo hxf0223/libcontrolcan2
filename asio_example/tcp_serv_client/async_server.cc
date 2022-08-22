@@ -18,6 +18,9 @@
 #include <thread>
 #include <utility>
 
+#include "glog/logging.h"
+#include "gtest/gtest.h"
+
 class session : public std::enable_shared_from_this<session> {
 public:
   ~session() { std::cout << "session closed." << std::endl; }
@@ -79,6 +82,17 @@ private:
   boost::asio::ip::tcp::acceptor acceptor_;
 };
 
+TEST(asioDemo, asyncTcpServer) {
+  try {
+    boost::asio::io_context io_context;
+    server s(io_context, 8888);
+    io_context.run();
+  } catch (std::exception &e) {
+    std::cerr << "Exception: " << e.what() << "\n";
+  }
+}
+
+#if 0
 int main(int argc, char *argv[]) {
   try {
     if (argc != 2) {
@@ -96,3 +110,4 @@ int main(int argc, char *argv[]) {
 
   return 0;
 }
+#endif

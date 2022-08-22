@@ -20,19 +20,20 @@
 #include <boost/bind.hpp>
 #include <boost/system/detail/error_code.hpp>
 
+#include "glog/logging.h"
+#include "gtest/gtest.h"
+
 enum { max_length = 1024 };
 
 class match_char {
 public:
-  explicit match_char(char c) : c_(c) {
-  }
+  explicit match_char(char c) : c_(c) {}
 
   template <typename Iterator>
   std::pair<Iterator, bool> operator()(Iterator begin, Iterator end) const {
     Iterator i = begin;
     while (i != end)
-      if (c_ == *i++)
-        return std::make_pair(i, true);
+      if (c_ == *i++) return std::make_pair(i, true);
     return std::make_pair(i, false);
   }
 
@@ -66,6 +67,19 @@ private:
   boost::asio::streambuf rx_sb_;
 };
 
+TEST(asioDemo, tcpClient) {
+  try {
+    boost::asio::io_context io_context;
+    auto client = std::make_shared<tcpClient>(io_context, "localhost", "8888");
+    client->start_receive();
+    io_context.run();
+
+  } catch (std::exception &e) {
+    std::cerr << "Exception: " << e.what() << "\n";
+  }
+}
+
+#if 0
 int main(int argc, char *argv[]) {
   try {
     if (argc != 3) {
@@ -84,3 +98,4 @@ int main(int argc, char *argv[]) {
 
   return 0;
 }
+#endif
