@@ -1303,7 +1303,7 @@ endif()
 # -----------------------------------------------------------------------------
 # output
 option(BUILD_SHARED "Whether or not to build the shared object" ON)
-option(BUILD_STATIC "Whether or not to build the static archive" ON)
+option(BUILD_STATIC "Whether or not to build the static archive" OFF)
 
 if(MSVC)
   # Suppress linker warnings caused by #ifdef omission of file content.

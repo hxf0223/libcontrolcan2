@@ -27,6 +27,7 @@ glog源码相对于官方glog的修改：
 - BUILD_TESTS 设置为 OFF;
 - WITH_LIBSODIUM 设置为 OFF;
 - WITH_LIBBSD 设置为 OFF;
+- BUILD_STATIC 设置为 OFF，否则Windows编译报错（与BUILD_SHARED二选一）；
 - set(ZeroMQ ${ZeroMQ} PARENT_SCOPE);
 - WITH_DOCS 位置为 OFF;
 
