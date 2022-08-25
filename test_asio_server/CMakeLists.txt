@@ -6,10 +6,13 @@ link_directories(${PROJECT_BINARY_DIR})
 file(GLOB_RECURSE srcs server.cc server/*.cc)
 
 add_executable (test_asio_server ${srcs})
-target_link_libraries(test_asio_server ControlCAN gtest glog -Wl,-Bstatic zmq -Wl,-Bdynamic)
+#target_link_libraries(test_asio_server ControlCAN gtest glog -Wl,-Bstatic zmq -Wl,-Bdynamic)
+target_link_libraries(test_asio_server ControlCAN gtest glog)
 
 add_executable(test_asio_client client.cc)
-target_link_libraries(test_asio_client pthread)
+if (CMAKE_HOST_UNIX)
+	target_link_libraries(test_asio_client pthread)
+endif()
 
 if (WIN32)
 	set_property(TARGET test_asio_server PROPERTY

@@ -8,10 +8,6 @@ if (CMAKE_HOST_UNIX)
 	link_directories("/usr/local/lib")
 endif()
 
-if (CMAKE_HOST_WIN32)
-	add_definitions(-DWIN32_LEAN_AND_MEAN)
-	add_definitions(-D_WIN32_WINNT=0x0A00) # avoid boost.asio warning: Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately
-endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc)
 

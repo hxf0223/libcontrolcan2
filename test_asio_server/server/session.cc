@@ -6,10 +6,8 @@
 
 #include "hex_dump.hpp"
 #include "lib_control_can_imp.h"
-#include "zmq_addon.hpp"
 
-Session::Session(boost::asio::io_context &ioContext, zmq::context_t *ctx)
-  : socket_(ioContext), tx_buffer_(1024), ctx_(ctx), ctx_sub_(*ctx_, ZMQ_SUB) {
+Session::Session(boost::asio::io_context &ioContext) : socket_(ioContext), tx_buffer_(1024) {
 #if 0
   ctx_sub_.connect("inproc://#1");
   ctx_sub_.set(zmq::sockopt::subscribe, ""); // subscribe all message types

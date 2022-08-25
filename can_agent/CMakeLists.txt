@@ -8,7 +8,11 @@ link_directories(${PROJECT_BINARY_DIR})
 file(GLOB_RECURSE srcs *.cc server/*.cc)
 
 add_executable (can_agent ${srcs})
-target_link_libraries(can_agent ControlCAN gtest glog pthread)
+if (CMAKE_HOST_UNIX)
+	target_link_libraries(can_agent ControlCAN gtest glog pthread)
+elseif(CMAKE_HOST_WIN32)
+	target_link_libraries(can_agent ControlCAN gtest glog)
+endif()
 
 if (WIN32)
 	set_property(TARGET can_agent PROPERTY
