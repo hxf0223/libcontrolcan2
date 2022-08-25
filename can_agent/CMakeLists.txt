@@ -1,13 +1,14 @@
 cmake_minimum_required (VERSION 3.15)
 
+add_definitions(-DWIN32_LEAN_AND_MEAN)
+
 #set (CMAKE_CXX_STANDARD 17)
-include_directories(${PROJECT_SOURCE_DIR}/libzmq/include)
 link_directories(${PROJECT_BINARY_DIR})
 
 file(GLOB_RECURSE srcs *.cc server/*.cc)
 
 add_executable (can_agent ${srcs})
-target_link_libraries(can_agent ControlCAN gtest glog pthread -Wl,-Bstatic zmq -Wl,-Bdynamic)
+target_link_libraries(can_agent ControlCAN gtest glog pthread)
 
 if (WIN32)
 	set_property(TARGET can_agent PROPERTY

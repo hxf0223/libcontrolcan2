@@ -20,13 +20,9 @@ private:
   std::vector<char> tx_buffer_;
   std::array<char, 1024> zrx_buff_;
 
-  // zmq::context_t *ctx_;
-  // zmq::socket_t ctx_sub_;
-  asio_zmq::asioZmqReqSocket zsock_;
-
 public:
   boost::asio::ip::tcp::socket &get_socket() { return socket_; }
-  Session(boost::asio::io_context &ioContext, zmq::context_t *ctx);
+  Session(boost::asio::io_context &ioContext);
   ~Session();
 
   void start();

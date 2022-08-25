@@ -14,10 +14,9 @@ private:
 
   std::shared_ptr<Session> session_;
   std::shared_ptr<SessionPool> session_pool_;
-  zmq::context_t *ctx_;
 
 public:
-  Server(boost::asio::io_context &ioContext, short port, zmq::context_t *ctx);
+  Server(boost::asio::io_context &ioContext, short port);
   void startAccepting();
 
   void handle_accept(const boost::system::error_code &ec);

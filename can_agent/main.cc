@@ -16,8 +16,8 @@
 #include "boost/asio.hpp"
 #include "server/server.h"
 
-#include "zmq.hpp"
-#include "zmq_addon.hpp"
+//#include "zmq.hpp"
+//#include "zmq_addon.hpp"
 
 constexpr DWORD devtype = 4;
 constexpr DWORD devid = 0;
@@ -41,14 +41,11 @@ inline VCI_INIT_CONFIG create_vci_init_cfg(UCHAR timing0, UCHAR timing1, DWORD m
 
 } // namespace
 
-static void can_rx_func(std::atomic_bool *runFlag, zmq::context_t *ctx) {
+static void can_rx_func(std::atomic_bool *runFlag) {
   auto e = VCI_OpenDevice(devtype, 0, 0);
   auto cfg = create_vci_init_cfg(0x00, 0x1C, 0xffffffff);
   e = VCI_InitCAN(devtype, devid, channel, &cfg);
   e = VCI_StartCAN(devtype, devid, channel);
-
-  zmq::socket_t publisher(*ctx, zmq::socket_type::pub);
-  publisher.bind("inproc://#1");
 
   // Give the subscribers a chance to connect, so they don't lose any messages
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -67,8 +64,8 @@ static void can_rx_func(std::atomic_bool *runFlag, zmq::context_t *ctx) {
 
       auto &can_obj = can_recv_buff[i];
       auto size = can::utils::bin2hex::bin2hex_fast(send_buff, cmd_recv, &send_count, &now, &can_obj, "\n");
-      zmq::send_result_t rc = publisher.send(zmq::buffer(std::string_view(send_buff, size)));
-      std::cout << "publib send result: " << rc << std::endl;
+      // zmq::send_result_t rc = publisher.send(zmq::buffer(std::string_view(send_buff, size)));
+      // std::cout << "publib send result: " << rc << std::endl;
 
       send_count++;
     }
@@ -79,13 +76,10 @@ static void can_rx_func(std::atomic_bool *runFlag, zmq::context_t *ctx) {
   std::cout << "can_rx_func exit." << std::endl;
 }
 
-static void pub_simu_func(std::atomic_bool *runFlag, zmq::context_t *ctx) {
+static void pub_simu_func(std::atomic_bool *runFlag) {
   const char *cmd_recv = "VCI_Receive,";
   uint64_t send_count = 0;
   char send_buff[256];
-
-  zmq::socket_t publisher(*ctx, zmq::socket_type::pub);
-  publisher.bind("inproc://#1");
 
   // Give the subscribers a chance to connect, so they don't lose any messages
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -98,8 +92,8 @@ static void pub_simu_func(std::atomic_bool *runFlag, zmq::context_t *ctx) {
     *(uint64_t *)(can_obj.Data) = send_count;
 
     auto size = can::utils::bin2hex::bin2hex_fast(send_buff, cmd_recv, &send_count, &now, &can_obj, "\n");
-    zmq::send_result_t rc = publisher.send(zmq::buffer(std::string_view(send_buff, size)));
-    std::cout << "publib send result: " << rc << std::endl;
+    // zmq::send_result_t rc = publisher.send(zmq::buffer(std::string_view(send_buff, size)));
+    // std::cout << "publib send result: " << rc << std::endl;
     send_count++;
 
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -113,13 +107,11 @@ static void signal_hander(int sig) { run_flag.store(false); }
 
 int main(int argc, char **argv) {
   signal(SIGINT, signal_hander);
-  zmq::context_t ctx;
-
-  std::thread pub_thd(pub_simu_func, &run_flag, &ctx);
+  std::thread pub_thd(pub_simu_func, &run_flag);
 
   try {
     boost::asio::io_context io_context;
-    Server s = Server(io_context, lisenPort, &ctx);
+    Server s = Server(io_context, lisenPort);
     s.startAccepting();
     io_context.run();
   } catch (boost::system::system_error &ec) {
