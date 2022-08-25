@@ -2,7 +2,11 @@ cmake_minimum_required (VERSION 3.15)
 message(STATUS "Select CMake build type: ${CMAKE_BUILD_TYPE}")
 
 add_definitions(-DBUILDING_LIBCC_DLL)
-add_compile_options(-fPIC)
+
+if (CMAKE_HOST_UNIX)
+	# there maybe multiple boost install, override the default boost install path
+	link_directories("/usr/local/lib")
+endif()
 
 if (CMAKE_HOST_WIN32)
 	add_definitions(-DWIN32_LEAN_AND_MEAN)
@@ -18,6 +22,7 @@ if (CMAKE_HOST_UNIX)
 endif()
 
 set(ControlCAN ${ControlCAN} PARENT_SCOPE)
+set_property(TARGET ControlCAN PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 if (CMAKE_HOST_WIN32)
 	set_property(TARGET ControlCAN PROPERTY
