@@ -2,6 +2,8 @@
 
 #include "glog/logging.h"
 #include "gtest/gtest.h"
+#include <chrono>
+#include <thread>
 
 TEST(asioDemo, udpServer2) {
   boost::asio::io_service io_service;
@@ -17,7 +19,10 @@ TEST(asioDemo, udpServer2) {
 
   try {
     socket.bind(local_endpoint);
-    socket.send_to(boost::asio::buffer("abc", 3), remote_endpoint);
+    while (true) {
+      socket.send_to(boost::asio::buffer("abc", 3), remote_endpoint);
+      std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
   } catch (boost::system::system_error e) {
     std::cout << e.what() << std::endl;
   }
