@@ -3,13 +3,11 @@ cmake_minimum_required (VERSION 3.15)
 include(${PROJECT_SOURCE_DIR}/cmake/platform_include.cmake)
 
 file( GLOB SRC_FILES *.cc )
-add_executable( can_test ${SRC_FILES} )
-target_link_libraries( can_test ControlCAN gtest glog )
+add_executable( test_eventpp ${SRC_FILES} )
+target_link_libraries( test_eventpp gtest glog )
 
 if (CMAKE_HOST_WIN32)
-	set_property(TARGET can_test PROPERTY
+	set_property(TARGET test_eventpp PROPERTY
 		MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 endif()
-
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test_eventpp)
 

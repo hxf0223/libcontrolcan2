@@ -34,6 +34,7 @@ TEST(asioDemo, udpClient2) {
 
   // Client binds to any address on port 8888 (the same port on which broadcast data is sent from server).
   ip::udp::socket socket(io_service, ip::udp::endpoint(ip::udp::v4(), 8888));
+  LOG(INFO) << "create socket success.";
   ip::udp::endpoint sender_endpoint;
 
   size_t rx_count = 0;
