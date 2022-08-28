@@ -41,7 +41,7 @@ add_subdirectory("libControlCAN")
 
 add_subdirectory("can_agent")
 add_subdirectory ("test")
-#add_subdirectory ("test_zmq")
+add_subdirectory ("test_zmq")
 add_subdirectory("test_asio_server")
 add_subdirectory("asio_example")
 

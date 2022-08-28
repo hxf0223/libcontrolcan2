@@ -5,7 +5,11 @@ include(${PROJECT_SOURCE_DIR}/cmake/platform_include.cmake)
 file( GLOB SRC_FILES *.cc )
 add_executable( test_zmq ${SRC_FILES} )
 #target_link_libraries( test_zmq gtest glog -Wl,-Bstatic zmq -Wl,-Bdynamic )
-target_link_libraries( test_zmq gtest glog zmq )
+if (CMAKE_HOST_UNIX)
+	target_link_libraries( test_zmq gtest glog zmq )
+elseif(CMAKE_HOST_WIN32)
+	target_link_libraries( test_zmq gtest glog libzmq )
+endif()
 
 if (CMAKE_HOST_WIN32)
 	set_property(TARGET test_zmq PROPERTY

@@ -23,7 +23,7 @@ glog源码相对于官方glog的修改：
 - 添加 glog/include/glog目录，将install得到的头文件拷贝到此目录下。
 
 引入libzmq，辅助测试代码引用libzmp：
-
+- 注释掉 RELEASE_POSTFIX ， RELWITHDEBINFO_POSTFIX ， MINSIZEREL_POSTFIX ， DEBUG_POSTFIX ，并且测试例程针对Windows 链接名称为 libzmq；
 - BUILD_TESTS 设置为 OFF;
 - WITH_LIBSODIUM 设置为 OFF;
 - WITH_LIBBSD 设置为 OFF;
