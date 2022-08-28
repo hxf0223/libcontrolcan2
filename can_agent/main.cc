@@ -3,6 +3,7 @@
 #include <csignal>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <signal.h>
 #include <string>
 #include <string_view>
@@ -14,10 +15,11 @@
 #include "lib_control_can.h"
 
 #include "boost/asio.hpp"
+#include "server/canobj_queue_type.h"
 #include "server/server.h"
 
-//#include "zmq.hpp"
-//#include "zmq_addon.hpp"
+// #include "zmq.hpp"
+// #include "zmq_addon.hpp"
 
 constexpr DWORD devtype = 4;
 constexpr DWORD devid = 0;
@@ -25,11 +27,6 @@ constexpr DWORD channel = 0;
 constexpr short lisenPort = 9999;
 
 namespace {
-
-template <typename T>
-std::ostream &operator<<(std::ostream &os, std::optional<T> const &opt) {
-  return opt ? os << opt.value() : os;
-}
 
 inline VCI_INIT_CONFIG create_vci_init_cfg(UCHAR timing0, UCHAR timing1, DWORD mask) {
   VCI_INIT_CONFIG cfg{};
@@ -76,7 +73,7 @@ static void can_rx_func(std::atomic_bool *runFlag) {
   std::cout << "can_rx_func exit." << std::endl;
 }
 
-static void pub_simu_func(std::atomic_bool *runFlag) {
+static void pub_simu_func(std::atomic_bool *runFlag, eventpp_queue_t &ppq) {
   const char *cmd_recv = "VCI_Receive,";
   uint64_t send_count = 0;
   char send_buff[256];
@@ -107,13 +104,12 @@ static void signal_hander(int sig) { run_flag.store(false); }
 
 int main(int argc, char **argv) {
   signal(SIGINT, signal_hander);
-  std::thread pub_thd(pub_simu_func, &run_flag);
+  eventpp_queue_t ppq;
+  std::thread pub_thd(pub_simu_func, &run_flag, std::ref(ppq));
 
   try {
-    boost::asio::io_context io_context;
-    Server s = Server(io_context, lisenPort);
+    Server s(lisenPort, ppq);
     s.startAccepting();
-    io_context.run();
   } catch (boost::system::system_error &ec) {
     std::cout << ec.what() << std::endl;
   }

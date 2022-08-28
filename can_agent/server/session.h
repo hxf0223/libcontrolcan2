@@ -8,29 +8,31 @@
 #include <boost/bind.hpp>
 #include <iostream>
 
-#include "asio_zsocket.hpp"
-#include "zmq.hpp"
+#include "canobj_queue_type.h"
 
 class Session : public std::enable_shared_from_this<Session> {
 private:
   boost::asio::ip::tcp::socket socket_;
   std::string address_;
 
-  char rx_buffer_[1024]{0};
-  std::vector<char> tx_buffer_;
-  std::array<char, 1024> zrx_buff_;
+  boost::asio::deadline_timer deadline_;
+  spsc_queue_t<boost::lockfree::capacity<1024>> spsc_queue_;
+  canobj_queue_node_t can_obj_;
+  eventpp_queue_t eventpp_q_;
+  eventpp_queue_handle_t ppq_handle_;
 
 public:
   boost::asio::ip::tcp::socket &get_socket() { return socket_; }
-  Session(boost::asio::io_context &ioContext);
+  Session(boost::asio::io_context &ioContext, eventpp_queue_t &ppq);
   ~Session();
 
+  void consume_can_obj_handler(const canobj_queue_node_t &node);
   void start();
 
   // write message to client which come from zmq's server
-  void write_message(const boost::system::error_code &ec, std::size_t bytesTransfered);
+  void write_message();
+  void do_can_obj_transpose(const boost::system::error_code &ec);
 
   void handle_write(const boost::system::error_code &ec, std::size_t bytesTransfered);
   void handle_read(const boost::system::error_code &ec, std::size_t bytesTransfered);
-  void handle_zmq_recv(const boost::system::error_code &ec, std::size_t bytesTransfered);
 };
