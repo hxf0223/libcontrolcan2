@@ -1,5 +1,6 @@
 #include <chrono>
 #include <cstddef>
+#include <functional>
 #include <string>
 #include <thread>
 
@@ -12,15 +13,25 @@
 TEST(evnetQueue, Function) {
   auto f1 = [](const std::string &str) { LOG(INFO) << "function1, value: " << str; };
   auto f2 = [](const std::string &str) { LOG(INFO) << "function2, value: " << str; };
+  auto f3 = [](const std::string &str) { LOG(INFO) << "function3, value: " << str; };
   struct functor1 {
     size_t count_{0};
     void operator()(const std::string &str) { LOG(INFO) << "functor 1, count " << ++count_ << ", value: " << str; }
+  };
+
+  struct class1 {
+    size_t count_{0};
+    void print_str(const std::string &str) { LOG(INFO) << "class1, count " << ++count_ << ", value " << str; }
   };
 
   functor1 ft1;
   using queue_t = eventpp::EventQueue<int, void(const std::string &)>;
   using queue_handle_t = queue_t::Handle;
   queue_t q;
+
+  q.enqueue(1, "test string 10");
+  q.enqueue(1, "test string 20");
+  q.process();
 
   queue_handle_t h1 = q.appendListener(1, f1);
   q.appendListener(1, f2);
@@ -30,9 +41,16 @@ TEST(evnetQueue, Function) {
   q.enqueue(1, "test string 2");
   q.process();
 
+  class1 c1;
+  LOG(INFO) << "!!! append more after queue and process";
+  q.appendListener(1, std::bind(&class1::print_str, &c1, std::placeholders::_1));
+  q.appendListener(1, f3);
+  q.enqueue(1, "test string 3");
+  q.process();
+
   LOG(INFO) << "!!! remove f1";
   q.removeListener(1, h1);
-  q.enqueue(1, "test string 3");
+  q.enqueue(1, "test string 4");
   q.process();
 }
 

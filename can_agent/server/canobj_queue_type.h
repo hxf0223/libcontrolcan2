@@ -19,5 +19,6 @@ struct canobj_queue_node_t {
 template <typename CAPACITY>
 using spsc_queue_t = boost::lockfree::spsc_queue<canobj_queue_node_t, CAPACITY, boost::lockfree::fixed_sized<true>>;
 
+constexpr int ppq_can_obj_evt_id = 1;
 using eventpp_queue_t = eventpp::EventQueue<int, void(const canobj_queue_node_t &)>;
 using eventpp_queue_handle_t = eventpp_queue_t::Handle;

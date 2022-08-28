@@ -13,12 +13,11 @@
 class Session : public std::enable_shared_from_this<Session> {
 private:
   boost::asio::ip::tcp::socket socket_;
-  std::string address_;
-
   boost::asio::deadline_timer deadline_;
+
   spsc_queue_t<boost::lockfree::capacity<1024>> spsc_queue_;
   canobj_queue_node_t can_obj_;
-  eventpp_queue_t eventpp_q_;
+  eventpp_queue_t &eventpp_q_;
   eventpp_queue_handle_t ppq_handle_;
 
 public:

@@ -11,7 +11,7 @@ typedef std::shared_ptr<Session> session_ptr;
 
 class Server {
 private:
-  boost::asio::io_context io_context_;
+  boost::asio::io_context &io_context_;
   boost::asio::ip::tcp::acceptor acceptor_;
 
   std::shared_ptr<Session> session_;
@@ -21,7 +21,7 @@ private:
   eventpp_queue_t &eventpp_queue_;
 
 public:
-  Server(short port, eventpp_queue_t &ppq);
+  Server(short port, boost::asio::io_context &ioContext, eventpp_queue_t &ppq);
   ~Server();
   void startAccepting();
 

@@ -12,11 +12,11 @@
 
 Session::Session(boost::asio::io_context &ioContext, eventpp_queue_t &ppq)
   : socket_(ioContext), deadline_(ioContext), eventpp_q_(ppq) {
-  ppq_handle_ = eventpp_q_.appendListener(1, std::bind(&Session::consume_can_obj_handler, this, std::placeholders::_1));
+  std::cout << "Session created." << std::endl;
 }
 
 Session::~Session() {
-  eventpp_q_.removeListener(1, ppq_handle_);
+  eventpp_q_.removeListener(ppq_can_obj_evt_id, ppq_handle_);
   std::cout << "Session terminated." << std::endl;
 }
 
@@ -27,6 +27,8 @@ void Session::consume_can_obj_handler(const canobj_queue_node_t &node) {
 }
 
 void Session::start() {
+  ppq_handle_ = eventpp_q_.appendListener(
+    ppq_can_obj_evt_id, std::bind(&Session::consume_can_obj_handler, shared_from_this(), std::placeholders::_1));
   boost::system::error_code ec;
   do_can_obj_transpose(ec);
 }

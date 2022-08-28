@@ -9,6 +9,7 @@
 #include <mutex> // std::mutex, std::unique_lock
 #include <regex>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include <boost/asio.hpp>
