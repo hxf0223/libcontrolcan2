@@ -90,13 +90,16 @@ static void pub_simu_func(std::atomic_bool *runFlag, eventpp_queue_t &ppq) {
     send_count++;
 
     auto err = ppq.process();
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 
   std::cout << "pub_simu_func exit." << std::endl;
 }
 
 int main(int argc, char **argv) {
+  FLAGS_alsologtostderr = 1;
+  google::InitGoogleLogging(argv[0]);
+
   eventpp_queue_t ppq;
   std::atomic_bool run_flag{true};
   std::thread pub_thd(pub_simu_func, &run_flag, std::ref(ppq));
@@ -113,7 +116,7 @@ int main(int argc, char **argv) {
     s.startAccepting();
     io_context.run();
   } catch (boost::system::system_error &ec) {
-    std::cout << ec.what() << std::endl;
+    LOG(WARNING) << ec.what();
     run_flag.store(false);
   }
 

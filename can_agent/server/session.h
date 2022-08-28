@@ -25,13 +25,14 @@ public:
   Session(boost::asio::io_context &ioContext, eventpp_queue_t &ppq);
   ~Session();
 
-  void consume_can_obj_handler(const canobj_queue_node_t &node);
   void start();
 
-  // write message to client which come from zmq's server
-  void write_message();
+private:
+  void disconnect_to_eventqq();
+  void consume_can_obj_handler(const canobj_queue_node_t &node);
   void do_can_obj_transpose(const boost::system::error_code &ec);
 
+  void write_message();
   void handle_write(const boost::system::error_code &ec, std::size_t bytesTransfered);
   void handle_read(const boost::system::error_code &ec, std::size_t bytesTransfered);
 };
