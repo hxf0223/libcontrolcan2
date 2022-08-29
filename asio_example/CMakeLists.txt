@@ -1,5 +1,3 @@
-include(${PROJECT_SOURCE_DIR}/cmake/platform_include.cmake)
-
 file( GLOB_RECURSE  SRC_FILES *.cc )
 add_executable( exam_asio ${SRC_FILES} )
 target_link_libraries( exam_asio gtest glog )

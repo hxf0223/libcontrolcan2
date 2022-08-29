@@ -583,6 +583,8 @@ set (GLOG_PUBLIC_H
   src/glog/platform.h
 )
 
+set(GLOG_INC_DIR ${CMAKE_CURRENT_BINARY_DIR}/glog PARENT_SCOPE)
+
 set (GLOG_SRCS
   ${GLOG_PUBLIC_H}
   src/base/commandlineflags.h

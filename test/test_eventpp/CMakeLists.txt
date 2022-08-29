@@ -1,7 +1,5 @@
 cmake_minimum_required (VERSION 3.15)
 
-include(${PROJECT_SOURCE_DIR}/cmake/platform_include.cmake)
-
 file( GLOB SRC_FILES *.cc )
 add_executable( test_eventpp ${SRC_FILES} )
 target_link_libraries( test_eventpp gtest glog )

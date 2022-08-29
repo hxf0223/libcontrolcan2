@@ -20,7 +20,7 @@ glog源码相对于官方glog的修改：
 
 - glog/CMakeLists.txt： set(BUILD_TESTING OFF)，禁用编译glog的测试用例；
 - glog/CMakeLists.txt：set(glog ${glog} PARENT_SCOPE)；
-- 添加 glog/include/glog目录，将install得到的头文件拷贝到此目录下。
+- 在 set(GLOG_PUBLIC_H ...) 语句后面，添加 set(GLOG_INC_DIR "${CMAKE_CURRENT_BINARY_DIR}/glog" PARENT_SCOPE) 。在根 CMakeLists.txt 中添加 include_directories(${GLOG_INC_DIR}) 。
 
 引入libzmq，辅助测试代码引用libzmp：
 - 注释掉 RELEASE_POSTFIX ， RELWITHDEBINFO_POSTFIX ， MINSIZEREL_POSTFIX ， DEBUG_POSTFIX ，并且测试例程针对Windows 链接名称为 libzmq；
