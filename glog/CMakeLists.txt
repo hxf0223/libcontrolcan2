@@ -47,6 +47,7 @@ option (WITH_TLS "Enable Thread Local Storage (TLS) support" ON)
 option (WITH_UNWIND "Enable libunwind support" ON)
 
 cmake_dependent_option (WITH_GMOCK "Use Google Mock" ON WITH_GTEST OFF)
+message(AUTHOR_WARNING "glog build type: ${CMAKE_BUILD_TYPE}")
 
 if (NOT WITH_UNWIND)
   set (CMAKE_DISABLE_FIND_PACKAGE_Unwind ON)

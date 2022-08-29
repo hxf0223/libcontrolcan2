@@ -33,6 +33,8 @@ if (COMMAND pre_project_set_up_hermetic_build)
   pre_project_set_up_hermetic_build()
 endif()
 
+message(AUTHOR_WARNING "googletest build type: ${CMAKE_BUILD_TYPE}")
+
 ########################################################################
 #
 # Project-wide settings
