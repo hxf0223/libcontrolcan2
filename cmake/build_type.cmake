@@ -1,0 +1,33 @@
+if(NOT WIN32)
+    string(ASCII 27 esc)
+    set(red          "${esc}[31m")
+    set(green        "${esc}[32m")
+    set(yellow       "${esc}[33m")
+    set(blue         "${esc}[34m")
+    set(magenta      "${esc}[35m")
+    set(cyan         "${esc}[36m")
+    set(white        "${esc}[37m")
+    set(bold_red     "${esc}[1;31m")
+    set(bold_green   "${esc}[1;32m")
+    set(bold_yellow  "${esc}[1;33m")
+    set(bold_blue    "${esc}[1;34m")
+    set(bold_magenta "${esc}[1;35m")
+    set(bold_cyan    "${esc}[1;36m")
+    set(bold_white   "${esc}[1;37m")
+    set(reset_color  "${esc}[m")
+    set(bold_color   "${esc}[1m")
+endif()
+
+# Set a default build type if none was specified
+set(default_build_type "Release")
+if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
+    set(default_build_type "Debug")
+endif()
+
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
+    set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE STRING "Choose the type of build." FORCE)
+    # Set the possible values of build type for cmake-gui
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
+        "MinSizeRel" "RelWithDebInfo")
+endif()

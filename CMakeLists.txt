@@ -22,6 +22,8 @@ if (CMAKE_HOST_WIN32)
 	add_definitions(-D_WIN32_WINNT=0x0A00) # avoid boost.asio warning: Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately
 endif()
 
+include(cmake/build_type.cmake)
+
 # for windows compile or cross-platform compile
 include_directories("$ENV{BOOST_ROOT}/include")
 link_directories("$ENV{BOOST_ROOT}/lib")
