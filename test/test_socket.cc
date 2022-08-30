@@ -5,6 +5,7 @@
 
 #include <boost/asio.hpp>
 #include <chrono>
+#include <filesystem>
 #include <memory>
 #include <thread>
 
