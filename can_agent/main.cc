@@ -78,16 +78,18 @@ static void pub_simu_func(std::atomic_bool *runFlag, eventpp_queue_t &ppq) {
   uint64_t send_count = 0;
 
   while (runFlag->load()) {
-    auto dur = std::chrono::system_clock::now().time_since_epoch();
-    uint64_t now = std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+    for (size_t i = 0; i < 10; i++) {
+      auto dur = std::chrono::system_clock::now().time_since_epoch();
+      uint64_t now = std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
 
-    VCI_CAN_OBJ can_obj{};
-    *(uint64_t *)(can_obj.Data) = send_count;
+      VCI_CAN_OBJ can_obj{};
+      *(uint64_t *)(can_obj.Data) = send_count;
 
-    auto ptr_dst = (char *)send_buff.can_obj_;
-    send_buff.len_ = can::utils::bin2hex::bin2hex_fast(ptr_dst, cmd_recv, &send_count, &now, &can_obj, "\n");
-    ppq.enqueue(ppq_can_obj_evt_id, send_buff);
-    send_count++;
+      auto ptr_dst = (char *)send_buff.can_obj_;
+      send_buff.len_ = can::utils::bin2hex::bin2hex_fast(ptr_dst, cmd_recv, &send_count, &now, &can_obj, "\n");
+      ppq.enqueue(ppq_can_obj_evt_id, send_buff);
+      send_count++;
+    }
 
     auto err = ppq.process();
     std::this_thread::sleep_for(std::chrono::milliseconds(10));

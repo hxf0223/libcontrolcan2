@@ -70,19 +70,19 @@ TEST(Socket, perfClient) {
     const size_t recv_cnt_max = 10000 * 30;
     ULONG recv_frame_cnt = 0;
 
-    auto tm0 = std::chrono::steady_clock::now();
+    // auto tm0 = std::chrono::high_resolution_clock::now();
     while (recv_frame_cnt < recv_cnt_max) {
       auto recv_frame_num = canDc->VCI_Receive(devtype, devid, channel, can_recv_buff, rec_buff_size, 10);
       for (ULONG i = 0; i < recv_frame_num; i++) {
         std::string str = can::utils::bin2hex_dump(can_recv_buff[i].Data, 8);
-        LOG(INFO) << recv_frame_cnt << ": " << str;
+        // LOG(INFO) << recv_frame_cnt << ": " << str;
         recv_frame_cnt++;
       }
     }
 
-    auto tm2 = std::chrono::steady_clock::now();
-    std::chrono::duration<double, std::milli> dur1 = tm2 - tm0;
-    LOG(INFO) << "receive frame num: " << recv_frame_cnt << ", time in ms: " << dur1.count();
+    // auto tm2 = std::chrono::high_resolution_clock::now();
+    // std::chrono::duration<double, std::milli> dur1 = tm2 - tm0;
+    // LOG(INFO) << "receive frame num: " << recv_frame_cnt << ", time in ms: " << dur1.count();
   }; // client_proc
 
   std::shared_ptr<CanImpInterface> can_dc(createCanNet());
