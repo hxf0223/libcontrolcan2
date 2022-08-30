@@ -2,7 +2,12 @@ cmake_minimum_required (VERSION 3.15)
 
 file( GLOB SRC_FILES *.cc )
 add_executable( can_test ${SRC_FILES} )
-target_link_libraries( can_test ControlCAN gtest glog "-Wl,--no-as-needed" profiler "-Wl,--as-needed")
+
+if (CMAKE_HOST_UNIX)
+	target_link_libraries( can_test ControlCAN gtest glog "-Wl,--no-as-needed" profiler "-Wl,--as-needed")
+else()
+	target_link_libraries( can_test ControlCAN gtest glog)
+endif()
 
 if (CMAKE_HOST_WIN32)
 	set_property(TARGET can_test PROPERTY
