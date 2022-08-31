@@ -25,7 +25,8 @@
         "--completion-style=detailed",
         "--header-insertion=iwyu",
         "--compile-commands-dir=${workspaceFolder}/build",
-        "--query-driver=g++"
+        "--query-driver=g++",
+        "-std=c++17"
     ],
     "ffi_navigator.pythonpath": "/home/hxf0223/anaconda3/bin/python3",
     "files.associations": {

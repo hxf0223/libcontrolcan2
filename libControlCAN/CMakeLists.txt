@@ -19,6 +19,10 @@ endif()
 
 set(ControlCAN ${ControlCAN} PARENT_SCOPE)
 set_property(TARGET ControlCAN PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_target_properties(ControlCAN PROPERTIES
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED ON
+)
 
 if (CMAKE_HOST_WIN32)
 	set_property(TARGET ControlCAN PROPERTY

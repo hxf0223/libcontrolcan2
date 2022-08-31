@@ -129,7 +129,7 @@ private:
 };
 
 //----------------------------------------------------------------------
-
+#if 0
 int main(int argc, char *argv[]) {
   try {
     if (argc != 4) {
@@ -162,3 +162,4 @@ int main(int argc, char *argv[]) {
 
   return 0;
 }
+#endif
