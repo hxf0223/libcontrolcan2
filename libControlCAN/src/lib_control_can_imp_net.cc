@@ -1,5 +1,8 @@
+#include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <boost/asio.hpp>
+#include <boost/asio/buffer.hpp>
+#include <boost/asio/read_until.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/lexical_cast.hpp>
@@ -46,6 +49,7 @@ std::regex CanImpCanNet::_hex_str_pattern2("^(?:[0-9a-fA-F][0-9a-fA-F])+$");
 CanImpCanNet::CanImpCanNet() : _connected(false), _str_sock_addr(""), _str_sock_port("") {
   const auto dir_path = getexepath().parent_path();
   boost::filesystem::path ini_path(dir_path / "control_can.ini");
+  rx_buff_.prepare(1024 * 8);
 
   if (boost::filesystem::exists(ini_path)) {
     ini_t ini(ini_path.string(), true);
@@ -246,14 +250,12 @@ vciReturnType CanImpCanNet::VCI_Transmit(DWORD DeviceType, DWORD DeviceInd, DWOR
   return vciReturnType::STATUS_OK;
 }
 
-ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_CAN_OBJ pReceive, ULONG Len,
-                                INT WaitTime) {
+void CanImpCanNet::async_read(PVCI_CAN_OBJ pReceive, ULONG &Len, error_code_t &ec) {
   using sv_regex_iter_t = std::regex_iterator<std::string_view::const_iterator>;
   using namespace boost::asio::error;
   using namespace boost::system;
-  if (!_connected.load() || !pReceive) return 0;
 
-  auto f = [&](const std::string_view &str, VCI_CAN_OBJ *dst) -> int {
+  auto line_post_process_func = [&](const std::string_view &str, VCI_CAN_OBJ *dst) -> int {
     const auto end = sv_regex_iter_t();
     const sv_regex_iter_t it(str.begin(), str.end(), _receive_pattern2);
     if (it == end || (*it)[0].second == str.end()) return -1;
@@ -269,20 +271,38 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
     return 0;
   };
 
-  ULONG recv_line_cnt = 0;
-  // const sregex_iterator end;
-  const std::chrono::milliseconds to(WaitTime);
-  const auto t0 = std::chrono::steady_clock::now();
-  std::chrono::duration<double, std::milli> dur(0);
-  error_code_t ec;
+  boost::asio::async_read_until(client_socket_, rx_buff_, '\n',
+                                [&](const error_code_t &result_error, std::size_t result_n) {
+                                  const auto avail_num = rx_buff_.size();
+                                  auto begin = boost::asio::buffer_cast<const char *>(rx_buff_.data());
+                                  auto pos = std::find(begin, begin + avail_num, '\n');
+                                  rx_buff_.consume(pos - begin + 1);
+                                  ec = result_error; // save error code
 
-  const dur_t dur1(WaitTime);
-  read_line_cb_t func = f;
-  while (!ec && recv_line_cnt < Len && dur.count() < WaitTime) {
-    auto n = read_line(dur1, func, pReceive + recv_line_cnt, ec);
-    dur = std::chrono::steady_clock::now() - t0;
-    if (n > 0) recv_line_cnt++;
-  }
+                                  if (!result_error && pos != (begin + avail_num) && Len > 0) {
+                                    std::string_view line(begin, pos - begin); // remove \n
+                                    auto proc_result = line_post_process_func(line, pReceive);
+                                    if (0 != proc_result) {
+                                      std::cout << "line process fail." << std::endl;
+                                    }
+                                    if (--Len > 0) {
+                                      async_read(pReceive + 1, Len, ec);
+                                    }
+                                  }
+                                });
+}
+
+ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_CAN_OBJ pReceive, ULONG Len,
+                                INT WaitTime) {
+  if (!_connected.load() || !pReceive || !Len) return 0;
+  using namespace boost::asio::error;
+  using namespace boost::system;
+
+  error_code_t ec;
+  ULONG require_rx_num = Len;
+
+  async_read(pReceive, require_rx_num, ec);
+  io_context_run(dur_t(WaitTime));
 
   const auto ec_val = ec.value();
   if (ec && ec_val != errc::operation_canceled && ec_val != operation_aborted) {
@@ -291,7 +311,7 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
     client_socket_.close();
   }
 
-  return recv_line_cnt;
+  return (Len - require_rx_num);
 }
 
 int CanImpCanNet::connect(const std::string &host, const std::string &service, int timeoutMs) {

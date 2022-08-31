@@ -3,6 +3,7 @@
 #include "lib_control_can_imp.h"
 #include "usbcan.h"
 
+#include <boost/asio/streambuf.hpp>
 #include <boost/system.hpp>
 #include <functional>
 #include <iterator>
@@ -53,6 +54,7 @@ private:
   int connect(const std::string &host, const std::string &service, int timeoutMs);
   void io_context_run(const dur_t &timeout);
 
+  void async_read(PVCI_CAN_OBJ pReceive, ULONG &Len, error_code_t &ec);
   void read_line(char *buff, size_t buffSize, const dur_t &timeout, error_code_t &ec);
   size_t read_line(const dur_t &timeout, read_line_cb_t &cb, VCI_CAN_OBJ *obj, error_code_t ec);
   inline int write_line(const char *p, size_t len, error_code_t &ec);
@@ -63,6 +65,7 @@ private:
   std::string _str_sock_port;
 
   boost::asio::io_context io_context_;
+  boost::asio::streambuf rx_buff_;
   boost::asio::ip::tcp::socket client_socket_{io_context_};
   std::string input_buffer_;
 
