@@ -17,6 +17,9 @@
     "C_Cpp.autocomplete": "Disabled", // So you don't get autocomplete from both extensions.
     "C_Cpp.errorSquiggles": "Disabled", // So you don't get error squiggles from both extensions (clangd's seem to be more reliable anyway).
     "clangd.path": "/usr/local/bin/clangd",
+    "clangd.onConfigChanged": "restart",
+    "clangd.restartAfterCrash": true,
+    "clangd.checkUpdates": true,
     "clangd.arguments": [
         "-log=verbose",
         "-pretty",
@@ -25,8 +28,7 @@
         "--completion-style=detailed",
         "--header-insertion=iwyu",
         "--compile-commands-dir=${workspaceFolder}/build",
-        "--query-driver=g++",
-        "-std=c++17"
+        "--query-driver=/usr/bin/g++"
     ],
     "ffi_navigator.pythonpath": "/home/hxf0223/anaconda3/bin/python3",
     "files.associations": {
