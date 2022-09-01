@@ -75,10 +75,6 @@ private:
   void async_read(std::atomic<PVCI_CAN_OBJ> &pReceive, ULONG Len,
                   error_code_t &ec, std::atomic_uint32_t &readNum);
 
-  void read_line(char *buff, size_t buffSize, const dur_t &timeout,
-                 error_code_t &ec);
-  size_t read_line(const dur_t &timeout, read_line_cb_t &cb, VCI_CAN_OBJ *obj,
-                   error_code_t ec);
   inline int write_line(const char *p, size_t len, error_code_t &ec);
 
 private:

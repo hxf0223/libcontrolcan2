@@ -304,7 +304,6 @@ void CanImpCanNet::async_read(std::atomic<PVCI_CAN_OBJ> &ptrCanObj, ULONG Len,
     return;
   }
 
-  std::cout << "11111 " << std::hex << ptrCanObj << std::dec << std::endl;
   using sv_regex_iter_t = std::regex_iterator<std::string_view::const_iterator>;
   using namespace boost::asio::error;
   using namespace boost::system;
@@ -364,7 +363,6 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
   error_code_t ec;
   ULONG require_rx_num = Len;
   std::atomic_uint32_t rx_num{0};
-  // std::cout << "00000 " << std::hex << pReceive << std::dec << std::endl;
 
   io_context_.reset();
   std::atomic<PVCI_CAN_OBJ> atomic_p(pReceive);
@@ -372,7 +370,6 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
   timer_.expires_from_now(boost::posix_time::milliseconds(WaitTime));
   timer_.async_wait([&](const error_code &ec) {
     if (!ec) { // no error mean timeout
-      std::cout << "00000 VCI_Receive timeout." << std::endl;
       client_socket_.cancel();
     }
   });
@@ -386,7 +383,6 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
     client_socket_.close();
   }
 
-  // std::cout << "00000 VCI_Receive " << rx_num.load() << std::endl;
   return rx_num.load(std::memory_order_relaxed);
 }
 
@@ -445,55 +441,6 @@ void CanImpCanNet::io_context_run(const dur_t &timeout) {
   }
 }
 
-void CanImpCanNet::read_line(char *buff, size_t buffSize, const dur_t &timeout,
-                             error_code_t &ec) {
-  io_context_run(timeout);
-
-  std::size_t n = 0;
-  boost::asio::async_read(
-      client_socket_, boost::asio::buffer(buff, buffSize),
-      boost::asio::transfer_exactly(buffSize),
-      [&](const error_code_t &result_error, std::size_t result_n) {
-        ec = result_error;
-        n = result_n;
-      });
-
-  // io_context_run(timeout);
-}
-
-size_t CanImpCanNet::read_line(const dur_t &timeout, read_line_cb_t &cb,
-                               VCI_CAN_OBJ *obj, error_code_t ec) {
-  // Start the asynchronous operation. The lambda that is used as a callback
-  // will update the error and n variables when the operation completes. The
-  // blocking_udp_client.cpp example shows how you can use std::bind rather
-  // than a lambda.
-  std::size_t n = 0;
-  boost::asio::async_read_until(
-      client_socket_, boost::asio::dynamic_buffer(input_buffer_), '\n',
-      [&](const error_code_t &result_error, std::size_t result_n) {
-        ec = result_error;
-        n = result_n;
-      });
-
-  io_context_run(
-      timeout); // FIXME: for windows, why io context run after async read
-
-  // Determine whether the read completed successfully.
-  if (ec || n == 0) { // throw std::system_error(ec);
-    return 0;
-  }
-
-  const auto pos = input_buffer_.find('\n');
-  if (pos == std::string::npos)
-    return 0;
-
-  std::string_view line(input_buffer_.data(), pos); // remove last \n
-  if (cb(line, obj) < 0)
-    n = 0;
-  input_buffer_.erase(0, pos + 1);
-  return n;
-}
-
 int CanImpCanNet::write_line(const char *p, size_t len, error_code_t &ec) {
   using namespace boost::asio::error;
   using namespace boost::system;
@@ -531,6 +478,7 @@ int CanImpCanNet::write_line(const char *p, size_t len, error_code_t &ec) {
   return 0;
 }
 
+// export function
 #include "lib_control_can_imp.h"
 #ifdef __cplusplus
 extern "C" {
