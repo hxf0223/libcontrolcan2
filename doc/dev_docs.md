@@ -1,4 +1,7 @@
-### _WIN32_WINNT 版本定义
+# DEV DOCS
+
+## _WIN32_WINNT 版本定义
+
 libControlCAN用到的BOOST::ASIO需要定义WINNT版本：-D_WIN32_WINNT。
 ```bash
 // https://docs.microsoft.com/zh-cn/cpp/porting/modifying-winver-and-win32-winnt?view=msvc-170
@@ -18,3 +21,7 @@ libControlCAN用到的BOOST::ASIO需要定义WINNT版本：-D_WIN32_WINNT。
 #define _WIN32_WINNT_WINTHRESHOLD           0x0A00 // Windows 10
 #define _WIN32_WINNT_WIN10                  0x0A00 // Windows 10
 ```
+
+## boost asio 调试知识
+
+1. Eanble Handler Tracking: BOOST_ASIO_ENABLE_HANDLER_TRACKING

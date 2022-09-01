@@ -4,10 +4,13 @@
 #include <boost/asio.hpp>
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/read_until.hpp>
+#include <boost/date_time/posix_time/posix_time_duration.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/system.hpp>
+#include <boost/system/detail/errc.hpp>
+#include <boost/system/errc.hpp>
 #include <boost/thread.hpp>
 #include <chrono>
 #include <cmath>
@@ -389,21 +392,31 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
 int CanImpCanNet::connect(const std::string &host, const std::string &service,
                           int timeoutMs) {
   using boost::asio::ip::tcp;
+  using namespace boost::system;
   // Resolve the host name and service to a list of endpoints.
   auto endpoints = tcp::resolver(io_context_).resolve(host, service);
 
-  // Start the asynchronous operation itself. The lambda that is used as a
-  // callback will update the error variable when the operation completes.
-  // The blocking_udp_client.cpp example shows how you can use std::bind
-  // rather than a lambda.
   error_code_t error;
-  boost::asio::async_connect(
-      client_socket_, endpoints,
-      [&](const error_code_t &result_error,
-          const tcp::endpoint & /*result_endpoint*/) { error = result_error; });
+  io_context_.reset();
+  boost::asio::async_connect(client_socket_, endpoints,
+                             [&](const error_code_t &result_error,
+                                 const tcp::endpoint & /*result_endpoint*/) {
+                               const auto v = result_error.value();
+                               error = result_error;
+                               if (errc::operation_canceled != v) {
+                                 timer_.cancel();
+                               }
+                             });
 
-  // Run the operation until it completes, or until the timeout.
-  io_context_run(std::chrono::milliseconds(timeoutMs));
+  timer_.expires_from_now(boost::posix_time::milliseconds(timeoutMs));
+  timer_.async_wait([&](const error_code_t &result_error) {
+    if (!result_error) { // no error mean timeout, need cancel socket ops.
+      error = errc::make_error_code(errc::timed_out);
+      client_socket_.cancel();
+    }
+  });
+
+  io_context_.run();
 
   // Determine whether a connection was successfully established.
   if (error) { // throw std::system_error(error);
@@ -415,55 +428,30 @@ int CanImpCanNet::connect(const std::string &host, const std::string &service,
   return 0;
 }
 
-void CanImpCanNet::io_context_run(const dur_t &timeout) {
-  // Restart the io_context, as it may have been left in the "stopped" state
-  // by a previous operation.
-  io_context_.restart();
-
-  // Block until the asynchronous operation has completed, or timed out. If
-  // the pending asynchronous operation is a composed operation, the deadline
-  // applies to the entire operation, rather than individual operations on
-  // the socket.
-  io_context_.run_for(timeout);
-  if (!io_context_.stopped())
-    std::cout << "!!! not stopped." << std::endl;
-
-  // If the asynchronous operation completed successfully then the io_context
-  // would have been stopped due to running out of work. If it was not
-  // stopped, then the io_context::run_for call must have timed out.
-  if (!io_context_.stopped()) {
-    // Close the socket to cancel the outstanding asynchronous operation.
-    error_code_t ec;
-    client_socket_.cancel(ec); // .close();
-
-    // Run the io_context again until the operation completes.
-    io_context_.run();
-  }
-}
-
 int CanImpCanNet::write_line(const char *p, size_t len, error_code_t &ec) {
   using namespace boost::asio::error;
   using namespace boost::system;
 
-  // Run the operation until it completes, or until the timeout.
-  dur_t timeout{std::chrono::milliseconds(100)};
-#ifdef __linux__
-  io_context_run(timeout);
-#endif
+  io_context_.reset();
 
-  // Start the asynchronous operation itself. The lambda that is used as a
-  // callback will update the error variable when the operation completes.
-  // The blocking_udp_client.cpp example shows how you can use std::bind
-  // rather than a lambda.
   boost::asio::async_write(
       client_socket_, boost::asio::buffer(p, len),
       [&](const error_code_t &result_error, std::size_t /*result_n*/) {
+        if (!result_error) {
+          timer_.cancel();
+        }
         ec = result_error;
       });
 
-#ifdef _WIN32
-  io_context_run(timeout);
-#endif
+  timer_.expires_from_now(boost::posix_time::milliseconds(100));
+  timer_.async_wait([&](const error_code_t &result_ec) {
+    if (!result_ec) { // no error mean timeout, cancel socket ops.
+      ec = errc::make_error_code(errc::operation_canceled);
+      client_socket_.cancel();
+    }
+  });
+
+  io_context_.run();
 
   if (!ec)
     return len;
