@@ -30,7 +30,8 @@ constexpr short lisenPort = 9999;
 
 namespace {
 
-inline VCI_INIT_CONFIG create_vci_init_cfg(UCHAR timing0, UCHAR timing1, DWORD mask) {
+inline VCI_INIT_CONFIG create_vci_init_cfg(UCHAR timing0, UCHAR timing1,
+                                           DWORD mask) {
   VCI_INIT_CONFIG cfg{};
   cfg.Timing0 = timing0;
   cfg.Timing1 = timing1;
@@ -53,19 +54,24 @@ static void can_rx_func(std::atomic_bool *runFlag, eventpp_queue_t &ppq) {
   uint64_t send_count = 0;
 
   while (runFlag->load()) {
-    auto recv_frame_num = VCI_Receive(devtype, devid, channel, can_recv_buff, rec_buff_size, 10);
+    auto recv_frame_num =
+        VCI_Receive(devtype, devid, channel, can_recv_buff, rec_buff_size, 10);
     for (ULONG i = 0; i < recv_frame_num; i++) {
       auto dur = std::chrono::system_clock::now().time_since_epoch();
-      uint64_t now = std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+      uint64_t now =
+          std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
 
       auto &can_obj = can_recv_buff[i];
       auto ptr_dst = (char *)send_buff.can_obj_;
-      send_buff.len_ = can::utils::bin2hex::bin2hex_fast(ptr_dst, cmd_recv, &send_count, &now, &can_obj, "\n");
+      send_buff.len_ = can::utils::bin2hex::bin2hex_fast(
+          ptr_dst, cmd_recv, &send_count, &now, &can_obj, "\n");
       ppq.enqueue(ppq_can_obj_evt_id, send_buff);
       send_count++;
     }
 
-    ppq.processIf([&recv_frame_num](const canobj_queue_node_t /*event*/) { return (recv_frame_num > 0); });
+    ppq.processIf([&recv_frame_num](const canobj_queue_node_t /*event*/) {
+      return (recv_frame_num > 0);
+    });
     // std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 
@@ -80,13 +86,15 @@ static void pub_simu_func(std::atomic_bool *runFlag, eventpp_queue_t &ppq) {
   while (runFlag->load()) {
     for (size_t i = 0; i < 10; i++) {
       auto dur = std::chrono::system_clock::now().time_since_epoch();
-      uint64_t now = std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+      uint64_t now =
+          std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
 
       VCI_CAN_OBJ can_obj{};
       *(uint64_t *)(can_obj.Data) = send_count;
 
       auto ptr_dst = (char *)send_buff.can_obj_;
-      send_buff.len_ = can::utils::bin2hex::bin2hex_fast(ptr_dst, cmd_recv, &send_count, &now, &can_obj, "\n");
+      send_buff.len_ = can::utils::bin2hex::bin2hex_fast(
+          ptr_dst, cmd_recv, &send_count, &now, &can_obj, "\n");
       ppq.enqueue(ppq_can_obj_evt_id, send_buff);
       send_count++;
     }
@@ -104,12 +112,13 @@ int main(int argc, char **argv) {
 
   eventpp_queue_t ppq;
   std::atomic_bool run_flag{true};
-  std::thread pub_thd(can_rx_func, &run_flag, std::ref(ppq));
+  std::thread pub_thd(pub_simu_func, &run_flag, std::ref(ppq));
 
   try {
     boost::asio::io_context io_context;
     boost::asio::signal_set sigset(io_context, SIGINT, SIGTERM);
-    sigset.async_wait([&run_flag, &io_context](const boost::system::error_code &err, int signal) {
+    sigset.async_wait([&run_flag, &io_context](
+                          const boost::system::error_code &err, int signal) {
       run_flag.store(false);
       io_context.stop();
     });

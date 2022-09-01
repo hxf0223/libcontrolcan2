@@ -54,12 +54,11 @@ TEST(Socket, perfServer) {
 
       boost::asio::write(server_socket, boost::asio::buffer(send_buff, size),
                          ec);
-      std::this_thread::sleep_for(1000ms);
+      std::this_thread::sleep_for(100ms);
       send_count++;
     }
 
-    LOG(INFO) << "exit with boost asio error_code: " << ec.value() << ": "
-              << ec.message();
+    LOG(INFO) << "exit: " << ec.value() << " : " << ec.message();
   }; // server_proc
 
   std::thread server_thread(server_proc);
