@@ -69,17 +69,17 @@ TEST(Socket, perfServer) {
  */
 TEST(Socket, perfClient) {
   auto client_proc = [](std::shared_ptr<CanImpInterface> canDc) {
-    constexpr DWORD rec_buff_size = 100;
-    VCI_CAN_OBJ can_recv_buff[rec_buff_size];
+    constexpr DWORD rx_buff_size = 100;
+    VCI_CAN_OBJ can_rx_buff[rx_buff_size];
     const size_t recv_cnt_max = 10000 * 30;
     ULONG recv_frame_cnt = 0;
 
     // auto tm0 = std::chrono::high_resolution_clock::now();
     while (recv_frame_cnt < recv_cnt_max) {
-      auto recv_frame_num = canDc->VCI_Receive(
-          devtype, devid, channel, can_recv_buff, rec_buff_size, 20);
+      auto recv_frame_num = canDc->VCI_Receive(devtype, devid, channel,
+                                               can_rx_buff, rx_buff_size, 20);
       for (ULONG i = 0; i < recv_frame_num; i++) {
-        std::string str = can::utils::bin2hex_dump(can_recv_buff[i].Data, 8);
+        std::string str = can::utils::bin2hex_dump(can_rx_buff[i].Data, 8);
         LOG(INFO) << recv_frame_cnt << ": " << str;
         recv_frame_cnt++;
       }

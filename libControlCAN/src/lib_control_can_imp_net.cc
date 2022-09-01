@@ -383,7 +383,9 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
     client_socket_.close();
   }
 
-  return rx_num.load(std::memory_order_relaxed);
+  auto temp = rx_num.load();
+  spdlog::info("parsed obj num {}", temp);
+  return temp;
 }
 
 int CanImpCanNet::connect(const std::string &host, const std::string &service,
