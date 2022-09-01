@@ -100,7 +100,7 @@ static void pub_simu_func(std::atomic_bool *runFlag, eventpp_queue_t &ppq) {
     }
 
     auto err = ppq.process();
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 
   std::cout << "pub_simu_func exit." << std::endl;

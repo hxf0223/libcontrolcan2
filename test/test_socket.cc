@@ -52,7 +52,7 @@ TEST(Socket, perfServer) {
       LOG(INFO) << "size: " << size << ", data: " << txbuff;
 
       boost::asio::write(server_socket, boost::asio::buffer(txbuff, size), ec);
-      std::this_thread::sleep_for(100ms);
+      std::this_thread::sleep_for(10ms);
       txcount++;
     }
 

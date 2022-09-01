@@ -48,6 +48,7 @@ typedef Ini<> ini_t;
 #include <iostream>
 
 using std::chrono::microseconds;
+using namespace can::utils;
 
 // _receive_pattern match frame head. _hex_str_pattern match VCI_CAN_OBJ,
 // boost::read_until will remove last \n
@@ -300,7 +301,7 @@ vciReturnType CanImpCanNet::VCI_Transmit(DWORD DeviceType, DWORD DeviceInd,
 
 void CanImpCanNet::async_read(std::atomic<PVCI_CAN_OBJ> &ptrCanObj, ULONG Len,
                               error_code_t &ec, std::atomic_uint32_t &readNum) {
-  if (readNum.load(std::memory_order_acquire) >= Len) {
+  if (readNum.load() >= Len) {
     timer_.cancel();
     return;
   }
@@ -323,9 +324,8 @@ void CanImpCanNet::async_read(std::atomic<PVCI_CAN_OBJ> &ptrCanObj, ULONG Len,
     if (it2 == end || pl.size() < (sizeof(VCI_CAN_OBJ) * 2))
       return -1;
 
-    can::utils::hex_string_to_bin_fastest(
-        (const char *)(&pl[0]), pl.size(),
-        (uint8_t *)(dst.load(std::memory_order_relaxed)));
+    can::utils::hex_string_to_bin_fastest((const char *)(&pl[0]), pl.size(),
+                                          (uint8_t *)(dst.load()));
     return 0;
   };
 
@@ -342,8 +342,8 @@ void CanImpCanNet::async_read(std::atomic<PVCI_CAN_OBJ> &ptrCanObj, ULONG Len,
           line_func(line, ptrCanObj);
           rx_buff_.consume(pos - begin + 1);
           if (readNum.load() < Len) {
-            readNum.fetch_add(1, std::memory_order_release); // readNum += 1;
-            ptrCanObj.fetch_add(1, std::memory_order_release);
+            readNum.fetch_add(1);
+            ptrCanObj.fetch_add(1);
             async_read(ptrCanObj, Len, ec, readNum);
           } else { // if read finished, stop the deadline timer
             timer_.cancel();
@@ -384,7 +384,7 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
   }
 
   auto temp = rx_num.load();
-  spdlog::info("parsed obj num {}", temp);
+  // spdlog::info("parsed obj num {}", temp);
   return temp;
 }
 
