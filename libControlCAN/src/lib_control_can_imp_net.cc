@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <atomic>
 #include <boost/algorithm/string.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/buffer.hpp>
@@ -16,6 +17,8 @@
 #include <regex>
 #include <string>
 #include <string_view>
+#include <thread>
+#include <unistd.h>
 #include <vector>
 
 #include "hex_dump.hpp"
@@ -294,14 +297,20 @@ vciReturnType CanImpCanNet::VCI_Transmit(DWORD DeviceType, DWORD DeviceInd,
   return vciReturnType::STATUS_OK;
 }
 
-void CanImpCanNet::async_read(PVCI_CAN_OBJ pReceive, ULONG &Len,
-                              error_code_t &ec) {
+void CanImpCanNet::async_read(std::atomic<PVCI_CAN_OBJ> &ptrCanObj, ULONG Len,
+                              error_code_t &ec, std::atomic_uint32_t &readNum) {
+  if (readNum.load(std::memory_order_acquire) >= Len) {
+    timer_.cancel();
+    return;
+  }
+
+  std::cout << "11111 " << std::hex << ptrCanObj << std::dec << std::endl;
   using sv_regex_iter_t = std::regex_iterator<std::string_view::const_iterator>;
   using namespace boost::asio::error;
   using namespace boost::system;
 
-  auto line_post_process_func = [](const std::string_view &str,
-                                   VCI_CAN_OBJ *dst) -> int {
+  auto line_func = [](const std::string_view &str,
+                      std::atomic<PVCI_CAN_OBJ> &dst) -> int {
     const auto end = sv_regex_iter_t();
     const sv_regex_iter_t it(str.begin(), str.end(), _receive_pattern2);
     if (it == end || (*it)[0].second == str.end())
@@ -309,15 +318,14 @@ void CanImpCanNet::async_read(PVCI_CAN_OBJ pReceive, ULONG &Len,
 
     auto ptr = str.data() + ((*it)[0].second - str.begin());
     const auto left_len = str.end() - (*it)[0].second;
-    auto data_str = std::string_view(ptr, left_len);
-    const sv_regex_iter_t it2(data_str.begin(), data_str.end(),
-                              _hex_str_pattern2);
-    if (it2 == end || data_str.size() < (sizeof(VCI_CAN_OBJ) * 2))
+    auto pl = std::string_view(ptr, left_len);
+    const sv_regex_iter_t it2(pl.begin(), pl.end(), _hex_str_pattern2);
+    if (it2 == end || pl.size() < (sizeof(VCI_CAN_OBJ) * 2))
       return -1;
 
-    const auto psrc = (const char *)(&data_str[0]);
-    can::utils::hex_string_to_bin_fastest(psrc, data_str.length(),
-                                          (uint8_t *)dst);
+    can::utils::hex_string_to_bin_fastest(
+        (const char *)(&pl[0]), pl.size(),
+        (uint8_t *)(dst.load(std::memory_order_relaxed)));
     return 0;
   };
 
@@ -329,12 +337,16 @@ void CanImpCanNet::async_read(PVCI_CAN_OBJ pReceive, ULONG &Len,
         auto pos = std::find(begin, begin + avail_num, '\n');
         ec = result_error; // save error code
 
-        if (!result_error && pos != (begin + avail_num) && Len > 0) {
+        if (!result_error && pos != (begin + avail_num)) {
           std::string_view line(begin, pos - begin); // remove \n
-          auto proc_result = line_post_process_func(line, pReceive);
+          line_func(line, ptrCanObj);
           rx_buff_.consume(pos - begin + 1);
-          if (--Len > 0) {
-            async_read(pReceive + 1, Len, ec);
+          if (readNum.load() < Len) {
+            readNum.fetch_add(1, std::memory_order_release); // readNum += 1;
+            ptrCanObj.fetch_add(1, std::memory_order_release);
+            async_read(ptrCanObj, Len, ec, readNum);
+          } else { // if read finished, stop the deadline timer
+            timer_.cancel();
           }
         }
       });
@@ -345,24 +357,37 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
                                 INT WaitTime) {
   if (!_connected.load() || !pReceive || !Len)
     return 0;
+
   using namespace boost::asio::error;
   using namespace boost::system;
 
   error_code_t ec;
   ULONG require_rx_num = Len;
+  std::atomic_uint32_t rx_num{0};
+  // std::cout << "00000 " << std::hex << pReceive << std::dec << std::endl;
 
-  async_read(pReceive, require_rx_num, ec);
-  io_context_run(dur_t(WaitTime));
+  io_context_.reset();
+  std::atomic<PVCI_CAN_OBJ> atomic_p(pReceive);
+  async_read(atomic_p, require_rx_num, ec, rx_num);
+  timer_.expires_from_now(boost::posix_time::milliseconds(WaitTime));
+  timer_.async_wait([&](const error_code &ec) {
+    if (!ec) { // no error mean timeout
+      std::cout << "00000 VCI_Receive timeout." << std::endl;
+      client_socket_.cancel();
+    }
+  });
+  io_context_.run();
 
-  const auto ec_val = ec.value();
-  if (ec && ec_val != errc::operation_canceled && ec_val != operation_aborted) {
-    std::cout << "VCI_Receive close socket on error: " << ec_val << ":"
-              << ec.message() << std::endl;
+  const auto ev = ec.value();
+  if (ec && ev != errc::operation_canceled && ev != operation_aborted) {
+    std::cout << "VCI_Receive error: " << ev << " : " << ec.message()
+              << std::endl;
     _connected.store(false);
     client_socket_.close();
   }
 
-  return (Len - require_rx_num);
+  // std::cout << "00000 VCI_Receive " << rx_num.load() << std::endl;
+  return rx_num.load(std::memory_order_relaxed);
 }
 
 int CanImpCanNet::connect(const std::string &host, const std::string &service,
@@ -404,6 +429,8 @@ void CanImpCanNet::io_context_run(const dur_t &timeout) {
   // applies to the entire operation, rather than individual operations on
   // the socket.
   io_context_.run_for(timeout);
+  if (!io_context_.stopped())
+    std::cout << "!!! not stopped." << std::endl;
 
   // If the asynchronous operation completed successfully then the io_context
   // would have been stopped due to running out of work. If it was not

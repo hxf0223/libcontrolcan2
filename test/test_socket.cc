@@ -54,7 +54,7 @@ TEST(Socket, perfServer) {
 
       boost::asio::write(server_socket, boost::asio::buffer(send_buff, size),
                          ec);
-      std::this_thread::sleep_for(10ms);
+      std::this_thread::sleep_for(1000ms);
       send_count++;
     }
 
@@ -80,7 +80,7 @@ TEST(Socket, perfClient) {
     // auto tm0 = std::chrono::high_resolution_clock::now();
     while (recv_frame_cnt < recv_cnt_max) {
       auto recv_frame_num = canDc->VCI_Receive(
-          devtype, devid, channel, can_recv_buff, rec_buff_size, 10);
+          devtype, devid, channel, can_recv_buff, rec_buff_size, 1500);
       for (ULONG i = 0; i < recv_frame_num; i++) {
         std::string str = can::utils::bin2hex_dump(can_recv_buff[i].Data, 8);
         LOG(INFO) << recv_frame_cnt << ": " << str;
