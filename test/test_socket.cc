@@ -27,35 +27,33 @@ TEST(Socket, perfServer) {
   using namespace boost::asio;
   using namespace boost::asio::ip;
   using namespace std::literals::chrono_literals;
+  using microsec = std::chrono::microseconds;
+  using namespace can::utils;
 
   auto server_proc = []() {
     io_service io_service;
     tcp::acceptor acceptor_server(io_service, tcp::endpoint(tcp::v4(), 9999));
     tcp::socket server_socket(io_service); // Creating socket object
     acceptor_server.accept(server_socket); // waiting for connection
-    LOG(INFO)
-        << "wait for client connect and send VCI_Receive frame to client.";
 
     boost::system::error_code ec{};
     const char *cmd_recv = "VCI_Receive,";
-    uint64_t send_count = 0;
-    char send_buff[256];
+    uint64_t txcount = 0;
+    char txbuff[256];
 
     while (!ec) {
       VCI_CAN_OBJ can_obj{};
-      *(uint64_t *)(can_obj.Data) = send_count;
+      *(uint64_t *)(can_obj.Data) = txcount;
       auto dur = std::chrono::system_clock::now().time_since_epoch();
-      uint64_t now =
-          std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+      uint64_t now = std::chrono::duration_cast<microsec>(dur).count();
 
-      auto size = can::utils::bin2hex::bin2hex_fast(
-          send_buff, cmd_recv, &send_count, &now, &can_obj, "\n");
-      LOG(INFO) << "size: " << size << ", data: " << send_buff;
+      auto size = bin2hex::bin2hex_fast(txbuff, cmd_recv, &txcount, &now,
+                                        &can_obj, "\n");
+      LOG(INFO) << "size: " << size << ", data: " << txbuff;
 
-      boost::asio::write(server_socket, boost::asio::buffer(send_buff, size),
-                         ec);
+      boost::asio::write(server_socket, boost::asio::buffer(txbuff, size), ec);
       std::this_thread::sleep_for(100ms);
-      send_count++;
+      txcount++;
     }
 
     LOG(INFO) << "exit: " << ec.value() << " : " << ec.message();
@@ -66,8 +64,8 @@ TEST(Socket, perfServer) {
 }
 
 /**
- * @brief 与 Socket.perfServer 配合，接收其发送的CAN Object帧，并解析出CAN
- * Object。
+ * @brief 与 Socket.perfServer 配合，
+ * 接收其发送的CAN Object帧，并解析出CANObject。
  */
 TEST(Socket, perfClient) {
   auto client_proc = [](std::shared_ptr<CanImpInterface> canDc) {
@@ -79,7 +77,7 @@ TEST(Socket, perfClient) {
     // auto tm0 = std::chrono::high_resolution_clock::now();
     while (recv_frame_cnt < recv_cnt_max) {
       auto recv_frame_num = canDc->VCI_Receive(
-          devtype, devid, channel, can_recv_buff, rec_buff_size, 1500);
+          devtype, devid, channel, can_recv_buff, rec_buff_size, 20);
       for (ULONG i = 0; i < recv_frame_num; i++) {
         std::string str = can::utils::bin2hex_dump(can_recv_buff[i].Data, 8);
         LOG(INFO) << recv_frame_cnt << ": " << str;
@@ -130,8 +128,6 @@ TEST(Socket, perfServer2) {
     tcp::acceptor acceptor_server(io_service, tcp::endpoint(tcp::v4(), 9999));
     tcp::socket server_socket(io_service); // Creating socket object
     acceptor_server.accept(server_socket); // waiting for connection
-    LOG(INFO) << "Wait for client connect and recive client's VCI_Transmit "
-                 "frame data.";
 
     boost::system::error_code ec{};
     std::string input_buffer;
@@ -153,8 +149,7 @@ TEST(Socket, perfServer2) {
       LOG(INFO) << "len: " << data.length() << ": " << data;
     }
 
-    LOG(INFO) << "exit with boost asio error_code: " << ec.value() << ": "
-              << ec.message();
+    LOG(INFO) << "exit: " << ec.value() << ": " << ec.message();
   }; // server_proc
 
   std::thread server_thread(server_proc);
