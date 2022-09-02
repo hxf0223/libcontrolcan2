@@ -75,7 +75,7 @@ static void can_rx_func(std::atomic_bool *runFlag, eventpp_queue_t &ppq) {
     // std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 
-  std::cout << "can_rx_func exit." << std::endl;
+  LOG(INFO) << "can_rx_func exit.";
 }
 
 static void pub_simu_func(std::atomic_bool *runFlag, eventpp_queue_t &ppq) {
@@ -103,7 +103,7 @@ static void pub_simu_func(std::atomic_bool *runFlag, eventpp_queue_t &ppq) {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 
-  std::cout << "pub_simu_func exit." << std::endl;
+  LOG(INFO) << "pub_simu_func exit.";
 }
 
 int main(int argc, char **argv) {

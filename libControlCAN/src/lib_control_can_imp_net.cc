@@ -50,6 +50,13 @@ typedef Ini<> ini_t;
 using std::chrono::microseconds;
 using namespace can::utils;
 
+namespace {
+inline std::string make_string(const boost::asio::streambuf &streambuf) {
+  return {boost::asio::buffers_begin(streambuf.data()),
+          boost::asio::buffers_end(streambuf.data())};
+}
+} // namespace
+
 // _receive_pattern match frame head. _hex_str_pattern match VCI_CAN_OBJ,
 // boost::read_until will remove last \n
 std::regex CanImpCanNet::_receive_pattern2(
@@ -336,6 +343,10 @@ void CanImpCanNet::async_read(std::atomic<PVCI_CAN_OBJ> &ptrCanObj, ULONG Len,
         auto begin = boost::asio::buffer_cast<const char *>(rx_buff_.data());
         auto pos = std::find(begin, begin + avail_num, '\n');
         ec = result_error; // save error code
+        if (!result_error) {
+          // std::string dump_str = make_string(rx_buff_);
+          // SPDLOG_INFO("receive {0} bytes: {1}", result_n, dump_str);
+        }
 
         if (!result_error && pos != (begin + avail_num)) {
           std::string_view line(begin, pos - begin); // remove \n
