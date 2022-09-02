@@ -42,6 +42,10 @@ inline VCI_INIT_CONFIG create_vci_init_cfg(UCHAR timing0, UCHAR timing1,
 } // namespace
 
 static void can_rx_func(std::atomic_bool *runFlag, eventpp_queue_t &ppq) {
+  using namespace std::chrono;
+  auto dur = system_clock::now().time_since_epoch();
+  uint64_t now = duration_cast<microseconds>(dur).count();
+
   auto e = VCI_OpenDevice(devtype, 0, 0);
   auto cfg = create_vci_init_cfg(0x00, 0x1C, 0xffffffff);
   e = VCI_InitCAN(devtype, devid, channel, &cfg);
@@ -57,9 +61,8 @@ static void can_rx_func(std::atomic_bool *runFlag, eventpp_queue_t &ppq) {
     auto recv_frame_num =
         VCI_Receive(devtype, devid, channel, can_recv_buff, rec_buff_size, 10);
     for (ULONG i = 0; i < recv_frame_num; i++) {
-      auto dur = std::chrono::system_clock::now().time_since_epoch();
-      uint64_t now =
-          std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+      dur = system_clock::now().time_since_epoch();
+      now = duration_cast<microseconds>(dur).count();
 
       auto &can_obj = can_recv_buff[i];
       auto ptr_dst = (char *)send_buff.can_obj_;
@@ -79,15 +82,17 @@ static void can_rx_func(std::atomic_bool *runFlag, eventpp_queue_t &ppq) {
 }
 
 static void pub_simu_func(std::atomic_bool *runFlag, eventpp_queue_t &ppq) {
+  using namespace std::chrono;
+  auto dur = system_clock::now().time_since_epoch();
+  uint64_t now = duration_cast<microseconds>(dur).count();
   const char *cmd_recv = "VCI_Receive,";
   canobj_queue_node_t send_buff;
   uint64_t send_count = 0;
 
   while (runFlag->load()) {
     for (size_t i = 0; i < 10; i++) {
-      auto dur = std::chrono::system_clock::now().time_since_epoch();
-      uint64_t now =
-          std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+      dur = system_clock::now().time_since_epoch();
+      now = duration_cast<microseconds>(dur).count();
 
       VCI_CAN_OBJ can_obj{};
       *(uint64_t *)(can_obj.Data) = send_count;
@@ -100,7 +105,7 @@ static void pub_simu_func(std::atomic_bool *runFlag, eventpp_queue_t &ppq) {
     }
 
     auto err = ppq.process();
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(milliseconds(100));
   }
 
   LOG(INFO) << "pub_simu_func exit.";

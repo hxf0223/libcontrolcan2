@@ -343,15 +343,10 @@ void CanImpCanNet::async_read(std::atomic<PVCI_CAN_OBJ> &ptrCanObj, ULONG Len,
         auto begin = boost::asio::buffer_cast<const char *>(rx_buff_.data());
         auto pos = std::find(begin, begin + avail_num, '\n');
         ec = result_error; // save error code
-        if (!result_error) {
-          // std::string dump_str = make_string(rx_buff_);
-          // SPDLOG_INFO("receive {0} bytes: {1}", result_n, dump_str);
-        }
 
         if (!result_error && pos != (begin + avail_num)) {
           std::string_view line(begin, pos - begin); // remove \n
-          auto e = line_func(line, ptrCanObj);
-          if (0 != e) {
+          if (0 != line_func(line, ptrCanObj)) {
             SPDLOG_WARN("line post process error.");
           }
           rx_buff_.consume(pos - begin + 1);
@@ -398,7 +393,7 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
   }
 
   auto temp = rx_num.load();
-  SPDLOG_INFO("parsed obj num {}", temp);
+  // SPDLOG_INFO("parsed obj num {}", temp);
   return temp;
 }
 
