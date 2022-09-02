@@ -67,7 +67,7 @@ CanImpCanNet::CanImpCanNet()
     _str_sock_addr = ini["Server"]["IpAddr"];
     _str_sock_port = ini["Server"]["IpPort"];
   } else {
-    spdlog::warn("File not exist: {}.", ini_path.string());
+    SPDLOG_WARN("File not exist: {}.", ini_path.string());
   }
 }
 
@@ -286,7 +286,7 @@ vciReturnType CanImpCanNet::VCI_Transmit(DWORD DeviceType, DWORD DeviceInd,
         line_buff, head, &DeviceType, &DeviceInd, &CANInd, p, lr);
     const auto ret = write_line(line_buff, write_len, ec);
     if (ec && ret < 0) {
-      spdlog::warn("write_line error: {0}, {1}.", ec.value(), ec.message());
+      SPDLOG_WARN("write_line error: {0}, {1}.", ec.value(), ec.message());
       _connected.store(false);
       client_socket_.close();
     }
@@ -339,7 +339,10 @@ void CanImpCanNet::async_read(std::atomic<PVCI_CAN_OBJ> &ptrCanObj, ULONG Len,
 
         if (!result_error && pos != (begin + avail_num)) {
           std::string_view line(begin, pos - begin); // remove \n
-          line_func(line, ptrCanObj);
+          auto e = line_func(line, ptrCanObj);
+          if (0 != e) {
+            SPDLOG_WARN("line post process error.");
+          }
           rx_buff_.consume(pos - begin + 1);
           if (readNum.load() < Len) {
             readNum.fetch_add(1);
@@ -378,13 +381,13 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
 
   const auto ev = ec.value();
   if (ec && ev != errc::operation_canceled && ev != operation_aborted) {
-    spdlog::warn("error: {0}, {1}.", ev, ec.message());
+    SPDLOG_WARN("error: {0}, {1}.", ev, ec.message());
     _connected.store(false);
     client_socket_.close();
   }
 
   auto temp = rx_num.load();
-  // spdlog::info("parsed obj num {}", temp);
+  SPDLOG_INFO("parsed obj num {}", temp);
   return temp;
 }
 
@@ -419,7 +422,7 @@ int CanImpCanNet::connect(const std::string &host, const std::string &service,
 
   // Determine whether a connection was successfully established.
   if (error) {
-    spdlog::warn("Connect fail: {0}, {1}.", error.value(), error.message());
+    SPDLOG_WARN("Connect fail: {0}, {1}.", error.value(), error.message());
     return error.value();
   }
 
@@ -456,7 +459,7 @@ int CanImpCanNet::write_line(const char *p, size_t len, error_code_t &ec) {
 
   auto ec_code = ec.value();
   if (ec_code != errc::operation_canceled) {
-    spdlog::warn("write_line error: {0}, {1}.", ec.value(), ec.message());
+    SPDLOG_WARN("write_line error: {0}, {1}.", ec.value(), ec.message());
     return -std::abs(ec.value());
   }
 
