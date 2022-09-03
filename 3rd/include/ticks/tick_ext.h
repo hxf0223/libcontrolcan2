@@ -11,9 +11,21 @@ namespace tick {
 using namespace std::chrono;
 
 struct tickExt {
+private:
   uint64_t ticks_{0}, tm64_{0};
   double delta_ratio_{0.0};
   bool valid_tick_{false};
+
+public:
+  tickExt() { beginInitTick(); }
+  int updateTick() { return endInitTick(); }
+  uint64_t getTick() {
+    if (!valid_tick_)
+      return 0;
+
+    uint64_t tick_diff = ::getticks() - ticks_;
+    return (tm64_ + tick_diff * delta_ratio_);
+  }
 
   void beginInitTick() {
     auto dur = system_clock::now().time_since_epoch();

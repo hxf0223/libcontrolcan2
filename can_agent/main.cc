@@ -19,6 +19,7 @@
 #include "boost/asio.hpp"
 #include "server/canobj_queue_type.h"
 #include "server/server.h"
+#include "ticks/tick_ext.h"
 
 // #include "zmq.hpp"
 // #include "zmq_addon.hpp"
@@ -83,6 +84,12 @@ static void can_rx_func(std::atomic_bool *runFlag, eventpp_queue_t &ppq) {
 
 static void pub_simu_func(std::atomic_bool *runFlag, eventpp_queue_t &ppq) {
   using namespace std::chrono;
+
+  tick::tickExt tick_ext;
+  tick_ext.beginInitTick();
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+  tick_ext.endInitTick();
+
   auto dur = system_clock::now().time_since_epoch();
   uint64_t now = duration_cast<microseconds>(dur).count();
   const char *cmd_recv = "VCI_Receive,";
@@ -91,8 +98,7 @@ static void pub_simu_func(std::atomic_bool *runFlag, eventpp_queue_t &ppq) {
 
   while (runFlag->load()) {
     for (size_t i = 0; i < 10; i++) {
-      dur = system_clock::now().time_since_epoch();
-      now = duration_cast<microseconds>(dur).count();
+      now = tick_ext.getTick();
 
       VCI_CAN_OBJ can_obj{};
       *(uint64_t *)(can_obj.Data) = send_count;
