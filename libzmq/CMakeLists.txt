@@ -1571,6 +1571,7 @@ if(BUILD_SHARED)
     option(WITH_PERF_TOOL "Build with perf-tools" OFF)
   endif()
 
+  set(WITH_PERF_TOOL OFF)
   if(WITH_PERF_TOOL)
     foreach(perf-tool ${perf-tools})
       add_executable(${perf-tool} perf/${perf-tool}.cpp)
