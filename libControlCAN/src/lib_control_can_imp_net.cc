@@ -306,10 +306,10 @@ vciReturnType CanImpCanNet::VCI_Transmit(DWORD DeviceType, DWORD DeviceInd,
   return vciReturnType::STATUS_OK;
 }
 
-void CanImpCanNet::async_read(std::atomic<PVCI_CAN_OBJ> &ptrCanObj,
-                              std::atomic_uint32_t &Len, error_code_t &ec,
-                              std::atomic_uint32_t &readNum) {
-  if (readNum.load() >= Len.load()) {
+void CanImpCanNet::async_read(std::atomic<asyncReadParam> &param,
+                              error_code_t &ec) {
+  asyncReadParam temp_param = param.load(std::memory_order_acquire);
+  if (temp_param.read_cnt_ >= temp_param.len_) {
     timer_.cancel();
     return;
   }
@@ -318,8 +318,7 @@ void CanImpCanNet::async_read(std::atomic<PVCI_CAN_OBJ> &ptrCanObj,
   using namespace boost::asio::error;
   using namespace boost::system;
 
-  auto line_func = [](const std::string_view &str,
-                      std::atomic<PVCI_CAN_OBJ> &dst) -> int {
+  auto line_func = [](const std::string_view &str, PVCI_CAN_OBJ dst) -> int {
     const auto end = sv_regex_iter_t();
     const sv_regex_iter_t it(str.begin(), str.end(), _receive_pattern2);
     if (it == end || (*it)[0].second == str.end())
@@ -333,7 +332,7 @@ void CanImpCanNet::async_read(std::atomic<PVCI_CAN_OBJ> &ptrCanObj,
       return -1;
 
     can::utils::hex_string_to_bin_fastest((const char *)(&pl[0]), pl.size(),
-                                          (uint8_t *)(dst.load()));
+                                          (uint8_t *)dst);
     return 0;
   };
 
@@ -346,15 +345,16 @@ void CanImpCanNet::async_read(std::atomic<PVCI_CAN_OBJ> &ptrCanObj,
         ec = result_error; // save error code
 
         if (!result_error && pos != (begin + avail_num)) {
+          auto my_param = param.load(std::memory_order_acquire);
           std::string_view line(begin, pos - begin); // remove \n
-          if (0 != line_func(line, ptrCanObj)) {
+          if (0 != line_func(line, my_param.can_objs_)) {
             SPDLOG_WARN("line post process error.");
           }
           rx_buff_.consume(pos - begin + 1);
-          if (readNum.load() < Len.load()) {
-            readNum.fetch_add(1);
-            ptrCanObj.fetch_add(1);
-            async_read(ptrCanObj, Len, ec, readNum);
+          if (my_param.read_cnt_ < my_param.len_) {
+            my_param.read_cnt_++, my_param.can_objs_++;
+            param.store(my_param, std::memory_order_release);
+            async_read(param, ec);
           } else { // if read finished, stop the deadline timer
             timer_.cancel();
           }
@@ -377,12 +377,10 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
   using namespace boost::system;
 
   error_code_t ec;
-  std::atomic_uint32_t require_rx_num{Len};
-  std::atomic_uint32_t rx_num{0};
+  std::atomic<asyncReadParam> param{asyncReadParam{pReceive, Len, 0}};
 
   io_context_.restart();
-  std::atomic<PVCI_CAN_OBJ> atomic_p(pReceive);
-  async_read(atomic_p, require_rx_num, ec, rx_num);
+  async_read(param, ec);
   timer_.expires_from_now(boost::posix_time::milliseconds(WaitTime));
   timer_.async_wait([&](const error_code &ec) {
     if (!ec) { // no error mean timeout
@@ -398,7 +396,7 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
     client_socket_.close();
   }
 
-  auto temp = rx_num.load();
+  auto temp = param.load().read_cnt_;
   return temp;
 }
 

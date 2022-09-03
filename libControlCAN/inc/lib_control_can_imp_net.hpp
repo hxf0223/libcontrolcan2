@@ -76,13 +76,15 @@ public:
                     PVCI_CAN_OBJ pReceive, ULONG Len, INT WaitTime) override;
 
 private:
+  struct asyncReadParam {
+    PVCI_CAN_OBJ can_objs_{nullptr};
+    uint32_t len_{0}, read_cnt_{0};
+  };
+
   int connect(const std::string &host, const std::string &service,
               int timeoutMs);
 
-  void async_read(std::atomic<PVCI_CAN_OBJ> &pReceive,
-                  std::atomic_uint32_t &Len, error_code_t &ec,
-                  std::atomic_uint32_t &readNum);
-
+  void async_read(std::atomic<asyncReadParam> &param, error_code_t &ec);
   inline int write_line(const char *p, size_t len, error_code_t &ec);
 
 private:
