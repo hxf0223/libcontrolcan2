@@ -306,9 +306,10 @@ vciReturnType CanImpCanNet::VCI_Transmit(DWORD DeviceType, DWORD DeviceInd,
   return vciReturnType::STATUS_OK;
 }
 
-void CanImpCanNet::async_read(std::atomic<PVCI_CAN_OBJ> &ptrCanObj, ULONG Len,
-                              error_code_t &ec, std::atomic_uint32_t &readNum) {
-  if (readNum.load() >= Len) {
+void CanImpCanNet::async_read(std::atomic<PVCI_CAN_OBJ> &ptrCanObj,
+                              std::atomic_uint32_t &Len, error_code_t &ec,
+                              std::atomic_uint32_t &readNum) {
+  if (readNum.load() >= Len.load()) {
     timer_.cancel();
     return;
   }
@@ -350,13 +351,18 @@ void CanImpCanNet::async_read(std::atomic<PVCI_CAN_OBJ> &ptrCanObj, ULONG Len,
             SPDLOG_WARN("line post process error.");
           }
           rx_buff_.consume(pos - begin + 1);
-          if (readNum.load() < Len) {
+          if (readNum.load() < Len.load()) {
             readNum.fetch_add(1);
             ptrCanObj.fetch_add(1);
             async_read(ptrCanObj, Len, ec, readNum);
           } else { // if read finished, stop the deadline timer
             timer_.cancel();
           }
+        } else if (!result_error) {
+          std::string temp_str = make_string(rx_buff_);
+          SPDLOG_WARN("rx buffer error: {}", temp_str);
+        } else {
+          // SPDLOG_WARN(result_error.message());
         }
       });
 }
@@ -371,10 +377,10 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
   using namespace boost::system;
 
   error_code_t ec;
-  ULONG require_rx_num = Len;
+  std::atomic_uint32_t require_rx_num{Len};
   std::atomic_uint32_t rx_num{0};
 
-  io_context_.reset();
+  io_context_.restart();
   std::atomic<PVCI_CAN_OBJ> atomic_p(pReceive);
   async_read(atomic_p, require_rx_num, ec, rx_num);
   timer_.expires_from_now(boost::posix_time::milliseconds(WaitTime));
@@ -393,7 +399,6 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
   }
 
   auto temp = rx_num.load();
-  // SPDLOG_INFO("parsed obj num {}", temp);
   return temp;
 }
 
@@ -405,7 +410,7 @@ int CanImpCanNet::connect(const std::string &host, const std::string &service,
   auto endpoints = tcp::resolver(io_context_).resolve(host, service);
 
   error_code_t error;
-  io_context_.reset();
+  io_context_.restart();
   boost::asio::async_connect(client_socket_, endpoints,
                              [&](const error_code_t &result_error,
                                  const tcp::endpoint & /*result_endpoint*/) {
@@ -439,8 +444,7 @@ int CanImpCanNet::write_line(const char *p, size_t len, error_code_t &ec) {
   using namespace boost::asio::error;
   using namespace boost::system;
 
-  io_context_.reset();
-
+  io_context_.restart();
   boost::asio::async_write(
       client_socket_, boost::asio::buffer(p, len),
       [&](const error_code_t &result_error, std::size_t /*result_n*/) {

@@ -77,7 +77,7 @@ TEST(Socket, perfClient) {
     // auto tm0 = std::chrono::high_resolution_clock::now();
     while (recv_frame_cnt < recv_cnt_max) {
       auto recv_frame_num = canDc->VCI_Receive(devtype, devid, channel,
-                                               can_rx_buff, rx_buff_size, 100);
+                                               can_rx_buff, rx_buff_size, 10);
       for (ULONG i = 0; i < recv_frame_num; i++) {
         std::string str = can::utils::bin2hex_dump(can_rx_buff[i].Data, 8);
         LOG(INFO) << recv_frame_cnt << ": " << str;
