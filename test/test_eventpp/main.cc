@@ -11,17 +11,27 @@
 #include "eventpp/utilities/orderedqueuelist.h"
 
 TEST(evnetQueue, Function) {
-  auto f1 = [](const std::string &str) { LOG(INFO) << "function1, value: " << str; };
-  auto f2 = [](const std::string &str) { LOG(INFO) << "function2, value: " << str; };
-  auto f3 = [](const std::string &str) { LOG(INFO) << "function3, value: " << str; };
+  auto f1 = [](const std::string &str) {
+    LOG(INFO) << "function1, value: " << str;
+  };
+  auto f2 = [](const std::string &str) {
+    LOG(INFO) << "function2, value: " << str;
+  };
+  auto f3 = [](const std::string &str) {
+    LOG(INFO) << "function3, value: " << str;
+  };
   struct functor1 {
     size_t count_{0};
-    void operator()(const std::string &str) { LOG(INFO) << "functor 1, count " << ++count_ << ", value: " << str; }
+    void operator()(const std::string &str) {
+      LOG(INFO) << "functor 1, count " << ++count_ << ", value: " << str;
+    }
   };
 
   struct class1 {
     size_t count_{0};
-    void print_str(const std::string &str) { LOG(INFO) << "class1, count " << ++count_ << ", value " << str; }
+    void print_str(const std::string &str) {
+      LOG(INFO) << "class1, count " << ++count_ << ", value " << str;
+    }
   };
 
   functor1 ft1;
@@ -43,7 +53,8 @@ TEST(evnetQueue, Function) {
 
   class1 c1;
   LOG(INFO) << "!!! append more after queue and process";
-  q.appendListener(1, std::bind(&class1::print_str, &c1, std::placeholders::_1));
+  q.appendListener(1,
+                   std::bind(&class1::print_str, &c1, std::placeholders::_1));
   q.appendListener(1, f3);
   q.enqueue(1, "test string 3");
   q.process();
@@ -60,7 +71,8 @@ TEST(evnetQueue, multiThread) {
   queue_t q;
 
   auto f1 = [](const std::string &str) {
-    LOG(INFO) << "thread id: " << std::this_thread::get_id() << ". value: " << str;
+    LOG(INFO) << "thread id: " << std::this_thread::get_id()
+              << ". value: " << str;
   };
 
   auto queue_func = [](queue_t &q) {
@@ -78,7 +90,6 @@ TEST(evnetQueue, multiThread) {
 }
 
 int main(int argc, char **argv) {
-  FLAGS_alsologtostderr = 1;
   ::testing::InitGoogleTest(&argc, argv);
   google::InitGoogleLogging(argv[0]);
   int ret = RUN_ALL_TESTS();

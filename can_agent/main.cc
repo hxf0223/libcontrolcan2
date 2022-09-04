@@ -118,7 +118,6 @@ static void pub_simu_func(std::atomic_bool *runFlag, eventpp_queue_t &ppq) {
 }
 
 int main(int argc, char **argv) {
-  FLAGS_alsologtostderr = 1;
   google::InitGoogleLogging(argv[0]);
 
   eventpp_queue_t ppq;

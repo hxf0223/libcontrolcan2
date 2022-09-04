@@ -1,6 +1,6 @@
 file( GLOB_RECURSE  SRC_FILES *.cc )
 add_executable( exam_asio ${SRC_FILES} )
-target_link_libraries( exam_asio gtest glog )
+target_link_libraries( exam_asio miniglog gmock_test_all )
 
 if (CMAKE_HOST_WIN32)
 	set_property(TARGET exam_asio PROPERTY
