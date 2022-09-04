@@ -397,12 +397,13 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
     client_socket_.close();
   }
 
+  // post process: try read available data in rx buffer
   uint32_t read_num = param.load().read_cnt_; // frame count
-  while (_connected.load() && rx_buff_.size() > 0) {
+  while (_connected.load() && rx_buff_.size() > 0 && read_num < Len) {
     const auto avail_num = rx_buff_.size();
     auto begin = boost::asio::buffer_cast<const char *>(rx_buff_.data());
     auto pos = std::find(begin, begin + avail_num, '\n');
-    if (pos == (pos + avail_num))
+    if (pos == (begin + avail_num))
       break;
 
     std::string_view line(begin, pos - begin); // remove \n
