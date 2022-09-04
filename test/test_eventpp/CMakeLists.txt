@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 3.15)
 
 file( GLOB SRC_FILES *.cc )
 add_executable( test_eventpp ${SRC_FILES} )
-target_link_libraries( test_eventpp glog gmock_test_all )
+target_link_libraries( test_eventpp glog gtest )
 
 if (CMAKE_HOST_WIN32)
 	set_property(TARGET test_eventpp PROPERTY
