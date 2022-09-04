@@ -306,6 +306,26 @@ vciReturnType CanImpCanNet::VCI_Transmit(DWORD DeviceType, DWORD DeviceInd,
   return vciReturnType::STATUS_OK;
 }
 
+int CanImpCanNet::line_process(const std::string_view &str, PVCI_CAN_OBJ dst) {
+  using sv_regex_iter_t = std::regex_iterator<std::string_view::const_iterator>;
+  const auto end = sv_regex_iter_t();
+  const sv_regex_iter_t it(str.begin(), str.end(), _receive_pattern2);
+  if (it == end || (*it)[0].second == str.end())
+    return -1;
+
+  auto ptr = str.data() + ((*it)[0].second - str.begin());
+  const auto left_len = str.end() - (*it)[0].second;
+  auto pl = std::string_view(ptr, left_len);
+  const sv_regex_iter_t it2(pl.begin(), pl.end(), _hex_str_pattern2);
+  if (it2 == end || pl.size() < (sizeof(VCI_CAN_OBJ) * 2))
+    return -1;
+
+  auto p2 = (const char *)(&pl[0]);
+  can::utils::hex_string_to_bin_fastest(p2, pl.size(), (uint8_t *)dst);
+
+  return 0;
+}
+
 void CanImpCanNet::async_read(std::atomic<asyncReadParam> &param,
                               error_code_t &ec) {
   asyncReadParam temp_param = param.load(std::memory_order_acquire);
@@ -314,27 +334,8 @@ void CanImpCanNet::async_read(std::atomic<asyncReadParam> &param,
     return;
   }
 
-  using sv_regex_iter_t = std::regex_iterator<std::string_view::const_iterator>;
   using namespace boost::asio::error;
   using namespace boost::system;
-
-  auto line_func = [](const std::string_view &str, PVCI_CAN_OBJ dst) -> int {
-    const auto end = sv_regex_iter_t();
-    const sv_regex_iter_t it(str.begin(), str.end(), _receive_pattern2);
-    if (it == end || (*it)[0].second == str.end())
-      return -1;
-
-    auto ptr = str.data() + ((*it)[0].second - str.begin());
-    const auto left_len = str.end() - (*it)[0].second;
-    auto pl = std::string_view(ptr, left_len);
-    const sv_regex_iter_t it2(pl.begin(), pl.end(), _hex_str_pattern2);
-    if (it2 == end || pl.size() < (sizeof(VCI_CAN_OBJ) * 2))
-      return -1;
-
-    can::utils::hex_string_to_bin_fastest((const char *)(&pl[0]), pl.size(),
-                                          (uint8_t *)dst);
-    return 0;
-  };
 
   boost::asio::async_read_until(
       client_socket_, rx_buff_, '\n',
@@ -347,7 +348,7 @@ void CanImpCanNet::async_read(std::atomic<asyncReadParam> &param,
         if (!result_error && pos != (begin + avail_num)) {
           auto my_param = param.load(std::memory_order_acquire);
           std::string_view line(begin, pos - begin); // remove \n
-          if (0 != line_func(line, my_param.can_objs_)) {
+          if (0 != line_process(line, my_param.can_objs_)) {
             SPDLOG_WARN("line post process error.");
           }
           rx_buff_.consume(pos - begin + 1);
@@ -396,8 +397,21 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
     client_socket_.close();
   }
 
-  auto temp = param.load().read_cnt_;
-  return temp;
+  uint32_t read_num = param.load().read_cnt_; // frame count
+  while (_connected.load() && rx_buff_.size() > 0) {
+    const auto avail_num = rx_buff_.size();
+    auto begin = boost::asio::buffer_cast<const char *>(rx_buff_.data());
+    auto pos = std::find(begin, begin + avail_num, '\n');
+    if (pos == (pos + avail_num))
+      break;
+
+    std::string_view line(begin, pos - begin); // remove \n
+    line_process(line, pReceive + read_num);
+    rx_buff_.consume(pos - begin + 1);
+    read_num++;
+  }
+
+  return read_num;
 }
 
 int CanImpCanNet::connect(const std::string &host, const std::string &service,

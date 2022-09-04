@@ -49,7 +49,7 @@ void Session::do_can_obj_transpose(const boost::system::error_code &ec) {
   }
 
   auto self = shared_from_this();
-  deadline_.expires_from_now(boost::posix_time::microseconds(10));
+  deadline_.expires_from_now(boost::posix_time::milliseconds(10));
   deadline_.async_wait(boost::bind(&Session::do_can_obj_transpose, self,
                                    boost::asio::placeholders::error));
 }

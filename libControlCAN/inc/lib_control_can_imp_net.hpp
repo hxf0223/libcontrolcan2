@@ -86,6 +86,7 @@ private:
 
   void async_read(std::atomic<asyncReadParam> &param, error_code_t &ec);
   inline int write_line(const char *p, size_t len, error_code_t &ec);
+  static int line_process(const std::string_view &str, PVCI_CAN_OBJ dst);
 
 private:
   boost::atomic_bool _connected;
