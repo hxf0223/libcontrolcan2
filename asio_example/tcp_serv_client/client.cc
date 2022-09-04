@@ -33,7 +33,8 @@ public:
   std::pair<Iterator, bool> operator()(Iterator begin, Iterator end) const {
     Iterator i = begin;
     while (i != end)
-      if (c_ == *i++) return std::make_pair(i, true);
+      if (c_ == *i++)
+        return std::make_pair(i, true);
     return std::make_pair(i, false);
   }
 
@@ -43,16 +44,18 @@ private:
 
 class tcpClient : public std::enable_shared_from_this<tcpClient> {
 public:
-  tcpClient(boost::asio::io_context &ioContext, const std::string &servIp, const std::string &servPort)
-    : socket_(ioContext), resolver_(ioContext) {
+  tcpClient(boost::asio::io_context &ioContext, const std::string &servIp,
+            const std::string &servPort)
+      : socket_(ioContext), resolver_(ioContext) {
     boost::asio::connect(socket_, resolver_.resolve(servIp, servPort));
   }
 
   void start_receive() {
-    boost::asio::async_read_until(socket_, rx_sb_, "\n",
-                                  boost::bind(&tcpClient::handle_receive, shared_from_this(),
-                                              boost::asio::placeholders::error,
-                                              boost::asio::placeholders::bytes_transferred));
+    boost::asio::async_read_until(
+        socket_, rx_sb_, "\n",
+        boost::bind(&tcpClient::handle_receive, shared_from_this(),
+                    boost::asio::placeholders::error,
+                    boost::asio::placeholders::bytes_transferred));
   }
 
   void handle_receive(const boost::system::error_code &ec, std::size_t sz) {

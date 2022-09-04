@@ -22,7 +22,8 @@ TEST(CAN, bin2hex_template) {
   LOG(INFO) << "bin2hex size: " << size << ", data64 + data32: " << buffer;
 
   size = bin2hex::bin2hex_fast(buffer, pszcstr, data64, data32);
-  LOG(INFO) << "bin2hex size: " << size << ", const char* + data64 + data32: " << buffer;
+  LOG(INFO) << "bin2hex size: " << size
+            << ", const char* + data64 + data32: " << buffer;
 
   auto &data64_ref = data64;
   size = bin2hex::bin2hex_fast(buffer, data64_ref);
@@ -37,5 +38,6 @@ TEST(CAN, bin2hex_template) {
   LOG(INFO) << "VCI_CAN_OBJ size: " << sizeof(VCI_CAN_OBJ);
 
   size = bin2hex::bin2hex_fast(buffer, ".const string.", &can_obj);
-  LOG(INFO) << "bin2hex size: " << size << ", const char* + can_obj address: " << buffer;
+  LOG(INFO) << "bin2hex size: " << size
+            << ", const char* + can_obj address: " << buffer;
 }

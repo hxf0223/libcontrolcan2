@@ -11,11 +11,16 @@
 
 class multicast_sender {
 public:
-  multicast_sender(const std::string &address, const std::string &multicast_address,
+  multicast_sender(const std::string &address,
+                   const std::string &multicast_address,
                    const unsigned short multicast_port)
-    : work_(io_service_), multicast_endpoint_(boost::asio::ip::address::from_string(multicast_address), multicast_port),
-      socket_(io_service_,
-              boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(address), 0 /* any port */)) {
+      : work_(io_service_),
+        multicast_endpoint_(
+            boost::asio::ip::address::from_string(multicast_address),
+            multicast_port),
+        socket_(io_service_, boost::asio::ip::udp::endpoint(
+                                 boost::asio::ip::address::from_string(address),
+                                 0 /* any port */)) {
     // Start running the io_service.  The work_ object will keep
     // io_service::run() from returning even if there is no real work
     // queued into the io_service.
@@ -39,8 +44,10 @@ public:
     // a RAII object (std::shared_ptr) is ideal.
     auto buffer = std::make_shared<std::string>(data, size);
     socket_.async_send_to(boost::asio::buffer(*buffer), multicast_endpoint_,
-                          [buffer](const boost::system::error_code &error, std::size_t bytes_transferred) {
-                            std::cout << "Wrote " << bytes_transferred << " bytes with " << error.message()
+                          [buffer](const boost::system::error_code &error,
+                                   std::size_t bytes_transferred) {
+                            std::cout << "Wrote " << bytes_transferred
+                                      << " bytes with " << error.message()
                                       << std::endl;
                           });
   }

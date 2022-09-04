@@ -17,12 +17,13 @@ public:
   virtual void Format(std::ostringstream &ss, const std::string &fmt) = 0;
 };
 
-template <class T>
-class Arg : public ArgBase {
+template <class T> class Arg : public ArgBase {
 public:
   Arg(T arg) : m_arg(arg) {}
   virtual ~Arg() {}
-  virtual void Format(std::ostringstream &ss, const std::string &fmt) { ss << m_arg; }
+  virtual void Format(std::ostringstream &ss, const std::string &fmt) {
+    ss << m_arg;
+  }
 
 private:
   T m_arg;
@@ -36,7 +37,8 @@ public:
   }
 };
 
-static void FormatItem(std::ostringstream &ss, const std::string &item, const ArgArray &args) {
+static void FormatItem(std::ostringstream &ss, const std::string &item,
+                       const ArgArray &args) {
   int index = 0;
   int alignment = 0;
   std::string fmt;
@@ -65,8 +67,7 @@ static void FormatItem(std::ostringstream &ss, const std::string &item, const Ar
   return;
 }
 
-template <class T>
-static void Transfer(ArgArray &argArray, T t) {
+template <class T> static void Transfer(ArgArray &argArray, T t) {
   argArray.push_back(new Arg<T>(t));
 }
 

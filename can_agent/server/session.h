@@ -33,6 +33,8 @@ private:
   void do_can_obj_transpose(const boost::system::error_code &ec);
 
   void write_message();
-  void handle_write(const boost::system::error_code &ec, std::size_t bytesTransfered);
-  void handle_read(const boost::system::error_code &ec, std::size_t bytesTransfered);
+  void handle_write(const boost::system::error_code &ec,
+                    std::size_t bytesTransfered);
+  void handle_read(const boost::system::error_code &ec,
+                   std::size_t bytesTransfered);
 };

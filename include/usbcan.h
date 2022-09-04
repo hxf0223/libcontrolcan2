@@ -80,13 +80,20 @@ enum class vciDevType : DWORD {
 #define ERR_BUFFERCREATE 0x8000
 
 // return error
-enum class vciReturnType { STATUS_OK = 1, STATUS_ERR = 0, STATUS_NET_CONN_FAIL = -1 };
+enum class vciReturnType {
+  STATUS_OK = 1,
+  STATUS_ERR = 0,
+  STATUS_NET_CONN_FAIL = -1
+};
 
-inline bool operator!=(const vciReturnType &lhs, const DWORD &rhs) { return (static_cast<DWORD>(lhs) != rhs); }
+inline bool operator!=(const vciReturnType &lhs, const DWORD &rhs) {
+  return (static_cast<DWORD>(lhs) != rhs);
+}
 
 template <typename T>
-inline std::ostream &operator<<(typename std::enable_if<std::is_enum<T>::value, std::ostream>::type &stream,
-                                const T &e) {
+inline std::ostream &operator<<(
+    typename std::enable_if<std::is_enum<T>::value, std::ostream>::type &stream,
+    const T &e) {
   return stream << static_cast<typename std::underlying_type<T>::type>(e);
 }
 
@@ -149,27 +156,33 @@ typedef struct _INIT_CONFIG {
 #endif
 
 
-VCI_EXTERN DWORD __stdcall VCI_OpenDevice(DWORD DeviceType, DWORD DeviceInd, DWORD Reserved);
-VCI_EXTERN DWORD __stdcall VCI_CloseDevice(DWORD DeviceType, DWORD DeviceInd);
-VCI_EXTERN DWORD __stdcall VCI_ReadBoardInfo(DWORD DeviceType, DWORD DeviceInd, PVCI_BOARD_INFO pInfo);
+VCI_EXTERN DWORD __stdcall VCI_OpenDevice(DWORD DeviceType, DWORD DeviceInd,
+DWORD Reserved); VCI_EXTERN DWORD __stdcall VCI_CloseDevice(DWORD DeviceType,
+DWORD DeviceInd); VCI_EXTERN DWORD __stdcall VCI_ReadBoardInfo(DWORD DeviceType,
+DWORD DeviceInd, PVCI_BOARD_INFO pInfo);
 
-VCI_EXTERN DWORD __stdcall VCI_InitCAN(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_INIT_CONFIG pInitConfig);
-VCI_EXTERN DWORD __stdcall VCI_ReadErrInfo(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_ERR_INFO pErrInfo);
-VCI_EXTERN DWORD __stdcall VCI_ReadCANStatus(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_CAN_STATUS
-pCANStatus);
+VCI_EXTERN DWORD __stdcall VCI_InitCAN(DWORD DeviceType, DWORD DeviceInd, DWORD
+CANInd, PVCI_INIT_CONFIG pInitConfig); VCI_EXTERN DWORD __stdcall
+VCI_ReadErrInfo(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_ERR_INFO
+pErrInfo); VCI_EXTERN DWORD __stdcall VCI_ReadCANStatus(DWORD DeviceType, DWORD
+DeviceInd, DWORD CANInd, PVCI_CAN_STATUS pCANStatus);
 
-VCI_EXTERN DWORD __stdcall VCI_GetReference(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, DWORD RefType, PVOID
-pData); VCI_EXTERN DWORD __stdcall VCI_SetReference(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, DWORD RefType,
+VCI_EXTERN DWORD __stdcall VCI_GetReference(DWORD DeviceType, DWORD DeviceInd,
+DWORD CANInd, DWORD RefType, PVOID pData); VCI_EXTERN DWORD __stdcall
+VCI_SetReference(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, DWORD RefType,
 PVOID pData);
 
-VCI_EXTERN ULONG __stdcall VCI_GetReceiveNum(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd);
-VCI_EXTERN DWORD __stdcall VCI_ClearBuffer(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd);
+VCI_EXTERN ULONG __stdcall VCI_GetReceiveNum(DWORD DeviceType, DWORD DeviceInd,
+DWORD CANInd); VCI_EXTERN DWORD __stdcall VCI_ClearBuffer(DWORD DeviceType,
+DWORD DeviceInd, DWORD CANInd);
 
-VCI_EXTERN DWORD __stdcall VCI_StartCAN(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd);
-VCI_EXTERN DWORD __stdcall VCI_ResetCAN(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd);
+VCI_EXTERN DWORD __stdcall VCI_StartCAN(DWORD DeviceType, DWORD DeviceInd, DWORD
+CANInd); VCI_EXTERN DWORD __stdcall VCI_ResetCAN(DWORD DeviceType, DWORD
+DeviceInd, DWORD CANInd);
 
-VCI_EXTERN ULONG __stdcall VCI_Transmit(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_CAN_OBJ pSend, ULONG Len);
-VCI_EXTERN ULONG __stdcall VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_CAN_OBJ pReceive, ULONG
-Len, INT WaitTime);*/
+VCI_EXTERN ULONG __stdcall VCI_Transmit(DWORD DeviceType, DWORD DeviceInd, DWORD
+CANInd, PVCI_CAN_OBJ pSend, ULONG Len); VCI_EXTERN ULONG __stdcall
+VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_CAN_OBJ
+pReceive, ULONG Len, INT WaitTime);*/
 
 #endif

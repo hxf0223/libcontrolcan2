@@ -23,6 +23,8 @@ public:
   void start();
   void write_message();
 
-  void handle_write(const boost::system::error_code &ec, std::size_t bytesTransfered);
-  void handle_read(const boost::system::error_code &ec, std::size_t bytesTransfered);
+  void handle_write(const boost::system::error_code &ec,
+                    std::size_t bytesTransfered);
+  void handle_read(const boost::system::error_code &ec,
+                   std::size_t bytesTransfered);
 };

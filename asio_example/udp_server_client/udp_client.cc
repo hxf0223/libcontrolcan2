@@ -3,15 +3,19 @@
 namespace asio {
 namespace udp {
 
-void udpClient::send(const std::string &msg) { socket_.send_to(boost::asio::buffer(msg, msg.size()), endpoint_); }
+void udpClient::send(const std::string &msg) {
+  socket_.send_to(boost::asio::buffer(msg, msg.size()), endpoint_);
+}
 
-std::string udpClient::receive(boost::posix_time::time_duration timeout, boost::system::error_code &ec) {
+std::string udpClient::receive(boost::posix_time::time_duration timeout,
+                               boost::system::error_code &ec) {
   deadline_.expires_from_now(timeout);
   ec = boost::asio::error::would_block;
   std::size_t length = 0;
 
-  socket_.async_receive(boost::asio::buffer(recvBuffer_),
-                        boost::bind(&udpClient::handle_receive, _1, _2, &ec, &length));
+  socket_.async_receive(
+      boost::asio::buffer(recvBuffer_),
+      boost::bind(&udpClient::handle_receive, _1, _2, &ec, &length));
 
   do {
     io_service_.run_one();

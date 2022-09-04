@@ -42,7 +42,8 @@ int main(int argc, char *argv[]) {
 
   boost::asio::io_service io_service;
   boost::asio::ip::tcp::socket socket(io_service);
-  socket.connect(boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string(host_ip_addr), host_port));
+  socket.connect(boost::asio::ip::tcp::endpoint(
+      boost::asio::ip::address::from_string(host_ip_addr), host_port));
 
 #if 0
   while (1) {
