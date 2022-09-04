@@ -44,28 +44,33 @@ inline VCI_INIT_CONFIG create_vci_init_cfg(UCHAR timing0, UCHAR timing1,
 
 static void can_rx_func(std::atomic_bool *runFlag, eventpp_queue_t &ppq) {
   using namespace std::chrono;
-  auto dur = system_clock::now().time_since_epoch();
-  uint64_t now = duration_cast<microseconds>(dur).count();
+  // auto dur = system_clock::now().time_since_epoch();
+  // uint64_t now = duration_cast<microseconds>(dur).count();
 
   auto e = VCI_OpenDevice(devtype, 0, 0);
   auto cfg = create_vci_init_cfg(0x00, 0x1C, 0xffffffff);
   e = VCI_InitCAN(devtype, devid, channel, &cfg);
   e = VCI_StartCAN(devtype, devid, channel);
 
-  constexpr DWORD rec_buff_size = 100;
-  VCI_CAN_OBJ can_recv_buff[rec_buff_size];
+  tick::tickExt tick_ext;
+  tick_ext.beginInitTick();
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+  tick_ext.endInitTick();
+
+  constexpr DWORD rx_buff_size = 100;
+  VCI_CAN_OBJ can_rx_buff[rx_buff_size];
   const char *cmd_recv = "VCI_Receive,";
   canobj_queue_node_t send_buff;
   uint64_t send_count = 0;
 
   while (runFlag->load()) {
-    auto recv_frame_num =
-        VCI_Receive(devtype, devid, channel, can_recv_buff, rec_buff_size, 10);
-    for (ULONG i = 0; i < recv_frame_num; i++) {
-      dur = system_clock::now().time_since_epoch();
-      now = duration_cast<microseconds>(dur).count();
+    auto frame_num =
+        VCI_Receive(devtype, devid, channel, can_rx_buff, rx_buff_size, 10);
+    for (ULONG i = 0; i < frame_num; i++) {
+      uint64_t now = tick_ext.getTick();
+      tick_ext.updateTick();
 
-      auto &can_obj = can_recv_buff[i];
+      auto &can_obj = can_rx_buff[i];
       auto ptr_dst = (char *)send_buff.can_obj_;
       send_buff.len_ = can::utils::bin2hex::bin2hex_fast(
           ptr_dst, cmd_recv, &send_count, &now, &can_obj, "\n");
@@ -73,8 +78,8 @@ static void can_rx_func(std::atomic_bool *runFlag, eventpp_queue_t &ppq) {
       send_count++;
     }
 
-    ppq.processIf([&recv_frame_num](const canobj_queue_node_t /*event*/) {
-      return (recv_frame_num > 0);
+    ppq.processIf([&frame_num](const canobj_queue_node_t /*event*/) {
+      return (frame_num > 0);
     });
     // std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
@@ -90,15 +95,16 @@ static void pub_simu_func(std::atomic_bool *runFlag, eventpp_queue_t &ppq) {
   std::this_thread::sleep_for(std::chrono::seconds(1));
   tick_ext.endInitTick();
 
-  auto dur = system_clock::now().time_since_epoch();
-  uint64_t now = duration_cast<microseconds>(dur).count();
+  // auto dur = system_clock::now().time_since_epoch();
+  // uint64_t now = duration_cast<microseconds>(dur).count();
   const char *cmd_recv = "VCI_Receive,";
   canobj_queue_node_t send_buff;
   uint64_t send_count = 0;
 
   while (runFlag->load()) {
     for (size_t i = 0; i < 10; i++) {
-      now = tick_ext.getTick();
+      uint64_t now = tick_ext.getTick();
+      tick_ext.updateTick();
 
       VCI_CAN_OBJ can_obj{};
       *(uint64_t *)(can_obj.Data) = send_count;
