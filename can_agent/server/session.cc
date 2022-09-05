@@ -18,7 +18,7 @@ Session::Session(boost::asio::io_context &ioContext, eventpp_queue_t &ppq)
 
 Session::~Session() {
   disconnect_to_eventqq();
-  LOG(INFO) << "Session terminated.";
+  std::cout << "Session terminated." << std::endl;
 }
 
 void Session::start() {
