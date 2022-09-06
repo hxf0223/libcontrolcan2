@@ -15,4 +15,4 @@ if (CMAKE_HOST_WIN32)
 endif()
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test_eventpp)
-
+#add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test_git_ver)
