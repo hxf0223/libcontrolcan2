@@ -4,17 +4,21 @@ message(STATUS "Select CMake build type: ${CMAKE_BUILD_TYPE}")
 add_definitions(-DBUILDING_LIBCC_DLL)
 
 if (CMAKE_HOST_UNIX)
-	# there maybe multiple boost install, override the default boost install path
-	link_directories("/usr/local/lib")
+    # there maybe multiple boost install, override the default boost install path
+    link_directories("/usr/local/lib")
 endif()
 
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc)
 file(GLOB LIB_CTRL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc)
+if (CMAKE_HOST_WIN32)
+    file(GLOB LIB_DEF_FILE ${CMAKE_CURRENT_SOURCE_DIR}/src/libControlCan.def)
+    list(APPEND LIB_CTRL_SRCS ${LIB_DEF_FILE})
+endif()
 add_library(ControlCAN SHARED ${LIB_CTRL_SRCS})
 
 if (CMAKE_HOST_UNIX)
-	target_link_libraries(ControlCAN dl atomic -Wl,-Bstatic boost_filesystem boost_chrono -Wl,-Bdynamic -Wl,--as-needed)
+    target_link_libraries(ControlCAN dl atomic -Wl,-Bstatic boost_filesystem boost_chrono -Wl,-Bdynamic -Wl,--as-needed)
 endif()
 
 set(ControlCAN ${ControlCAN} PARENT_SCOPE)
@@ -25,6 +29,6 @@ set_target_properties(ControlCAN PROPERTIES
 )
 
 if (CMAKE_HOST_WIN32)
-	set_property(TARGET ControlCAN PROPERTY
-		MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+    set_property(TARGET ControlCAN PROPERTY
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 endif()
