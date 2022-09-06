@@ -8,21 +8,24 @@
 - 使用gtest源码 [v1.11.0](https://github.com/google/googletest/releases/tag/release-1.11.0)；
 - 使用glog源码 [v0.6.0](https://github.com/google/glog/releases/tag/v0.6.0)。
 
-gtest源码目录相对于官方gtest仓库修改：
+## 自带第三方库的编译
+
+1. gtest源码目录相对于官方gtest仓库修改
 
 - googletest/CMakeLists.txt：set(GOOGLETEST_VERSION 1.11.0)，否则找不到GOOGLETEST_VERSION会报错；
 - googletest/cmake/internal_utils.cmake：函数cxx_library_with_type中更改 RUNTIME_OUTPUT_DIRECTORY 等变量的路径为 CMAKE_ARCHIVE_OUTPUT_DIRECTORY ，使输出路径与父CMakeLists.txt保持一致。
 - googletest/CMakeLists.txt：添加 set(gtest ${gtest} PARENT_SCOPE)，让test目录能够依赖于gtest之后编译；
 - googletest/CMakeLists.txt：gtest，gtest_main 静态编译修改为 cxx_shared_library 动态编译。
 
-glog源码相对于官方glog的修改：
+2. glog源码相对于官方glog的修改
 
 - glog/CMakeLists.txt： set(BUILD_TESTING OFF)，禁用编译glog的测试用例；
 - glog/CMakeLists.txt：set(glog ${glog} PARENT_SCOPE)；
 - 在 set(GLOG_PUBLIC_H ...) 语句后面，添加 set(GLOG_INC_DIR "${CMAKE_CURRENT_BINARY_DIR}/glog" PARENT_SCOPE) 。在根 CMakeLists.txt 中添加 include_directories(${GLOG_INC_DIR}) ；
 - 注释掉 set(CMAKE_DEBUG_POSTFIX d) ；
 
-引入libzmq，辅助测试代码引用libzmp：
+3. 引入libzmq，辅助测试代码引用libzmp
+
 - 注释掉 RELEASE_POSTFIX ， RELWITHDEBINFO_POSTFIX ， MINSIZEREL_POSTFIX ， DEBUG_POSTFIX ，并且测试例程针对Windows 链接名称为 libzmq；
 - BUILD_TESTS 设置为 OFF;
 - WITH_LIBSODIUM 设置为 OFF;
@@ -31,7 +34,7 @@ glog源码相对于官方glog的修改：
 - set(ZeroMQ ${ZeroMQ} PARENT_SCOPE);
 - WITH_DOCS 位置为 OFF;
 
-boost编译适用于libControlCAN.so的静态库：[Linux Windows Boost编译命令](https://www.cnblogs.com/vaughnhuang/p/15848139.html)
+4. boost编译适用于libControlCAN.so的静态库：[Linux Windows Boost编译命令](https://www.cnblogs.com/vaughnhuang/p/15848139.html)
 
 ```bash
 ./boostrap.sh
@@ -50,6 +53,16 @@ sudo apt-get --purge remove libboost-all-dev
 ```bash
 cmake .. -G "Visual Studio 17 2022" -A Win32 -DCMAKE_BUILD_TYPE="Release" -DBUILD_SHARED_LIBS="ON" -DCMAKE_INSTALL_BINDIR="bin" -DCMAKE_INSTALL_SBINDIR="bin" -DCMAKE_INSTALL_LIBEXECDIR="bin" -DCMAKE_INSTALL_LIBDIR="lib" -DCMAKE_INSTALL_INCLUDEDIR="include" -DCMAKE_INSTALL_DATAROOTDIR="share" -DCMAKE_EXPORT_NO_PACKAGE_REGISTRY="ON" -DWITH_THREADS="True" -DWITH_SYMBOLIZE="True" -DWITH_UNWIND="True" -DBUILD_TESTING="False"
 ```
+
+## Windows 仅使用命令行编译
+
+```bash
+cmake -G "Visual Studio 17 2022" -A Win32 -S ./ -B "build32"
+# cmake --build build32 --config Release --clean-first -j
+cmake --build build32 --config Release -j
+```
+
+[CMake Build a Project](https://cmake.org/cmake/help/latest/manual/cmake.1.html#build-tool-mode)
 
 ## 编译问题解决
 
