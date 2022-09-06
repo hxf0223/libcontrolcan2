@@ -54,6 +54,7 @@ cmake .. -G "Visual Studio 17 2022" -A Win32 -DCMAKE_BUILD_TYPE="Release" -DBUIL
 ## 编译问题解决
 
 1. 编译libControlCAN时，出现 **relocation against in read-only section**。是由于系统安装了多个版本的boost导致，添加 **link_directories("/usr/local/lib")**覆盖系统boost安装位置。
+2. Windows编译时，导出__stdcall函数时，导出符号带有_Func_Name@num，需要将def文件带入源文件一起编译；
 
 ## 参考
 

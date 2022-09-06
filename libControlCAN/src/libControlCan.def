@@ -1,0 +1,25 @@
+LIBRARY ControlCan
+
+EXPORTS
+VCI_OpenDevice @6
+VCI_CloseDevice @2
+VCI_InitCAN @5
+
+VCI_ReadBoardInfo @7
+VCI_ReadErrInfo @9
+VCI_ReadCANStatus @8
+
+VCI_GetReference @4
+VCI_SetReference @12
+
+VCI_GetReceiveNum @3
+VCI_ClearBuffer @1
+
+VCI_StartCAN @13
+VCI_ResetCAN @11
+
+VCI_Transmit @14
+VCI_Receive @10
+
+VCI_DeirectOpenCan @15
+VCI_OpenNetCan @16
