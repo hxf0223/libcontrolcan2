@@ -48,7 +48,7 @@ AllowShortEnumsOnASingleLine: false
 # Short functions are not contracted into a single line
 AllowShortFunctionsOnASingleLine: None
 # Short If Statements are not contracted into a single line
-AllowShortIfStatementsOnASingleLine: Never
+AllowShortIfStatementsOnASingleLine: true
 # Short lambdas are not contracted into a single line
 AllowShortLambdasOnASingleLine: None
 # short loops are not contracted to a single line
