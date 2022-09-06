@@ -40,6 +40,8 @@ inline VCI_INIT_CONFIG create_vci_init_cfg(UCHAR timing0, UCHAR timing1,
   return cfg;
 }
 
+std::atomic_bool pub_thd_init_done{false};
+
 } // namespace
 
 static void can_rx_func(std::atomic_bool *runFlag, eventpp_queue_t &ppq) {
@@ -56,6 +58,8 @@ static void can_rx_func(std::atomic_bool *runFlag, eventpp_queue_t &ppq) {
   tick_ext.beginInitTick();
   std::this_thread::sleep_for(std::chrono::seconds(1));
   tick_ext.endInitTick();
+
+  pub_thd_init_done.store(true);
 
   constexpr DWORD rx_buff_size = 100;
   VCI_CAN_OBJ can_rx_buff[rx_buff_size];
@@ -95,6 +99,8 @@ static void pub_simu_func(std::atomic_bool *runFlag, eventpp_queue_t &ppq) {
   std::this_thread::sleep_for(std::chrono::seconds(1));
   tick_ext.endInitTick();
 
+  pub_thd_init_done.store(true);
+
   // auto dur = system_clock::now().time_since_epoch();
   // uint64_t now = duration_cast<microseconds>(dur).count();
   const char *cmd_recv = "VCI_Receive,";
@@ -124,11 +130,16 @@ static void pub_simu_func(std::atomic_bool *runFlag, eventpp_queue_t &ppq) {
 }
 
 int main(int argc, char **argv) {
+  FLAGS_alsologtostderr = 1;
+  FLAGS_colorlogtostderr = true;
   google::InitGoogleLogging(argv[0]);
 
   eventpp_queue_t ppq;
   std::atomic_bool run_flag{true};
-  std::thread pub_thd(pub_simu_func, &run_flag, std::ref(ppq));
+  std::thread pub_thd(can_rx_func, &run_flag, std::ref(ppq));
+  while (!pub_thd_init_done.load()) { // wait vci open device finish.
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  }
 
   try {
     boost::asio::io_context io_context;

@@ -90,6 +90,8 @@ TEST(evnetQueue, multiThread) {
 }
 
 int main(int argc, char **argv) {
+  FLAGS_alsologtostderr = 1;
+  FLAGS_colorlogtostderr = true;
   ::testing::InitGoogleTest(&argc, argv);
   google::InitGoogleLogging(argv[0]);
   int ret = RUN_ALL_TESTS();
