@@ -16,12 +16,12 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE "FileDescription", "ControlCAN library"
-            VALUE "FileVersion", "${PROJECT_VERSION_MAJOR}, ${PROJECT_VERSION_MINOR}, ${PROJECT_VERSION_PATCH}"
-            VALUE "InternalName", "ControlCAN library"
-            VALUE "LegalCopyright", "Copyright (C) 2022"
-            VALUE "OriginalFilename", ""
-            VALUE "ProductName", "ControlCAN library"
-            VALUE "ProductVersion", "${PROJECT_VERSION_MAJOR}, ${PROJECT_VERSION_MINOR}, ${PROJECT_VERSION_PATCH}"
+            VALUE "FileVersion", "${PROJECT_VERSION_MAJOR}, ${PROJECT_VERSION_MINOR}, ${PROJECT_VERSION_PATCH}\0"
+            VALUE "InternalName", "ControlCAN library\0"
+            VALUE "LegalCopyright", "Copyright (C) 2022\0"
+            VALUE "OriginalFilename", "\0"
+            VALUE "ProductName", "ControlCAN library\0"
+            VALUE "ProductVersion", "${PROJECT_VERSION_MAJOR}, ${PROJECT_VERSION_MINOR}, ${PROJECT_VERSION_PATCH}\0"
         END
     END
     BLOCK "VarFileInfo"
