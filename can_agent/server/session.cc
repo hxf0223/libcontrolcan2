@@ -4,6 +4,7 @@
 #include <chrono>
 #include <cstring>
 #include <functional>
+#include <ostream>
 #include <thread>
 
 #include "glog/logging.h"
@@ -14,6 +15,7 @@
 Session::Session(boost::asio::io_context &ioContext, eventpp_queue_t &ppq)
     : socket_(ioContext), deadline_(ioContext), eventpp_q_(ppq) {
   std::cout << "Session created." << std::endl;
+  shr_tx_buff_.prepare(2048);
 }
 
 Session::~Session() {
@@ -30,10 +32,10 @@ void Session::start() {
 }
 
 void Session::disconnect_to_eventqq() {
-  if (0 == ppq_handle_.use_count())
-    return;
-  // remove listener to let this session destroied
-  eventpp_q_.removeListener(ppq_can_obj_evt_id, ppq_handle_);
+  if (ppq_handle_.use_count() > 0) {
+    // remove listener to let this session destroied
+    eventpp_q_.removeListener(ppq_can_obj_evt_id, ppq_handle_);
+  }
 }
 
 void Session::consume_can_obj_handler(const canobj_queue_node_t &node) {
@@ -43,7 +45,15 @@ void Session::consume_can_obj_handler(const canobj_queue_node_t &node) {
 }
 
 void Session::do_can_obj_transpose(const boost::system::error_code &ec) {
-  if (spsc_queue_.pop(can_obj_)) {
+  canobj_queue_node_t node;
+  for (size_t i = 0; i < 8; i++) {
+    if (!spsc_queue_.pop(node))
+      break;
+
+    std::ostream os(&shr_tx_buff_);
+    os << node.can_obj_;
+  }
+  if (shr_tx_buff_.size() > 0) {
     write_message();
     return;
   }
@@ -56,8 +66,8 @@ void Session::do_can_obj_transpose(const boost::system::error_code &ec) {
 
 void Session::write_message() {
   auto self = shared_from_this();
-  socket_.async_write_some(
-      boost::asio::buffer(can_obj_.can_obj_, can_obj_.len_),
+  boost::asio::async_write(
+      socket_, shr_tx_buff_,
       boost::bind(&Session::handle_write, self,
                   boost::asio::placeholders::error,
                   boost::asio::placeholders::bytes_transferred));
@@ -65,6 +75,8 @@ void Session::write_message() {
 
 void Session::handle_write(const boost::system::error_code &ec,
                            std::size_t bytesTransfered) {
+  shr_tx_buff_.consume(bytesTransfered);
+
   if (ec) {
     LOG(WARNING) << "Session::handle_write " << ec.what();
     disconnect_to_eventqq();

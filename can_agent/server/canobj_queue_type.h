@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <ostream>
 #include <stdint.h>
 #include <string>
 
@@ -12,6 +13,11 @@
 
 constexpr size_t canobj_capacity = 256;
 struct canobj_queue_node_t {
+  friend std::ostream &operator<<(std::ostream &os,
+                                  const canobj_queue_node_t &node) {
+    os.write((const char *)(node.can_obj_), node.len_);
+    return os;
+  }
   uint8_t can_obj_[canobj_capacity];
   size_t len_{0};
 };

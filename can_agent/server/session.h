@@ -5,6 +5,7 @@
 
 #include <array>
 #include <boost/asio.hpp>
+#include <boost/asio/streambuf.hpp>
 #include <boost/bind.hpp>
 #include <iostream>
 
@@ -15,8 +16,8 @@ private:
   boost::asio::ip::tcp::socket socket_;
   boost::asio::deadline_timer deadline_;
 
-  spsc_queue_t<boost::lockfree::capacity<1024>> spsc_queue_;
-  canobj_queue_node_t can_obj_;
+  spsc_queue_t<boost::lockfree::capacity<2048>> spsc_queue_;
+  boost::asio::streambuf shr_tx_buff_;
   eventpp_queue_t &eventpp_q_;
   eventpp_queue_handle_t ppq_handle_;
 

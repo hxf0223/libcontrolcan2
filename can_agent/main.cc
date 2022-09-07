@@ -137,6 +137,7 @@ int main(int argc, char **argv) {
   eventpp_queue_t ppq;
   std::atomic_bool run_flag{true};
   std::thread pub_thd(can_rx_func, &run_flag, std::ref(ppq));
+  // std::thread pub_thd(pub_simu_func, &run_flag, std::ref(ppq));
   while (!pub_thd_init_done.load()) { // wait vci open device finish.
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
