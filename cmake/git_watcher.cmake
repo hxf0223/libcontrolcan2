@@ -324,24 +324,26 @@ endfunction()
 #              check the state of git before every build. If the state has
 #              changed, then a file is configured.
 function(SetupGitMonitoring)
-    add_custom_target(check_git
-        ALL
-        DEPENDS ${PRE_CONFIGURE_FILE}
-        BYPRODUCTS
-            ${POST_CONFIGURE_FILE}
-            ${GIT_STATE_FILE}
-        COMMENT "Checking the git repository for changes..."
-        COMMAND
-            ${CMAKE_COMMAND}
-            -D_BUILD_TIME_CHECK_GIT=TRUE
-            -DGIT_WORKING_DIR=${GIT_WORKING_DIR}
-            -DGIT_EXECUTABLE=${GIT_EXECUTABLE}
-            -DGIT_STATE_FILE=${GIT_STATE_FILE}
-            -DPRE_CONFIGURE_FILE=${PRE_CONFIGURE_FILE}
-            -DPOST_CONFIGURE_FILE=${POST_CONFIGURE_FILE}
-            -DGIT_FAIL_IF_NONZERO_EXIT=${GIT_FAIL_IF_NONZERO_EXIT}
-            -DGIT_IGNORE_UNTRACKED=${GIT_IGNORE_UNTRACKED}
-            -P "${CMAKE_CURRENT_LIST_FILE}")
+    if (CMAKE_BUILD_EARLY_EXPANSION)
+        add_custom_target(check_git
+            ALL
+            DEPENDS ${PRE_CONFIGURE_FILE}
+            BYPRODUCTS
+                ${POST_CONFIGURE_FILE}
+                ${GIT_STATE_FILE}
+            COMMENT "Checking the git repository for changes..."
+            COMMAND
+                ${CMAKE_COMMAND}
+                -D_BUILD_TIME_CHECK_GIT=TRUE
+                -DGIT_WORKING_DIR=${GIT_WORKING_DIR}
+                -DGIT_EXECUTABLE=${GIT_EXECUTABLE}
+                -DGIT_STATE_FILE=${GIT_STATE_FILE}
+                -DPRE_CONFIGURE_FILE=${PRE_CONFIGURE_FILE}
+                -DPOST_CONFIGURE_FILE=${POST_CONFIGURE_FILE}
+                -DGIT_FAIL_IF_NONZERO_EXIT=${GIT_FAIL_IF_NONZERO_EXIT}
+                -DGIT_IGNORE_UNTRACKED=${GIT_IGNORE_UNTRACKED}
+                -P "${CMAKE_CURRENT_LIST_FILE}")
+    endif()
 endfunction()
 
 
@@ -363,5 +365,14 @@ function(Main)
     endif()
 endfunction()
 
+function(Main2)
+    SetupGitMonitoring()
+    CheckGit("${GIT_WORKING_DIR}" changed)
+    if(changed OR NOT EXISTS "${POST_CONFIGURE_FILE}")
+        GitStateChangedAction()
+    endif()
+endfunction()
+
 # And off we go...
-Main()
+#Main()
+Main2()

@@ -3,7 +3,7 @@ if (POLICY CMP0091)
   cmake_policy(SET CMP0091 NEW)
 endif (POLICY CMP0091)
 
-project ("ControlCAN")
+project ("ControlCAN" VERSION 0.0.2)
 
 # cmake_policy(SET policy NEW)
 
