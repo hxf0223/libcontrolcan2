@@ -532,6 +532,8 @@ configure_file (src/glog/logging.h.in glog/logging.h @ONLY)
 configure_file (src/glog/raw_logging.h.in glog/raw_logging.h @ONLY)
 configure_file (src/glog/stl_logging.h.in glog/stl_logging.h @ONLY)
 configure_file (src/glog/vlog_is_on.h.in glog/vlog_is_on.h @ONLY)
+configure_file (src/glog/log_severity.h glog/log_severity.h @ONLY)
+configure_file (src/glog/platform.h glog/platform.h @ONLY)
 
 add_compile_options ($<$<AND:$<BOOL:${HAVE_NO_UNNAMED_TYPE_TEMPLATE_ARGS}>,$<NOT:$<CXX_COMPILER_ID:GNU>>>:-Wno-unnamed-type-template-args>)
 
@@ -583,7 +585,7 @@ set (GLOG_PUBLIC_H
   src/glog/platform.h
 )
 
-set(GLOG_INC_DIR "${CMAKE_CURRENT_BINARY_DIR}/glog" PARENT_SCOPE)
+set(GLOG_INC_DIR "${CMAKE_CURRENT_BINARY_DIR}" PARENT_SCOPE)
 
 set (GLOG_SRCS
   ${GLOG_PUBLIC_H}
