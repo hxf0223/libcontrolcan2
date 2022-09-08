@@ -1,0 +1,35 @@
+/////////////////////////////////////////////////////////////////////////////
+//
+// 版本
+// 
+
+VS_VERSION_INFO     VERSIONINFO
+  FILEVERSION       2014,0,0,2053
+  PRODUCTVERSION    2,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x01L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE        0x01L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080404B0"
+        BEGIN
+            VALUE "CompanyName", "Wesky Soft"
+            VALUE "FileDescription", "DLL Fix Utility"
+            VALUE "FileVersion",     "2014.0.0.2053"
+            VALUE "InternalName",    "DllSuite"
+            VALUE "LegalCopyright", "Microsoft (C)"
+            VALUE "ProductVersion",  "2.0.0.1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0804, 1200
+    END
+END

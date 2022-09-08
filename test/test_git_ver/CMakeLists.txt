@@ -12,6 +12,6 @@ endif()
 
 file( GLOB SRC_FILES *.cc )
 add_executable( test_git_ver ${SRC_FILES} ${POST_CONFIGURE_FILE})
-#target_sources(test_git_ver PRIVATE ${MY_VERSIONINFO_RC})
+target_sources(test_git_ver PRIVATE ${MY_VERSIONINFO_RC})
 target_link_libraries( test_git_ver glog gtest )
 target_include_directories(test_git_ver SYSTEM PUBLIC "${PROJECT_SOURCE_DIR}/git_ver_src_in")
