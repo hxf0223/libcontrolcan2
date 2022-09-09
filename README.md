@@ -70,7 +70,11 @@ cmake --build build32 --config Release -j
 
 1. 编译libControlCAN时，出现 **relocation against in read-only section**。是由于系统安装了多个版本的boost导致，添加 **link_directories("/usr/local/lib")**覆盖系统boost安装位置。
 2. Windows编译时，导出__stdcall函数时，导出符号带有_Func_Name@num，需要将def文件带入源文件一起编译；
-3. 编译资源文件参考[TVersionFixedInfo](https://www.freepascal.org/docs-html/current/fclres/versiontypes/tversionfixedinfo.filetype.html) [https://www.cnblogs.com/tupx/p/3656078.html](如何写入和获取软件的版本信息(VS环境下))[https://www.cnblogs.com/tupx/p/3656078.html]
+
+## 编译资源文件参考
+- [TVersionFixedInfo](https://www.freepascal.org/docs-html/current/fclres/versiontypes/tversionfixedinfo.filetype.html) 
+- [Go利用windres.exe和.rc文件在Windows下生成的程序带有版本、版权、产品名称、图标等属性信息](https://blog.csdn.net/FlushHip/article/details/84978556)
+- [llvm windows_version_resource.rc](https://github.com/llvm-mirror/llvm/blob/master/resources/windows_version_resource.rc)
 
 ## 参考
 

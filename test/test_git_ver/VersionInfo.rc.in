@@ -1,31 +1,34 @@
-VERSIONINFO
- FILEVERSION ${PROJECT_VERSION_MAJOR}, ${PROJECT_VERSION_MINOR}, ${PROJECT_VERSION_PATCH}
- PRODUCTVERSION ${PROJECT_VERSION_MAJOR}, ${PROJECT_VERSION_MINOR}, ${PROJECT_VERSION_PATCH}
- FILEFLAGSMASK 0x17L
+#include <windows.h>
+
+VS_VERSION_INFO     VERSIONINFO MOVEABLE IMPURE LOADONCALL DISCARDABLE
+  FILEVERSION       2022,9,9,2053
+  PRODUCTVERSION    0,1,0,0
+  FILEFLAGSMASK	    0x3fL
 #ifdef _DEBUG
- FILEFLAGS 0x1L
+  FILEFLAGS 0x1L
 #else
- FILEFLAGS 0x0L
+  FILEFLAGS 0x0L
 #endif
- FILEOS 0x4L
- FILETYPE 0x0L
- FILESUBTYPE 0x0L
+  FILEOS 0x40004L
+  FILETYPE        0x1L
+  FILESUBTYPE 0x0L
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
-        BLOCK "040904b0"
+        BLOCK "080404B0"
         BEGIN
-            VALUE "FileDescription", "ControlCAN library"
-            VALUE "FileVersion", "${PROJECT_VERSION_MAJOR}, ${PROJECT_VERSION_MINOR}, ${PROJECT_VERSION_PATCH}\0"
-            VALUE "InternalName", "ControlCAN library\0"
-            VALUE "LegalCopyright", "Copyright (C) 2022\0"
-            VALUE "OriginalFilename", "\0"
-            VALUE "ProductName", "ControlCAN library\0"
-            VALUE "ProductVersion", "${PROJECT_VERSION_MAJOR}, ${PROJECT_VERSION_MINOR}, ${PROJECT_VERSION_PATCH}\0"
+            VALUE "CompanyName", "Wesky Soft"
+            VALUE "FileDescription", "TCP extension for ControlCAN"
+            VALUE "FileVersion",     "2022.9.9.2053"
+            VALUE "InternalName",    "ControlCAN Library"
+            VALUE "LegalCopyright",  "Roderick.Huang hxf0223@hotmail.com"
+            VALUE "OriginalFilename", "ControlCAN.dll"
+            VALUE "ProductName", "ControlCAN TCP"
+            VALUE "ProductVersion",  "0.1.0.0"
         END
     END
     BLOCK "VarFileInfo"
     BEGIN
-        VALUE "Translation", 0x409, 1200
+        VALUE "Translation", 0x0804, 1200
     END
 END
