@@ -69,9 +69,9 @@ public:
     val = c = '\0';
 
     // After a timeout & cancel it seems we need
-    // to do a reset for subsequent reads to work.
+    // to do a restart for subsequent reads to work.
     (static_cast<boost::asio::io_context &>(port.get_executor().context()))
-        .reset();
+        .restart();
 
     // Asynchronously read 1 character.
     boost::asio::async_read(

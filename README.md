@@ -72,9 +72,14 @@ cmake --build build32 --config Release -j
 2. Windows编译时，导出__stdcall函数时，导出符号带有_Func_Name@num，需要将def文件带入源文件一起编译；
 
 ## 编译资源文件参考
-- [TVersionFixedInfo](https://www.freepascal.org/docs-html/current/fclres/versiontypes/tversionfixedinfo.filetype.html) 
+- [TVersionFixedInfo](https://www.freepascal.org/docs-html/current/fclres/versiontypes/tversionfixedinfo.filetype.html)
 - [Go利用windres.exe和.rc文件在Windows下生成的程序带有版本、版权、产品名称、图标等属性信息](https://blog.csdn.net/FlushHip/article/details/84978556)
 - [llvm windows_version_resource.rc](https://github.com/llvm-mirror/llvm/blob/master/resources/windows_version_resource.rc)
+
+## 代码clang-format全部格式化
+```bash
+find . -regex '.*\.\(cc\|cpp\|hpp\|cu\|c\|h\)' -exec clang-format -style=file -i {} \;
+```
 
 ## 参考
 
