@@ -8,7 +8,7 @@ project ("ControlCAN" VERSION 0.0.2)
 # cmake_policy(SET policy NEW)
 
 # cmake set info
-set(CMAKE_VERBOSE_MAKEFILE ON)
+#set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set (CMAKE_CXX_STANDARD 17)
 
