@@ -40,7 +40,7 @@ private:
   boost::asio::streambuf write_buffer;
 };
 
-int main(int argc, char *argv[]) {
+int main2(int argc, char *argv[]) {
   io::io_context io_context;
   std::vector<std::thread> threads;
   auto count = std::thread::hardware_concurrency() * 2;
