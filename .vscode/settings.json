@@ -24,6 +24,7 @@
         "-log=verbose",
         "-pretty",
         "--clang-tidy",
+        "--cross-file-rename",
         "--background-index",
         "--all-scopes-completion",
         "--completion-style=detailed",
