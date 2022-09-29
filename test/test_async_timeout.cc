@@ -20,26 +20,26 @@
 #include <boost/asio/serial_port.hpp>
 #include <boost/bind.hpp>
 
-class blocking_reader {
-  boost::asio::serial_port &port;
-  size_t timeout;
-  char c;
-  boost::asio::deadline_timer timer;
-  bool read_error;
+class BlockingReader {
+  boost::asio::serial_port &port_;
+  size_t timeout_;
+  char ch_;
+  boost::asio::deadline_timer timer_;
+  bool read_error_{};
 
   // Called when an async read completes or has been cancelled
-  void read_complete(const boost::system::error_code &error,
-                     size_t bytes_transferred) {
+  void readComplete(const boost::system::error_code &error,
+                    size_t bytes_transferred) {
 
-    read_error = (error || bytes_transferred == 0);
+    read_error_ = (error || bytes_transferred == 0);
 
     // Read has finished, so cancel the
     // timer.
-    timer.cancel();
+    timer_.cancel();
   }
 
   // Called when the timer's deadline expires.
-  void time_out(const boost::system::error_code &error) {
+  void timeOut(const boost::system::error_code &error) {
 
     // Was the timeout was cancelled?
     if (error) {
@@ -51,48 +51,48 @@ class blocking_reader {
     // the read operation
     // The read callback will be called
     // with an error
-    port.cancel();
+    port_.cancel();
   }
 
 public:
   // Constructs a blocking reader, pass in an open serial_port and
   // a timeout in milliseconds.
-  blocking_reader(boost::asio::serial_port &port, size_t timeout)
-      : port(port), timeout(timeout),
-        timer(static_cast<boost::asio::io_context &>(
-            port.get_executor().context())),
-        read_error(true) {}
+  BlockingReader(boost::asio::serial_port &port, size_t timeout)
+      : port_(port), timeout_(timeout),
+        timer_(static_cast<boost::asio::io_context &>(
+            port.get_executor().context())) {}
 
   // Reads a character or times out
   // returns false if the read times out
-  bool read_char(char &val) {
-    val = c = '\0';
+  bool readChar(char &val) {
+    val = ch_ = '\0';
 
     // After a timeout & cancel it seems we need
     // to do a restart for subsequent reads to work.
-    (static_cast<boost::asio::io_context &>(port.get_executor().context()))
+    (static_cast<boost::asio::io_context &>(port_.get_executor().context()))
         .restart();
 
     // Asynchronously read 1 character.
     boost::asio::async_read(
-        port, boost::asio::buffer(&c, 1),
-        boost::bind(&blocking_reader::read_complete, this,
+        port_, boost::asio::buffer(&ch_, 1),
+        boost::bind(&BlockingReader::readComplete, this, // NOLINT
                     boost::asio::placeholders::error,
                     boost::asio::placeholders::bytes_transferred));
 
     // Setup a deadline time to implement our timeout.
-    timer.expires_from_now(boost::posix_time::milliseconds(timeout));
-    timer.async_wait(boost::bind(&blocking_reader::time_out, this,
-                                 boost::asio::placeholders::error));
+    timer_.expires_from_now(boost::posix_time::milliseconds(timeout_));
+    timer_.async_wait(boost::bind(&BlockingReader::timeOut, this, // NOLINT
+                                  boost::asio::placeholders::error));
 
     // This will block until a character is read
     // or until the it is cancelled.
-    (static_cast<boost::asio::io_context &>(port.get_executor().context()))
+    (static_cast<boost::asio::io_context &>(port_.get_executor().context()))
         .run();
 
-    if (!read_error)
-      val = c;
+    if (!read_error_) {
+      val = ch_;
+    }
 
-    return !read_error;
+    return !read_error_;
   }
 };

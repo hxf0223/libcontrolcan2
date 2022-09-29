@@ -10,13 +10,13 @@
  *
  */
 TEST(streambuf, write) {
-  std::string host_ip_addr = "127.0.0.1";
-  constexpr int host_port = 9999;
+  std::string const host_ip_addr = "127.0.0.1";
+  constexpr int kHostPort = 9999;
 
   boost::asio::io_service io_service;
   boost::asio::ip::tcp::socket socket(io_service);
   socket.connect(boost::asio::ip::tcp::endpoint(
-      boost::asio::ip::address::from_string(host_ip_addr), host_port));
+      boost::asio::ip::address::from_string(host_ip_addr), kHostPort));
 
   boost::asio::streambuf b;
 
@@ -26,7 +26,7 @@ TEST(streambuf, write) {
 
   // Read from the socket, writing into the output sequence.  The
   // input sequence is empty and the output sequence contains "hello".
-  size_t n = socket.receive(bufs);
+  size_t const n = socket.receive(bufs);
 
   // Remove 'n' (5) bytes from output sequence appending them to the
   // input sequence.  The input sequence contains "hello" and the
@@ -48,13 +48,13 @@ TEST(streambuf, write) {
  *
  */
 TEST(streambuf, read) {
-  std::string host_ip_addr = "127.0.0.1";
-  constexpr int host_port = 9999;
+  std::string const host_ip_addr = "127.0.0.1";
+  constexpr int kHostPort = 9999;
 
   boost::asio::io_service io_service;
   boost::asio::ip::tcp::socket socket(io_service);
   socket.connect(boost::asio::ip::tcp::endpoint(
-      boost::asio::ip::address::from_string(host_ip_addr), host_port));
+      boost::asio::ip::address::from_string(host_ip_addr), kHostPort));
 
   boost::asio::streambuf b;
 
@@ -64,7 +64,7 @@ TEST(streambuf, read) {
 
   // Read from the socket, writing into the output sequence.  The
   // input sequence is empty and the output sequence contains "hello".
-  size_t n = socket.receive(bufs);
+  size_t const n = socket.receive(bufs);
 
   // Remove 'n' (5) bytes from output sequence appending them to the
   // input sequence.  The input sequence contains "hello" and the

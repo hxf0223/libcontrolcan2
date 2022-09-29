@@ -16,9 +16,11 @@
 #include "lib_control_can_imp.h"
 #include "test_helper.hpp"
 
-constexpr DWORD devtype = 4;
-constexpr DWORD devid = 0;
-constexpr DWORD channel = 0;
+namespace {
+constexpr DWORD kDevtype = 4;
+constexpr DWORD kDevid = 0;
+constexpr DWORD kChannel = 0;
+} // namespace
 
 /**
  * @brief 作为测试服务器，不断发送CAN Object。
@@ -68,18 +70,19 @@ TEST(Socket, perfServer) {
  * 接收其发送的CAN Object帧，并解析出CANObject。
  */
 TEST(Socket, perfClient) {
-  auto client_proc = [](std::shared_ptr<CanImpInterface> canDc) {
-    constexpr DWORD rx_buff_size = 100;
-    VCI_CAN_OBJ can_rx_buff[rx_buff_size];
+  auto client_proc = [](const std::shared_ptr<CanImpInterface> &canDc) {
+    constexpr DWORD kRxBuffSize = 100;
+    VCI_CAN_OBJ can_rx_buff[kRxBuffSize];
     const size_t recv_cnt_max = 10000 * 300;
     ULONG recv_frame_cnt = 0;
 
     // auto tm0 = std::chrono::high_resolution_clock::now();
     while (recv_frame_cnt < recv_cnt_max) {
-      auto recv_frame_num = canDc->VCI_Receive(devtype, devid, channel,
-                                               can_rx_buff, rx_buff_size, 10);
+      auto recv_frame_num = canDc->VCI_Receive(kDevtype, kDevid, kChannel,
+                                               can_rx_buff, kRxBuffSize, 10);
       for (ULONG i = 0; i < recv_frame_num; i++) {
-        std::string str = can::utils::bin2hex_dump(can_rx_buff[i].Data, 8);
+        std::string const str =
+            can::utils::bin2hex_dump(can_rx_buff[i].Data, 8);
         LOG(INFO) << recv_frame_cnt << ": " << str;
         recv_frame_cnt++;
       }
@@ -92,16 +95,16 @@ TEST(Socket, perfClient) {
   }; // client_proc
 
   std::shared_ptr<CanImpInterface> can_dc(createCanNet());
-  auto result = can_dc->VCI_OpenDevice(devtype, 0, 0);
+  auto result = can_dc->VCI_OpenDevice(kDevtype, 0, 0);
   CHECK(result == vciReturnType::STATUS_OK)
       << "CAN NET VCI_OpenDevice fail: " << result;
 
-  auto cfg = test::helper::create_vci_init_cfg(0x00, 0x1C, 0xffffffff);
-  result = can_dc->VCI_InitCAN(devtype, devid, channel, &cfg);
+  auto cfg = test::helper::createVciInitCfg(0x00, 0x1C, 0xffffffff);
+  result = can_dc->VCI_InitCAN(kDevtype, kDevid, kChannel, &cfg);
   CHECK(result == vciReturnType::STATUS_OK)
       << "CAN NET VCI_InitCAN fail: " << result;
 
-  result = can_dc->VCI_StartCAN(devtype, devid, channel);
+  result = can_dc->VCI_StartCAN(kDevtype, kDevid, kChannel);
   CHECK(result == vciReturnType::STATUS_OK)
       << "CAN NET VCI_StartCAN fail: " << result;
 
@@ -110,7 +113,8 @@ TEST(Socket, perfClient) {
 }
 
 namespace {
-inline std::string make_string(const boost::asio::streambuf &streambuf) {
+inline std::string
+make_string(const boost::asio::streambuf &streambuf) { // NOLINT
   return {boost::asio::buffers_begin(streambuf.data()),
           boost::asio::buffers_end(streambuf.data())};
 }
@@ -133,17 +137,19 @@ TEST(Socket, perfServer2) {
     std::string input_buffer;
 
     while (!ec) {
-      VCI_CAN_OBJ can_obj;
+      // VCI_CAN_OBJ can_obj;
       auto read_num = boost::asio::read_until(
           server_socket, boost::asio::dynamic_buffer(input_buffer), "\n", ec);
-      if (ec)
+      if (ec) {
         continue;
+      }
 
-      const auto pos = input_buffer.find('\n');
-      if (pos == std::string::npos)
+      const size_t pos = input_buffer.find('\n');
+      if (pos == std::string::npos) {
         continue;
+      }
 
-      std::string data(input_buffer.begin(), input_buffer.begin() + pos);
+      std::string const data(input_buffer.begin(), input_buffer.begin() + pos);
       input_buffer.erase(0, pos + 1);
 
       LOG(INFO) << "len: " << data.length() << ": " << data;
@@ -162,39 +168,39 @@ TEST(Socket, perfServer2) {
  */
 TEST(Socket, perfClient2) {
   using namespace std::chrono_literals;
-  auto client_proc = [](std::shared_ptr<CanImpInterface> canDc) {
-    constexpr DWORD can_tx_buff_size = 1;
-    VCI_CAN_OBJ can_tx_buff[can_tx_buff_size];
-    const size_t recv_cnt_max = 10000 * 30;
+  auto client_proc = [](const std::shared_ptr<CanImpInterface> &canDc) {
+    constexpr DWORD kCanTxBuffSize = 1;
+    VCI_CAN_OBJ can_tx_buff[kCanTxBuffSize];
+    const size_t recv_cnt_max = 10000 * 30; // NOLINT
     ULONG send_count = 0;
 
     auto tm0 = std::chrono::steady_clock::now();
     while (send_count < recv_cnt_max) {
       *(uint64_t *)(can_tx_buff[0].Data) = send_count;
-      auto e = canDc->VCI_Transmit(devtype, devid, channel, can_tx_buff,
-                                   can_tx_buff_size);
+      auto e = canDc->VCI_Transmit(kDevtype, kDevid, kChannel, can_tx_buff,
+                                   kCanTxBuffSize);
       CHECK(e == vciReturnType::STATUS_OK) << "VCI_Transmit return " << e;
       std::this_thread::sleep_for(300ms);
       send_count++;
     }
 
     auto tm2 = std::chrono::steady_clock::now();
-    std::chrono::duration<double, std::milli> dur1 = tm2 - tm0;
+    std::chrono::duration<double, std::milli> const dur1 = tm2 - tm0;
     LOG(INFO) << "transmit frame num: " << send_count
               << ", time in ms: " << dur1.count();
   }; // client_proc
 
   std::shared_ptr<CanImpInterface> can_dc(createCanNet());
-  auto result = can_dc->VCI_OpenDevice(devtype, 0, 0);
+  auto result = can_dc->VCI_OpenDevice(kDevtype, 0, 0);
   CHECK(result == vciReturnType::STATUS_OK)
       << "CAN NET VCI_OpenDevice fail: " << result;
 
-  auto cfg = test::helper::create_vci_init_cfg(0x00, 0x1C, 0xffffffff);
-  result = can_dc->VCI_InitCAN(devtype, devid, channel, &cfg);
+  auto cfg = test::helper::createVciInitCfg(0x00, 0x1C, 0xffffffff);
+  result = can_dc->VCI_InitCAN(kDevtype, kDevid, kChannel, &cfg);
   CHECK(result == vciReturnType::STATUS_OK)
       << "CAN NET VCI_InitCAN fail: " << result;
 
-  result = can_dc->VCI_StartCAN(devtype, devid, channel);
+  result = can_dc->VCI_StartCAN(kDevtype, kDevid, kChannel);
   CHECK(result == vciReturnType::STATUS_OK)
       << "CAN NET VCI_StartCAN fail: " << result;
 

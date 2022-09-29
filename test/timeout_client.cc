@@ -29,7 +29,7 @@ using boost::asio::ip::tcp;
 // times out, the socket is closed and the outstanding asynchronous operation
 // is cancelled.
 //
-class client {
+class Client {
 public:
   void connect(const std::string &host, const std::string &service,
                std::chrono::steady_clock::duration timeout) {
@@ -52,11 +52,12 @@ public:
     run(timeout);
 
     // Determine whether a connection was successfully established.
-    if (error)
+    if (error) {
       throw std::system_error(error);
+    }
   }
 
-  std::string read_line(std::chrono::steady_clock::duration timeout) {
+  std::string readLine(std::chrono::steady_clock::duration timeout) {
     // Start the asynchronous operation. The lambda that is used as a callback
     // will update the error and n variables when the operation completes. The
     // blocking_udp_client.cpp example shows how you can use std::bind rather
@@ -75,16 +76,17 @@ public:
     run(timeout);
 
     // Determine whether the read completed successfully.
-    if (error)
+    if (error) {
       throw std::system_error(error);
+    }
 
     std::string line(input_buffer_.substr(0, n - 1));
     input_buffer_.erase(0, n);
     return line;
   }
 
-  void write_line(const std::string &line,
-                  std::chrono::steady_clock::duration timeout) {
+  void writeLine(const std::string &line,
+                 std::chrono::steady_clock::duration timeout) {
     std::string data = line + "\n";
 
     // Start the asynchronous operation itself. The lambda that is used as a
@@ -101,8 +103,9 @@ public:
     run(timeout);
 
     // Determine whether the read completed successfully.
-    if (error)
+    if (error) {
       throw std::system_error(error);
+    }
   }
 
 private:
@@ -173,38 +176,38 @@ int main(int argc, char *argv[]) {
 #include <type_traits>
 
 template <class Stream, class ConstBufferSequence, class Handler>
-auto async_read_with_timeout(Stream &stream, ConstBufferSequence &&sequence,
-                             std::size_t millis, Handler &&handler) {
+auto asyncReadWithTimeout(Stream &stream, ConstBufferSequence &&sequence,
+                          std::size_t millis, Handler &&handler) {
   using handler_type = std::decay_t<Handler>;
   using buffer_sequence_type = std::decay_t<ConstBufferSequence>;
   using stream_type = Stream;
 
-  struct state_machine : std::enable_shared_from_this<state_machine> {
-    state_machine(stream_type &stream, buffer_sequence_type sequence,
-                  handler_type handler)
+  struct StateMachine : std::enable_shared_from_this<StateMachine> {
+    StateMachine(stream_type &stream, buffer_sequence_type sequence,
+                 handler_type handler)
         : stream_(stream), sequence_(std::move(sequence)),
           handler_(std::move(handler)) {}
     void start(std::size_t millis) {
       timer_.expires_from_now(boost::posix_time::milliseconds(millis));
       timer_.async_wait(
           strand_.wrap([self = this->shared_from_this()](auto &&ec) {
-            self->handle_timeout(ec);
+            self->handleTimeout(ec);
           }));
       boost::asio::async_read(
           stream_, sequence_,
           strand_.wrap([self = this->shared_from_this()](auto &&ec, auto size) {
-            self->handle_read(ec, size);
+            self->handleRead(ec, size);
           }));
     }
 
-    void handle_timeout(boost::system::error_code const &ec) {
+    void handleTimeout(boost::system::error_code const &ec) {
       if (!ec && !completed_) {
         boost::system::error_code sink;
         stream_.cancel(sink);
       }
     }
 
-    void handle_read(boost::system::error_code const &ec, std::size_t size) {
+    void handleRead(boost::system::error_code const &ec, std::size_t size) {
       assert(not completed_);
       boost::system::error_code sink;
       timer_.cancel(sink);
@@ -223,13 +226,13 @@ auto async_read_with_timeout(Stream &stream, ConstBufferSequence &&sequence,
     bool completed_ = false;
   };
 
-  auto psm = std::make_shared<state_machine>(
+  auto psm = std::make_shared<StateMachine>(
       stream, std::forward<ConstBufferSequence>(sequence),
       std::forward<Handler>(handler));
   psm->start(millis);
 }
 
-std::size_t ReadData(boost::asio::ip::tcp::socket &socket,
+std::size_t readData(boost::asio::ip::tcp::socket &socket,
                      std::vector<unsigned char> &buffer,
                      unsigned int size_to_read, boost::system::error_code &ec) {
   buffer.resize(size_to_read);
@@ -238,12 +241,12 @@ std::size_t ReadData(boost::asio::ip::tcp::socket &socket,
   std::size_t bytes_read = 0;
   boost::asio::io_context &io_context =
       static_cast<boost::asio::io_context &>(socket.get_executor().context());
-  async_read_with_timeout(socket, boost::asio::buffer(buffer),
-                          2000, // 2 seconds for example
-                          [&](auto &&err, auto size) {
-                            ec = err;
-                            bytes_read = size;
-                          });
+  asyncReadWithTimeout(socket, boost::asio::buffer(buffer),
+                       2000, // 2 seconds for example
+                       [&](auto &&err, auto size) {
+                         ec = err;
+                         bytes_read = size;
+                       });
 
   // todo: use a more scalable executor than spawning threads
   auto future = std::async(std::launch::async, [&] {

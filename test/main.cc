@@ -18,17 +18,19 @@
 #include "glog/logging.h"
 #include "gtest/gtest.h"
 
-constexpr DWORD devtype = 4;
-constexpr DWORD devid = 0;
-constexpr DWORD channel = 0;
+namespace {
+constexpr DWORD kDevtype = 4;
+constexpr DWORD kDevid = 0;
+constexpr DWORD kChannel = 0;
+} // namespace
 
 TEST(CAN, F001_P0) {
-  auto result = VCI_OpenDevice(devtype, 0, 0);
+  auto result = VCI_OpenDevice(kDevtype, 0, 0);
   CHECK(1 == result) << "VCI_OpenDevice fail: " << result;
 
-  auto cfg = test::helper::create_vci_init_cfg(0x00, 0x1C, 0xffffffff);
-  result = VCI_InitCAN(devtype, devid, channel, &cfg);
-  result = VCI_StartCAN(devtype, devid, channel);
+  auto cfg = test::helper::createVciInitCfg(0x00, 0x1C, 0xffffffff);
+  result = VCI_InitCAN(kDevtype, kDevid, kChannel, &cfg);
+  result = VCI_StartCAN(kDevtype, kDevid, kChannel);
 
   VCI_CAN_OBJ can_obj;
   uint8_t send_data[] = {0x03, 0x22, 0x28, 0x00, 0xAA, 0xAA, 0xAA, 0xAA};
@@ -38,7 +40,7 @@ TEST(CAN, F001_P0) {
   can_obj.ID = (0x102) & (~0x80000000);
   can_obj.DataLen = 8;
   can_obj.RemoteFlag = 0;
-  can_obj.ExternFlag = (0x102 & 0x80000000) ? 1 : 0;
+  can_obj.ExternFlag = (0x102 & 0x80000000) != 0U ? 1 : 0;
   can_obj.TimeFlag = 0;
   can_obj.SendType = 0;
   can_obj.TimeStamp = 0;
@@ -46,10 +48,11 @@ TEST(CAN, F001_P0) {
   VCI_CAN_OBJ can_recv_buff[10];
 
   for (int i = 0; i < 4000; i++, can_obj.Data[2]++) {
-    result = VCI_Transmit(devtype, devid, channel, &can_obj, 1);
-    auto len = VCI_Receive(devtype, devid, channel, can_recv_buff, 1, 100);
+    result = VCI_Transmit(kDevtype, kDevid, kChannel, &can_obj, 1);
+    auto len = VCI_Receive(kDevtype, kDevid, kChannel, can_recv_buff, 1, 100);
     if (len > 0) {
-      std::string str = can::utils::bin2hex_dump(can_recv_buff[0].Data, 8);
+      std::string const str =
+          can::utils::bin2hex_dump(can_recv_buff[0].Data, 8);
       LOG(INFO) << "VCI_Receive: " << std::setfill('0') << std::hex
                 << std::setw(8) << can_recv_buff[0].ID << ", data: " << str;
     } else {
@@ -57,39 +60,41 @@ TEST(CAN, F001_P0) {
     }
   }
 
-  result = VCI_CloseDevice(devtype, 0);
+  result = VCI_CloseDevice(kDevtype, 0);
   CHECK(1 == result) << "VCI_CloseDevice fail: " << result;
 }
 
 TEST(CAN, F002_P0) {
-  auto result = VCI_OpenDevice(devtype, 0, 0);
+  auto result = VCI_OpenDevice(kDevtype, 0, 0);
   CHECK(1 == result) << "VCI_OpenDevice fail: " << result;
 
-  auto cfg = test::helper::create_vci_init_cfg(0x00, 0x1C, 0xffffffff);
-  result = VCI_InitCAN(devtype, devid, channel, &cfg);
+  auto cfg = test::helper::createVciInitCfg(0x00, 0x1C, 0xffffffff);
+  result = VCI_InitCAN(kDevtype, kDevid, kChannel, &cfg);
 
   VCI_CAN_OBJ can_recv_buff[100];
-  result = VCI_StartCAN(devtype, devid, channel);
+  result = VCI_StartCAN(kDevtype, kDevid, kChannel);
 
   LOG(INFO) << std::setfill('0') << std::setw(8);
   for (int i = 0; i < 4000; i++) {
-    auto len = VCI_Receive(devtype, devid, channel, can_recv_buff, 1, 100);
-    if (len <= 0)
+    auto len = VCI_Receive(kDevtype, kDevid, kChannel, can_recv_buff, 1, 100);
+    if (len <= 0) {
       continue;
-    std::string str = can::utils::bin2hex_dump(can_recv_buff[0].Data, 8);
+    }
+
+    std::string const str = can::utils::bin2hex_dump(can_recv_buff[0].Data, 8);
     LOG(INFO) << "VCI_Receive: " << std::hex << can_recv_buff[0].ID
               << ", data: " << str;
   }
 
-  result = VCI_CloseDevice(devtype, 0);
+  result = VCI_CloseDevice(kDevtype, 0);
   CHECK(1 == result) << "VCI_CloseDevice fail: " << result;
 }
 
 int main(int argc, char **argv) {
-  FLAGS_alsologtostderr = 1;
+  FLAGS_alsologtostderr = true;
   FLAGS_colorlogtostderr = true;
   ::testing::InitGoogleTest(&argc, argv);
   google::InitGoogleLogging(argv[0]);
-  int ret = RUN_ALL_TESTS();
+  int const ret = RUN_ALL_TESTS();
   return ret;
 }

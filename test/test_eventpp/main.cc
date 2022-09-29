@@ -20,21 +20,21 @@ TEST(evnetQueue, Function) {
   auto f3 = [](const std::string &str) {
     LOG(INFO) << "function3, value: " << str;
   };
-  struct functor1 {
+  struct Functor1 {
     size_t count_{0};
     void operator()(const std::string &str) {
       LOG(INFO) << "functor 1, count " << ++count_ << ", value: " << str;
     }
   };
 
-  struct class1 {
+  struct Class1 {
     size_t count_{0};
-    void print_str(const std::string &str) {
+    void printStr(const std::string &str) {
       LOG(INFO) << "class1, count " << ++count_ << ", value " << str;
     }
   };
 
-  functor1 ft1;
+  Functor1 ft1;
   using queue_t = eventpp::EventQueue<int, void(const std::string &)>;
   using queue_handle_t = queue_t::Handle;
   queue_t q;
@@ -43,7 +43,7 @@ TEST(evnetQueue, Function) {
   q.enqueue(1, "test string 20");
   q.process();
 
-  queue_handle_t h1 = q.appendListener(1, f1);
+  queue_handle_t const h1 = q.appendListener(1, f1);
   q.appendListener(1, f2);
   q.appendListener(1, ft1);
 
@@ -51,10 +51,11 @@ TEST(evnetQueue, Function) {
   q.enqueue(1, "test string 2");
   q.process();
 
-  class1 c1;
+  Class1 c1;
   LOG(INFO) << "!!! append more after queue and process";
-  q.appendListener(1,
-                   std::bind(&class1::print_str, &c1, std::placeholders::_1));
+  q.appendListener(1, [object_ptr = &c1](auto &&PH1) {
+    object_ptr->printStr(std::forward<decltype(PH1)>(PH1));
+  });
   q.appendListener(1, f3);
   q.enqueue(1, "test string 3");
   q.process();
@@ -90,10 +91,10 @@ TEST(evnetQueue, multiThread) {
 }
 
 int main(int argc, char **argv) {
-  FLAGS_alsologtostderr = 1;
+  FLAGS_alsologtostderr = true;
   FLAGS_colorlogtostderr = true;
   ::testing::InitGoogleTest(&argc, argv);
   google::InitGoogleLogging(argv[0]);
-  int ret = RUN_ALL_TESTS();
+  int const ret = RUN_ALL_TESTS();
   return ret;
 }

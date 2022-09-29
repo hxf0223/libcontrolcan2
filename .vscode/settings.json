@@ -23,6 +23,7 @@
     "clangd.arguments": [
         "-log=verbose",
         "-pretty",
+        "--clang-tidy",
         "--background-index",
         "--all-scopes-completion",
         "--completion-style=detailed",

@@ -7,45 +7,48 @@ namespace io = boost::asio;
 using tcp = io::ip::tcp;
 using error_code = boost::system::error_code;
 
-class session {
-  session(io::io_context &io_context)
-      : socket(io_context), read(io_context), write(io_context) {}
+class Session {
+  Session(io::io_context &io_context)
+      : socket_(io_context), read_(io_context), write_(io_context) {}
 
-  void async_read() {
-    io::async_read(socket, read_buffer,
-                   io::bind_executor(read, [&](error_code error,
-                                               std::size_t bytes_transferred) {
-                     if (!error) {
-                       async_read();
-                     }
-                   }));
+  void asyncRead() {
+    io::async_read(
+        socket_, read_buffer_,
+        io::bind_executor(
+            read_, [&](error_code error, std::size_t /*bytes_transferred*/) {
+              if (!error) {
+                asyncRead();
+              }
+            }));
   }
 
-  void async_write() {
-    io::async_read(socket, write_buffer,
-                   io::bind_executor(write, [&](error_code error,
-                                                std::size_t bytes_transferred) {
-                     if (!error) {
-                       async_write();
-                     }
-                   }));
+  void asyncWrite() {
+    io::async_read(
+        socket_, write_buffer_,
+        io::bind_executor(
+            write_, [&](error_code error, std::size_t /*bytes_transferred*/) {
+              if (!error) {
+                asyncWrite();
+              }
+            }));
   }
 
 private:
-  tcp::socket socket;
-  io::io_context::strand read;
-  io::io_context::strand write;
+  tcp::socket socket_;
+  io::io_context::strand read_;
+  io::io_context::strand write_;
 
-  boost::asio::streambuf read_buffer;
-  boost::asio::streambuf write_buffer;
+  boost::asio::streambuf read_buffer_;
+  boost::asio::streambuf write_buffer_;
 };
 
-int main2(int argc, char *argv[]) {
+int main2(int /*argc*/, char * /*argv*/[]) {
   io::io_context io_context;
   std::vector<std::thread> threads;
   auto count = std::thread::hardware_concurrency() * 2;
 
-  for (int n = 0; n < count; ++n) {
+  threads.reserve(count);
+  for (int i = 0; i < count; i++) {
     threads.emplace_back([&] { io_context.run(); });
   }
 
