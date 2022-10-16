@@ -4,9 +4,9 @@ file( GLOB SRC_FILES *.cc )
 add_executable( can_test ${SRC_FILES} )
 
 if (CMAKE_HOST_UNIX)
-	target_link_libraries( can_test ControlCAN glog gtest "-Wl,--no-as-needed" profiler "-Wl,--as-needed")
+	target_link_libraries( can_test ControlCAN glog gtest ${EXTRA_LD_FLAGS} )
 else()
-	target_link_libraries( can_test ControlCAN glog gtest)
+	target_link_libraries( can_test ControlCAN glog gtest )
 endif()
 
 if (CMAKE_HOST_WIN32)

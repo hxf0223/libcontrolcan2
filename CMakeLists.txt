@@ -17,17 +17,13 @@ set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin ) # set static lib
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin ) # set DSO output dir
 add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS) # dismiss compile message about boost placeholders
 
-if (CMAKE_HOST_UNIX)
-	set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -Wl,--eh-frame-hdr" )
-endif()
-
 if (CMAKE_HOST_WIN32)
 	add_definitions(-DWIN32_LEAN_AND_MEAN)
 	add_definitions(-D_WIN32_WINNT=0x0A00) # avoid boost.asio warning: Please define _WIN32_WINNT or _WIN32_WINDOWS appropriately
 endif()
 
 include(cmake/build_type.cmake)
-#include(cmake/extern-glog.cmake)
+include(cmake/build_options.cmake)
 
 # for windows compile or cross-platform compile
 include_directories("$ENV{BOOST_ROOT}/include")

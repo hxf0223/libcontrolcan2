@@ -9,7 +9,7 @@ file(GLOB_RECURSE srcs *.cc server/*.cc)
 
 add_executable (can_agent ${srcs})
 if (CMAKE_HOST_UNIX)
-	target_link_libraries(can_agent ControlCAN pthread glog "-Wl,--no-as-needed" profiler "-Wl,--as-needed")
+	target_link_libraries(can_agent ControlCAN pthread glog ${EXTRA_LD_FLAGS})
 elseif(CMAKE_HOST_WIN32)
 	target_link_libraries(can_agent ControlCAN glog)
 endif()

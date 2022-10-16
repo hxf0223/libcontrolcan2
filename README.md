@@ -8,6 +8,10 @@
 - 使用gtest源码 [v1.11.0](https://github.com/google/googletest/releases/tag/release-1.11.0)；
 - 使用glog源码 [v0.6.0](https://github.com/google/glog/releases/tag/v0.6.0)。
 
+## 编译选项
+1. 环境变量 BOOST_ROOT ：设置BOOST及其他非默认路径下的库的根目录；
+2. 编译选项 ENABLE_PROFILER ：使能链接 gperftools profiler。
+
 ## 自带第三方库的编译
 
 1. gtest源码目录相对于官方gtest仓库修改
