@@ -23,7 +23,7 @@
 - glog/CMakeLists.txt：set(glog ${glog} PARENT_SCOPE)；
 - 在 configure_file (src/glog/logging.h.in glog/logging.h @ONLY) 等后面继续添加 configure_file (src/glog/log_severity.h glog/log_severity.h @ONLY) ；
 - 以及添加 configure_file (src/glog/platform.h glog/platform.h @ONLY) ；
-- 在 set(GLOG_PUBLIC_H ...) 语句后面，添加 set(GLOG_INC_DIR "${CMAKE_CURRENT_BINARY_DIR}/glog" PARENT_SCOPE) 。在根 CMakeLists.txt 中添加 include_directories(${GLOG_INC_DIR}) ；
+- 在 set(GLOG_PUBLIC_H ...) 语句后面，添加 set(GLOG_INC_DIR "\${CMAKE_CURRENT_BINARY_DIR}/glog" PARENT_SCOPE) 。在根 CMakeLists.txt 中添加 include_directories(${GLOG_INC_DIR}) ；
 - 注释掉 set(CMAKE_DEBUG_POSTFIX d) ；
 
 3. 引入libzmq，辅助测试代码引用libzmp
