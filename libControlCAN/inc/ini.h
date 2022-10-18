@@ -33,16 +33,16 @@ http://code.google.com/p/feather-ini-parser/wiki/Tutorials
 #define FINI_BUFFER_SIZE 256
 
 #if __cplusplus >= 201103L
-#include <unordered_map>
-#define FINI_CPP11
-#define ALLOCATE_SECTIONS 100
-#define ALLOCATE_KEYS 5
+#  include <unordered_map>
+#  define FINI_CPP11
+#  define ALLOCATE_SECTIONS 100
+#  define ALLOCATE_KEYS 5
 #else
-#include <map>
+#  include <map>
 #endif
 
 #ifdef FINI_WIDE_SUPPORT
-#include <wchar.h>
+#  include <wchar.h>
 
 typedef std::wstringstream fini_sstream_t;
 typedef std::wstring fini_string_t;
@@ -50,14 +50,14 @@ typedef wchar_t fini_char_t;
 typedef std::wifstream fini_ifstream_t;
 typedef std::wofstream fini_ofstream_t;
 
-#define fini_strlen(a) wcslen(a)
-#define fini_strncpy(a, b) wcscpy(a, b)
-#define fini_strncpy(a, b, c) wcsncpy(a, b, c)
-#define fini_strtok(a, b) wcstok(a, b)
+#  define fini_strlen(a) wcslen(a)
+#  define fini_strncpy(a, b) wcscpy(a, b)
+#  define fini_strncpy(a, b, c) wcsncpy(a, b, c)
+#  define fini_strtok(a, b) wcstok(a, b)
 
-#define INITEXT(x) L##x
+#  define INITEXT(x) L##x
 #else
-#include <cstring>
+#  include <cstring>
 
 typedef std::stringstream fini_sstream_t;
 typedef std::string fini_string_t;
@@ -65,12 +65,12 @@ typedef char fini_char_t;
 typedef std::ifstream fini_ifstream_t;
 typedef std::ofstream fini_ofstream_t;
 
-#define fini_strlen(a) strlen(a)
-#define fini_strcpy(a, b) strcpy(a, b)
-#define fini_strncpy(a, b, c) strncpy(a, b, c)
-#define fini_strtok(a, b) strtok(a, b)
+#  define fini_strlen(a) strlen(a)
+#  define fini_strcpy(a, b) strcpy(a, b)
+#  define fini_strncpy(a, b, c) strncpy(a, b, c)
+#  define fini_strtok(a, b) strtok(a, b)
 
-#define INITEXT(x) x
+#  define INITEXT(x) x
 #endif
 
 #define CHAR_SIZE sizeof(fini_char_t)
@@ -79,16 +79,18 @@ typedef std::ofstream fini_ofstream_t;
 /// flexibility of handling native types
 class converters {
 public:
-  template <typename T, typename U> static T convert(U value);
-  template <typename T> static void GetLine(fini_sstream_t &out, T &value);
-  static void GetLine(fini_sstream_t &out, fini_string_t &value);
-  template <typename T> static size_t GetDataSize(T &value);
+  template <typename T, typename U>
+  static T convert(U value);
+  template <typename T>
+  static void GetLine(fini_sstream_t& out, T& value);
+  static void GetLine(fini_sstream_t& out, fini_string_t& value);
+  template <typename T>
+  static size_t GetDataSize(T& value);
   static size_t GetDataSize(fini_string_t value);
 };
 
 ///
-template <typename T = fini_string_t, typename U = fini_string_t,
-          typename V = fini_string_t>
+template <typename T = fini_string_t, typename U = fini_string_t, typename V = fini_string_t>
 class Ini {
 public:
   typedef T section_t;
@@ -99,17 +101,17 @@ public:
   /// Type definition declarations
 #ifdef FINI_CPP11
   typedef typename std::unordered_map<key_t, value_t> keys_t;
-  typedef typename std::unordered_map<section_t, keys_t *> sections_t;
+  typedef typename std::unordered_map<section_t, keys_t*> sections_t;
 #else
   typedef typename std::map<key_t, value_t> keys_t;
-  typedef typename std::map<section_t, keys_t *> sections_t;
+  typedef typename std::map<section_t, keys_t*> sections_t;
 #endif
 
   typedef typename keys_t::iterator keysit_t;
   typedef typename sections_t::iterator sectionsit_t;
 
   typedef typename std::pair<key_t, value_t> keyspair_t;
-  typedef typename std::pair<section_t, keys_t *> sectionspair_t;
+  typedef typename std::pair<section_t, keys_t*> sectionspair_t;
 
   typedef char data_t;
 
@@ -117,29 +119,33 @@ public:
 
   /// Data members
   std::string filename;
-  data_t *data;
+  data_t* data;
   size_t dataSize;
-  keys_t *current;
+  keys_t* current;
   sections_t sections;
   source_e source;
 
   /// Constuctor/Destructor
   // Specify the filename to associate and whether to parse immediately
-  Ini(const std::string filename, const bool doParse) : filename(filename) {
+  Ini(const std::string filename, const bool doParse)
+      : filename(filename) {
     init(source_file, doParse);
   }
 
   // Used for loading INI from memory
-  Ini(void *data, const size_t dataSize, bool doParse)
-      : data((data_t *)data), dataSize(dataSize) {
+  Ini(void* data, const size_t dataSize, bool doParse)
+      : data((data_t*)data)
+      , dataSize(dataSize) {
     init(source_memory, doParse);
   }
 
-  ~Ini() { clear(); }
+  ~Ini() {
+    clear();
+  }
 
   /// Access Content
   // Provide bracket access to section contents
-  keys_t &operator[](section_t section) {
+  keys_t& operator[](section_t section) {
 #ifdef FINI_SAFE
     if (!sections[section])
       sections[section] = new keys_t;
@@ -171,10 +177,9 @@ public:
   }
 
   /// Debug
-  friend std::ostream &operator<<(std::ostream &os, const ini_t &ini) {
+  friend std::ostream& operator<<(std::ostream& os, const ini_t& ini) {
 #ifdef FINI_CPP11
-    for (auto i = ini.sections.begin(); i != ini.sections.end();
-         i++) // typename ini_t::sectionsit_t
+    for (auto i = ini.sections.begin(); i != ini.sections.end(); i++) // typename ini_t::sectionsit_t
     {
       // Section name as ini_t::section_t
       os << '[' << i->first << ']' << std::endl;
@@ -182,15 +187,13 @@ public:
       if (i->second->size() == 0) // No keys/values in section, skip to next
         continue;
 
-      for (typename ini_t::keysit_t j = i->second->begin();
-           j != i->second->end(); j++) {
+      for (typename ini_t::keysit_t j = i->second->begin(); j != i->second->end(); j++) {
         // Name as ini_t::key_t & Value as ini_t::key_t
         os << "  " << j->first << "=" << j->second << std::endl;
       }
     }
 #else
-    std::cout << "Error: FINI requires CPP11 when outputting to stream."
-              << std::endl;
+    std::cout << "Error: FINI requires CPP11 when outputting to stream." << std::endl;
 #endif
 
     return os;
@@ -206,9 +209,9 @@ public:
     return true;
   }
 
-  template <typename W, typename X> bool set(const W key, const X value) {
-    return set(converters::convert<key_t>(key),
-               converters::convert<value_t>(value));
+  template <typename W, typename X>
+  bool set(const W key, const X value) {
+    return set(converters::convert<key_t>(key), converters::convert<value_t>(value));
   }
 
   /// Get
@@ -229,39 +232,32 @@ public:
 
   template <typename W, typename X>
   X get(const W key, const X def = value_t()) {
-    return converters::convert<X>(get(converters::convert<key_t>(key),
-                                      converters::convert<value_t>(def)));
+    return converters::convert<X>(get(converters::convert<key_t>(key), converters::convert<value_t>(def)));
   }
 
   template <typename W>
   fini_string_t get(const W key,
-                    const fini_char_t *def = INITEXT(
-                        "")) // Handle C string default value without casting
+                    const fini_char_t* def = INITEXT("")) // Handle C string default value without casting
   {
-    return converters::convert<fini_string_t>(get(
-        converters::convert<key_t>(key), converters::convert<value_t>(def)));
+    return converters::convert<fini_string_t>(get(converters::convert<key_t>(key), converters::convert<value_t>(def)));
   }
 
   template <typename W, typename X, typename Y>
   Y get(const W section, const X key, const Y def) {
-    return converters::convert<Y>(get(converters::convert<section_t>(section),
-                                      converters::convert<key_t>(key),
-                                      converters::convert<value_t>(def)));
+    return converters::convert<Y>(
+        get(converters::convert<section_t>(section), converters::convert<key_t>(key), converters::convert<value_t>(def)));
   }
 
   template <typename W, typename X>
-  fini_string_t
-  get(const W section, const X key,
-      const fini_char_t *def) // Handle C string default value without casting
+  fini_string_t get(const W section, const X key,
+                    const fini_char_t* def) // Handle C string default value without casting
   {
-    return converters::convert<fini_string_t>(
-        converters::convert<section_t>(section),
-        get(converters::convert<key_t>(key),
-            converters::convert<value_t>(def)));
+    return converters::convert<fini_string_t>(converters::convert<section_t>(section),
+                                              get(converters::convert<key_t>(key), converters::convert<value_t>(def)));
   }
 
   /// Functions
-  void parse(std::istream &file) {
+  void parse(std::istream& file) {
     fini_char_t line[FINI_BUFFER_SIZE];
     bool first = true;
     fini_sstream_t out;
@@ -273,8 +269,7 @@ public:
         first = false;
         if (line[0] == 0xEF) // Allows handling of UTF-16/32 documents
         {
-          memmove(line, line + (CHAR_SIZE * 3),
-                  CHAR_SIZE * (FINI_BUFFER_SIZE - 3));
+          memmove(line, line + (CHAR_SIZE * 3), CHAR_SIZE * (FINI_BUFFER_SIZE - 3));
           return;
         }
       }
@@ -284,20 +279,18 @@ public:
       if (line[0]) {
         auto const len = fini_strlen(line);
         if (len > 0 &&
-            !((len >= 2 && (line[0] == '/' && line[1] == '/')) ||
-              (len >= 1 && line[0] == '#'))) // Ignore comment and empty lines
+            !((len >= 2 && (line[0] == '/' && line[1] == '/')) || (len >= 1 && line[0] == '#'))) // Ignore comment and empty lines
         {
           if (line[0] == '[') // Section
           {
             section_t section;
             size_t length = fini_strlen(line) - 2; // Without section brackets
-            while (isspace(line[length + 1])) // Leave out any additional new
-                                              // line characters, not "spaces"
-                                              // as the name suggests
+            while (isspace(line[length + 1]))      // Leave out any additional new
+                                                   // line characters, not "spaces"
+                                                   // as the name suggests
               --length;
 
-            auto ssection =
-                static_cast<fini_char_t *>(calloc(CHAR_SIZE, length + 1));
+            auto ssection = static_cast<fini_char_t*>(calloc(CHAR_SIZE, length + 1));
             std::strncpy(ssection, line + 1,
                          length); // Count after first bracket
 
@@ -318,10 +311,9 @@ public:
             auto const skey_len = std::char_traits<char>::length(skey);
 
             if (skey && svalue) {
-              size_t index = 0; // Without section brackets
-              while (isspace(
-                  skey[index])) // Leave out any additional new line characters,
-                                // not "spaces" as the name suggests
+              size_t index = 0;            // Without section brackets
+              while (isspace(skey[index])) // Leave out any additional new line characters,
+                                           // not "spaces" as the name suggests
                 index++;
 
               if (index != 0) // Has preceeding white space
@@ -389,7 +381,7 @@ public:
       if (i > 0)
         file.seekg(1 + file.tellg());
 
-      file.read(reinterpret_cast<fini_char_t *>(&keyCount), sizeof(keyCount));
+      file.read(reinterpret_cast<fini_char_t*>(&keyCount), sizeof(keyCount));
       file >> section;
 
       create(section);
@@ -418,24 +410,21 @@ public:
     if (!has_file_association(filename))
       return false;
 
-    fini_ofstream_t file(((filename == "") ? this->filename : filename).c_str(),
-                         std::ios::trunc);
+    fini_ofstream_t file(((filename == "") ? this->filename : filename).c_str(), std::ios::trunc);
     if (!file.is_open())
       return false;
 
     // Loop through sections
-    for (typename Ini::sectionsit_t i = sections.begin(); i != sections.end();
-         i++) {
+    for (typename Ini::sectionsit_t i = sections.begin(); i != sections.end(); i++) {
       if (i->second->size() == 0) // No keys/values in section, skip to next
         continue;
 
       // Write section
       const fini_string_t temp = make_section(i->first);
-      const fini_char_t *line = temp.c_str();
+      const fini_char_t* line = temp.c_str();
       file.write(line, fini_strlen(line));
 
-      for (typename Ini::keysit_t j = i->second->begin(); j != i->second->end();
-           ++j) {
+      for (typename Ini::keysit_t j = i->second->begin(); j != i->second->end(); ++j) {
         // Write key and value
         const fini_string_t temp = make_key_value(j->first, j->second);
         auto line = temp.c_str();
@@ -453,25 +442,22 @@ public:
     if (!has_file_association(filename))
       return false;
 
-    fini_ofstream_t file(((filename == "") ? this->filename : filename).c_str(),
-                         std::ios::trunc | std::ios::binary);
+    fini_ofstream_t file(((filename == "") ? this->filename : filename).c_str(), std::ios::trunc | std::ios::binary);
     if (!file.is_open())
       return false;
 
     size_t sectionCount = sections.size();
 
-    file.write((fini_char_t *)&sectionCount, sizeof(sectionCount));
+    file.write((fini_char_t*)&sectionCount, sizeof(sectionCount));
 
     // Loop through sections
-    for (typename Ini::sectionsit_t i = sections.begin(); i != sections.end();
-         i++) {
+    for (typename Ini::sectionsit_t i = sections.begin(); i != sections.end(); i++) {
       size_t key_count = i->second->size();
-      file.write((fini_char_t *)&key_count, sizeof(key_count));
+      file.write((fini_char_t*)&key_count, sizeof(key_count));
 
       file << i->first << std::endl;
 
-      for (typename Ini::keysit_t j = i->second->begin(); j != i->second->end();
-           j++) {
+      for (typename Ini::keysit_t j = i->second->begin(); j != i->second->end(); j++) {
         file << j->first << std::endl;
         file << j->second << std::endl;
       }
@@ -488,30 +474,22 @@ public:
     if (!has_file_association(filename))
       return false;
 
-    fini_ofstream_t file(((filename == "") ? this->filename : filename).c_str(),
-                         std::ios::trunc | std::ios::binary);
+    fini_ofstream_t file(((filename == "") ? this->filename : filename).c_str(), std::ios::trunc | std::ios::binary);
     if (!file.is_open())
       return false;
 
     size_t section_count = sections.size();
-    file.write(reinterpret_cast<fini_char_t *>(&section_count),
-               sizeof(section_count));
+    file.write(reinterpret_cast<fini_char_t*>(&section_count), sizeof(section_count));
 
     // Loop through sections
-    for (typename Ini::sectionsit_t i = sections.begin(); i != sections.end();
-         ++i) {
+    for (typename Ini::sectionsit_t i = sections.begin(); i != sections.end(); ++i) {
       size_t key_count = i->second->size();
-      file.write(reinterpret_cast<fini_char_t *>(&key_count),
-                 sizeof(key_count));
-      file.write(static_cast<fini_char_t *>(&i->first),
-                 converters::GetDataSize(i->first));
+      file.write(reinterpret_cast<fini_char_t*>(&key_count), sizeof(key_count));
+      file.write(static_cast<fini_char_t*>(&i->first), converters::GetDataSize(i->first));
 
-      for (typename Ini::keysit_t j = i->second->begin(); j != i->second->end();
-           ++j) {
-        file.write(static_cast<fini_char_t *>(&j->first),
-                   converters::GetDataSize(j->first));
-        file.write(static_cast<fini_char_t *>(&j->second),
-                   converters::GetDataSize(j->second));
+      for (typename Ini::keysit_t j = i->second->begin(); j != i->second->end(); ++j) {
+        file.write(static_cast<fini_char_t*>(&j->first), converters::GetDataSize(j->first));
+        file.write(static_cast<fini_char_t*>(&j->second), converters::GetDataSize(j->second));
       }
     }
 
@@ -522,17 +500,15 @@ public:
 
   // Alows another INI's contents to be insert into another, with the ability to
   // retain the original values
-  void merge(ini_t &other, const bool retainValues = true) {
-    for (typename Ini::sectionsit_t i = other.sections.begin();
-         i != other.sections.end(); i++) {
+  void merge(ini_t& other, const bool retainValues = true) {
+    for (typename Ini::sectionsit_t i = other.sections.begin(); i != other.sections.end(); i++) {
       if (!select(i->first)) // Create and insert all key values into a missing
                              // section
       {
-        keys_t *keys = new keys_t(*i->second);
+        keys_t* keys = new keys_t(*i->second);
         sections.insert(std::make_pair(i->first, keys));
       } else {
-        for (typename Ini::keysit_t j = i->second->begin();
-             j != i->second->end(); j++) {
+        for (typename Ini::keysit_t j = i->second->begin(); j != i->second->end(); j++) {
           keysit_t it = current->find(j->first);
           if (it == current->end())
             current->insert(std::make_pair(j->first, j->second));
@@ -563,8 +539,7 @@ private:
   }
 
   // Make any alterations to the raw line
-  void nake(
-      const fini_char_t *) // Strip the line of any non-interpretable characters
+  void nake(const fini_char_t*) // Strip the line of any non-interpretable characters
   {}
 
   void reserveSections() {
@@ -573,7 +548,7 @@ private:
 #endif
   }
 
-  void reserveKeys(keys_t *current) {
+  void reserveKeys(keys_t* current) {
 #ifdef FINI_CPP11
     current->reserve(ALLOCATE_KEYS);
 #endif
@@ -588,7 +563,7 @@ private:
 
   /// Output
   // Creates a section as a string
-  static fini_string_t make_section(const section_t &section) {
+  static fini_string_t make_section(const section_t& section) {
     fini_sstream_t line;
     line << '[' << section << ']' << std::endl;
 
@@ -596,7 +571,7 @@ private:
   }
 
   // Creates a key and a value as a string
-  static fini_string_t make_key_value(const key_t &key, const value_t &value) {
+  static fini_string_t make_key_value(const key_t& key, const value_t& value) {
     fini_sstream_t line;
     line << key << '=' << value << std::endl;
 
@@ -605,7 +580,8 @@ private:
 };
 
 /// Definitions
-template <typename T, typename U> inline T converters::convert(U value) {
+template <typename T, typename U>
+inline T converters::convert(U value) {
   fini_sstream_t sout;
   T result;
 
@@ -617,27 +593,26 @@ template <typename T, typename U> inline T converters::convert(U value) {
 }
 
 template <>
-inline fini_string_t
-converters::convert<fini_string_t, fini_string_t>(fini_string_t value) {
+inline fini_string_t converters::convert<fini_string_t, fini_string_t>(fini_string_t value) {
   return value;
 }
 
 template <>
-inline fini_string_t
-converters::convert<fini_string_t>(const fini_char_t *value) {
+inline fini_string_t converters::convert<fini_string_t>(const fini_char_t* value) {
   return value;
 }
 
 template <typename T>
-inline void converters::GetLine(fini_sstream_t &out, T &value) {
+inline void converters::GetLine(fini_sstream_t& out, T& value) {
   out >> value;
 }
 
-inline void converters::GetLine(fini_sstream_t &out, fini_string_t &value) {
+inline void converters::GetLine(fini_sstream_t& out, fini_string_t& value) {
   std::getline(out, value);
 }
 
-template <typename T> inline size_t converters::GetDataSize(T &value) {
+template <typename T>
+inline size_t converters::GetDataSize(T& value) {
   return sizeof(value);
 }
 

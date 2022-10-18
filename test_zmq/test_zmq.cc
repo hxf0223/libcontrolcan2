@@ -13,20 +13,22 @@
 namespace {
 
 template <typename T>
-std::ostream &operator<<(std::ostream &os, std::optional<T> const &opt) {
+std::ostream& operator<<(std::ostream& os, std::optional<T> const& opt) {
   return opt ? os << opt.value() : os;
 }
 
 } // namespace
 
 static std::atomic_bool run_flag{true};
-static void signalHandler(int /*signal*/) { run_flag.store(false); }
+static void signalHandler(int /*signal*/) {
+  run_flag.store(false);
+}
 
 TEST(zmq, server) {
   zmq::context_t ctx;
   signal(SIGINT, signalHandler);
 
-  auto pub_func = [](std::atomic_bool *runFlag, zmq::context_t *ctx) -> void {
+  auto pub_func = [](std::atomic_bool* runFlag, zmq::context_t* ctx) -> void {
     zmq::socket_t publisher(*ctx, zmq::socket_type::pub);
     publisher.bind("inproc://#1");
 
@@ -43,7 +45,7 @@ TEST(zmq, server) {
     }
   };
 
-  auto sub_func = [](std::atomic_bool *runFlag, zmq::context_t *ctx) -> void {
+  auto sub_func = [](std::atomic_bool* runFlag, zmq::context_t* ctx) -> void {
     zmq::socket_t ctx_sub(*ctx, ZMQ_SUB);
     ctx_sub.connect("inproc://#1");
     ctx_sub.set(zmq::sockopt::subscribe, ""); // subscribe all message types
@@ -51,12 +53,10 @@ TEST(zmq, server) {
 
     while (runFlag->load()) {
       std::vector<zmq::message_t> recv_msgs;
-      zmq::recv_result_t const result =
-          zmq::recv_multipart(ctx_sub, std::back_inserter(recv_msgs));
+      zmq::recv_result_t const result = zmq::recv_multipart(ctx_sub, std::back_inserter(recv_msgs));
       // if (!result.has_value()) continue;
-      for (auto &msg : recv_msgs) {
-        std::string const rxstr(static_cast<const char *>(msg.data()),
-                                msg.size());
+      for (auto& msg : recv_msgs) {
+        std::string const rxstr(static_cast<const char*>(msg.data()), msg.size());
         std::cout << "receive message: " << rxstr << std::endl;
       }
     }

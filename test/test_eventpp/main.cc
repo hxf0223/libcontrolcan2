@@ -11,31 +11,31 @@
 #include "eventpp/utilities/orderedqueuelist.h"
 
 TEST(evnetQueue, Function) {
-  auto f1 = [](const std::string &str) {
+  auto f1 = [](const std::string& str) {
     LOG(INFO) << "function1, value: " << str;
   };
-  auto f2 = [](const std::string &str) {
+  auto f2 = [](const std::string& str) {
     LOG(INFO) << "function2, value: " << str;
   };
-  auto f3 = [](const std::string &str) {
+  auto f3 = [](const std::string& str) {
     LOG(INFO) << "function3, value: " << str;
   };
   struct Functor1 {
     size_t count_{0};
-    void operator()(const std::string &str) {
+    void operator()(const std::string& str) {
       LOG(INFO) << "functor 1, count " << ++count_ << ", value: " << str;
     }
   };
 
   struct Class1 {
     size_t count_{0};
-    void printStr(const std::string &str) {
+    void printStr(const std::string& str) {
       LOG(INFO) << "class1, count " << ++count_ << ", value " << str;
     }
   };
 
   Functor1 ft1;
-  using queue_t = eventpp::EventQueue<int, void(const std::string &)>;
+  using queue_t = eventpp::EventQueue<int, void(const std::string&)>;
   using queue_handle_t = queue_t::Handle;
   queue_t q;
 
@@ -53,7 +53,7 @@ TEST(evnetQueue, Function) {
 
   Class1 c1;
   LOG(INFO) << "!!! append more after queue and process";
-  q.appendListener(1, [object_ptr = &c1](auto &&PH1) {
+  q.appendListener(1, [object_ptr = &c1](auto&& PH1) {
     object_ptr->printStr(std::forward<decltype(PH1)>(PH1));
   });
   q.appendListener(1, f3);
@@ -67,16 +67,15 @@ TEST(evnetQueue, Function) {
 }
 
 TEST(evnetQueue, multiThread) {
-  using queue_t = eventpp::EventQueue<int, void(const std::string &)>;
+  using queue_t = eventpp::EventQueue<int, void(const std::string&)>;
   using queue_handle_t = queue_t::Handle;
   queue_t q;
 
-  auto f1 = [](const std::string &str) {
-    LOG(INFO) << "thread id: " << std::this_thread::get_id()
-              << ". value: " << str;
+  auto f1 = [](const std::string& str) {
+    LOG(INFO) << "thread id: " << std::this_thread::get_id() << ". value: " << str;
   };
 
-  auto queue_func = [](queue_t &q) {
+  auto queue_func = [](queue_t& q) {
     for (size_t i = 0; i < 100; i++) {
       std::this_thread::sleep_for(std::chrono::microseconds(10));
       LOG(INFO) << "queue thread id: " << std::this_thread::get_id();
@@ -90,7 +89,7 @@ TEST(evnetQueue, multiThread) {
   queue_thd.join();
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   FLAGS_alsologtostderr = true;
   FLAGS_colorlogtostderr = true;
   ::testing::InitGoogleTest(&argc, argv);

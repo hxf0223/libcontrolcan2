@@ -1,7 +1,7 @@
 #include "glog/logging.h"
 #include "gtest/gtest.h"
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   FLAGS_alsologtostderr = true;
   FLAGS_colorlogtostderr = true;
   ::testing::InitGoogleTest(&argc, argv);

@@ -31,13 +31,13 @@
 #include "usbcan.h"
 
 #ifdef _WIN32
-#pragma warning(disable : 4101)
-#pragma warning(disable : 4819)
+#  pragma warning(disable : 4101)
+#  pragma warning(disable : 4819)
 
 // Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
-#pragma comment(lib, "Ws2_32.lib")
-#pragma comment(lib, "Mswsock.lib")
-#pragma comment(lib, "AdvApi32.lib")
+#  pragma comment(lib, "Ws2_32.lib")
+#  pragma comment(lib, "Mswsock.lib")
+#  pragma comment(lib, "AdvApi32.lib")
 #endif
 
 typedef Ini<> ini_t;
@@ -50,20 +50,20 @@ using std::chrono::microseconds;
 using namespace can::utils;
 
 namespace {
-inline std::string make_string(const boost::asio::streambuf &streambuf) {
-  return {boost::asio::buffers_begin(streambuf.data()),
-          boost::asio::buffers_end(streambuf.data())};
+inline std::string make_string(const boost::asio::streambuf& streambuf) {
+  return {boost::asio::buffers_begin(streambuf.data()), boost::asio::buffers_end(streambuf.data())};
 }
 } // namespace
 
 // _receive_pattern match frame head. _hex_str_pattern match VCI_CAN_OBJ,
 // boost::read_until will remove last \n
-std::regex CanImpCanNet::_receive_pattern2(
-    "^(VCI_Receive,|VCI_Transmit,)[0-9a-fA-F]{32}");
+std::regex CanImpCanNet::_receive_pattern2("^(VCI_Receive,|VCI_Transmit,)[0-9a-fA-F]{32}");
 std::regex CanImpCanNet::_hex_str_pattern2("^(?:[0-9a-fA-F][0-9a-fA-F])+$");
 
 CanImpCanNet::CanImpCanNet()
-    : _connected(false), _str_sock_addr(""), _str_sock_port("") {
+    : _connected(false)
+    , _str_sock_addr("")
+    , _str_sock_port("") {
   const auto dir_path = getexepath().parent_path();
   boost::filesystem::path ini_path(dir_path / "control_can.ini");
   rx_buff_.prepare(1024 * 8);
@@ -83,8 +83,7 @@ CanImpCanNet::~CanImpCanNet() {
   }
 }
 
-vciReturnType CanImpCanNet::VCI_OpenDevice(DWORD DeviceType, DWORD DeviceInd,
-                                           DWORD Reserved) {
+vciReturnType CanImpCanNet::VCI_OpenDevice(DWORD DeviceType, DWORD DeviceInd, DWORD Reserved) {
   if (_str_sock_addr.length() <= 0 || _str_sock_port.length() <= 0) {
     return vciReturnType::STATUS_NET_CONN_FAIL;
   }
@@ -98,8 +97,7 @@ vciReturnType CanImpCanNet::VCI_OpenDevice(DWORD DeviceType, DWORD DeviceInd,
 
   char buff[128];
   const char *head = "VCI_OpenDevice,", *lr = "\n";
-  auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType,
-                                                &DeviceInd, &Reserved, lr);
+  auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, &Reserved, lr);
 
   error_code_t ec;
   auto ierror = write_line(buff, size, ec);
@@ -119,8 +117,7 @@ vciReturnType CanImpCanNet::VCI_CloseDevice(DWORD DeviceType, DWORD DeviceInd) {
 
   char buff[128];
   const char *head = "VCI_CloseDevice,", *lr = "\n";
-  auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType,
-                                                &DeviceInd, lr);
+  auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, lr);
 
   error_code_t ec;
   auto const ierror = write_line(buff, size, ec);
@@ -137,21 +134,17 @@ vciReturnType CanImpCanNet::VCI_CloseDevice(DWORD DeviceType, DWORD DeviceInd) {
   return vciReturnType::STATUS_OK;
 }
 
-vciReturnType CanImpCanNet::VCI_ReadBoardInfo(DWORD DeviceType, DWORD DeviceInd,
-                                              PVCI_BOARD_INFO pInfo) {
+vciReturnType CanImpCanNet::VCI_ReadBoardInfo(DWORD DeviceType, DWORD DeviceInd, PVCI_BOARD_INFO pInfo) {
   return vciReturnType::STATUS_ERR;
 }
 
-vciReturnType CanImpCanNet::VCI_InitCAN(DWORD DeviceType, DWORD DeviceInd,
-                                        DWORD CANInd,
-                                        PVCI_INIT_CONFIG pInitConfig) {
+vciReturnType CanImpCanNet::VCI_InitCAN(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_INIT_CONFIG pInitConfig) {
   if (!_connected.load())
     return vciReturnType::STATUS_ERR;
 
   char buff[256];
   const char *head = "VCI_InitCAN,", *lr = "\n";
-  auto size = can::utils::bin2hex::bin2hex_fast(
-      buff, head, &DeviceType, &DeviceInd, &CANInd, pInitConfig, lr);
+  auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, &CANInd, pInitConfig, lr);
 
   error_code_t ec;
   auto const ierror = write_line(buff, size, ec);
@@ -165,16 +158,13 @@ vciReturnType CanImpCanNet::VCI_InitCAN(DWORD DeviceType, DWORD DeviceInd,
   return vciReturnType::STATUS_OK;
 }
 
-vciReturnType CanImpCanNet::VCI_ReadErrInfo(DWORD DeviceType, DWORD DeviceInd,
-                                            DWORD CANInd,
-                                            PVCI_ERR_INFO pErrInfo) {
+vciReturnType CanImpCanNet::VCI_ReadErrInfo(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_ERR_INFO pErrInfo) {
   if (!_connected.load() || !pErrInfo)
     return vciReturnType::STATUS_ERR;
 
   char buff[256];
   const char *head = "VCI_ReadErrInfo,", *lr = "\n";
-  auto size = can::utils::bin2hex::bin2hex_fast(
-      buff, head, &DeviceType, &DeviceInd, &CANInd, pErrInfo, lr);
+  auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, &CANInd, pErrInfo, lr);
 
   error_code_t ec;
   auto const ierror = write_line(buff, size, ec);
@@ -188,38 +178,29 @@ vciReturnType CanImpCanNet::VCI_ReadErrInfo(DWORD DeviceType, DWORD DeviceInd,
   return vciReturnType::STATUS_OK;
 }
 
-vciReturnType CanImpCanNet::VCI_ReadCANStatus(DWORD DeviceType, DWORD DeviceInd,
-                                              DWORD CANInd,
-                                              PVCI_CAN_STATUS pCANStatus) {
+vciReturnType CanImpCanNet::VCI_ReadCANStatus(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_CAN_STATUS pCANStatus) {
   return vciReturnType::STATUS_ERR;
 }
 
-vciReturnType CanImpCanNet::VCI_GetReference(DWORD DeviceType, DWORD DeviceInd,
-                                             DWORD CANInd, DWORD RefType,
-                                             PVOID pData) {
+vciReturnType CanImpCanNet::VCI_GetReference(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, DWORD RefType, PVOID pData) {
   return vciReturnType::STATUS_ERR;
 }
 
-vciReturnType CanImpCanNet::VCI_SetReference(DWORD DeviceType, DWORD DeviceInd,
-                                             DWORD CANInd, DWORD RefType,
-                                             PVOID pData) {
+vciReturnType CanImpCanNet::VCI_SetReference(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, DWORD RefType, PVOID pData) {
   return vciReturnType::STATUS_ERR;
 }
 
-DWORD CanImpCanNet::VCI_GetReceiveNum(DWORD DeviceType, DWORD DeviceInd,
-                                      DWORD CANInd) {
+DWORD CanImpCanNet::VCI_GetReceiveNum(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd) {
   return 1;
 }
 
-vciReturnType CanImpCanNet::VCI_ClearBuffer(DWORD DeviceType, DWORD DeviceInd,
-                                            DWORD CANInd) {
+vciReturnType CanImpCanNet::VCI_ClearBuffer(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd) {
   if (!_connected.load())
     return vciReturnType::STATUS_ERR;
 
   char buff[256];
   const char *head = "VCI_ClearBuffer,", *lr = "\n";
-  auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType,
-                                                &DeviceInd, &CANInd, lr);
+  auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, &CANInd, lr);
 
   error_code_t ec;
   auto const ierror = write_line(buff, size, ec);
@@ -233,15 +214,13 @@ vciReturnType CanImpCanNet::VCI_ClearBuffer(DWORD DeviceType, DWORD DeviceInd,
   return vciReturnType::STATUS_OK;
 }
 
-vciReturnType CanImpCanNet::VCI_StartCAN(DWORD DeviceType, DWORD DeviceInd,
-                                         DWORD CANInd) {
+vciReturnType CanImpCanNet::VCI_StartCAN(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd) {
   if (!_connected.load())
     return vciReturnType::STATUS_ERR;
 
   char buff[256];
   const char *head = "VCI_StartCAN,", *lr = "\n";
-  auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType,
-                                                &DeviceInd, &CANInd, lr);
+  auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, &CANInd, lr);
 
   error_code_t ec;
   auto const ierror = write_line(buff, size, ec);
@@ -255,15 +234,13 @@ vciReturnType CanImpCanNet::VCI_StartCAN(DWORD DeviceType, DWORD DeviceInd,
   return vciReturnType::STATUS_OK;
 }
 
-vciReturnType CanImpCanNet::VCI_ResetCAN(DWORD DeviceType, DWORD DeviceInd,
-                                         DWORD CANInd) {
+vciReturnType CanImpCanNet::VCI_ResetCAN(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd) {
   if (!_connected.load())
     return vciReturnType::STATUS_ERR;
 
   char buff[256];
   const char *head = "VCI_ResetCAN,", *lr = "\n";
-  auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType,
-                                                &DeviceInd, &CANInd, lr);
+  auto size = can::utils::bin2hex::bin2hex_fast(buff, head, &DeviceType, &DeviceInd, &CANInd, lr);
 
   error_code_t ec;
   auto const ierror = write_line(buff, size, ec);
@@ -277,9 +254,7 @@ vciReturnType CanImpCanNet::VCI_ResetCAN(DWORD DeviceType, DWORD DeviceInd,
   return vciReturnType::STATUS_OK;
 }
 
-vciReturnType CanImpCanNet::VCI_Transmit(DWORD DeviceType, DWORD DeviceInd,
-                                         DWORD CANInd, PVCI_CAN_OBJ pSend,
-                                         ULONG Len) {
+vciReturnType CanImpCanNet::VCI_Transmit(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_CAN_OBJ pSend, ULONG Len) {
   if (!_connected.load())
     return vciReturnType::STATUS_ERR;
   error_code_t ec;
@@ -288,8 +263,7 @@ vciReturnType CanImpCanNet::VCI_Transmit(DWORD DeviceType, DWORD DeviceInd,
 
   for (ULONG i = 0; i < Len; i++) {
     PVCI_CAN_OBJ p = pSend + i;
-    auto write_len = can::utils::bin2hex::bin2hex_fast(
-        line_buff, head, &DeviceType, &DeviceInd, &CANInd, p, lr);
+    auto write_len = can::utils::bin2hex::bin2hex_fast(line_buff, head, &DeviceType, &DeviceInd, &CANInd, p, lr);
     const auto ret = write_line(line_buff, write_len, ec);
     if (ec && ret < 0) {
       SPDLOG_WARN("write_line error: {0}, {1}.", ec.value(), ec.message());
@@ -305,7 +279,7 @@ vciReturnType CanImpCanNet::VCI_Transmit(DWORD DeviceType, DWORD DeviceInd,
   return vciReturnType::STATUS_OK;
 }
 
-int CanImpCanNet::line_process(const std::string_view &str, PVCI_CAN_OBJ dst) {
+int CanImpCanNet::line_process(const std::string_view& str, PVCI_CAN_OBJ dst) {
   using sv_regex_iter_t = std::regex_iterator<std::string_view::const_iterator>;
   const auto end = sv_regex_iter_t();
   const sv_regex_iter_t it(str.begin(), str.end(), _receive_pattern2);
@@ -319,14 +293,13 @@ int CanImpCanNet::line_process(const std::string_view &str, PVCI_CAN_OBJ dst) {
   if (it2 == end || pl.size() < (sizeof(VCI_CAN_OBJ) * 2))
     return -1;
 
-  auto p2 = (const char *)(&pl[0]);
-  can::utils::hex_string_to_bin_fastest(p2, pl.size(), (uint8_t *)dst);
+  auto p2 = (const char*)(&pl[0]);
+  can::utils::hex_string_to_bin_fastest(p2, pl.size(), (uint8_t*)dst);
 
   return 0;
 }
 
-void CanImpCanNet::async_read(std::atomic<asyncReadParam> &param,
-                              error_code_t &ec) {
+void CanImpCanNet::async_read(std::atomic<asyncReadParam>& param, error_code_t& ec) {
   asyncReadParam temp_param = param.load(std::memory_order_acquire);
   if (temp_param.read_cnt_ >= temp_param.len_) {
     timer_.cancel();
@@ -336,40 +309,36 @@ void CanImpCanNet::async_read(std::atomic<asyncReadParam> &param,
   using namespace boost::asio::error;
   using namespace boost::system;
 
-  boost::asio::async_read_until(
-      client_socket_, rx_buff_, '\n',
-      [&](const error_code_t &result_error, std::size_t result_n) {
-        const auto avail_num = rx_buff_.size();
-        auto begin = boost::asio::buffer_cast<const char *>(rx_buff_.data());
-        auto pos = std::find(begin, begin + avail_num, '\n');
-        ec = result_error; // save error code
+  boost::asio::async_read_until(client_socket_, rx_buff_, '\n', [&](const error_code_t& result_error, std::size_t result_n) {
+    const auto avail_num = rx_buff_.size();
+    auto begin = boost::asio::buffer_cast<const char*>(rx_buff_.data());
+    auto pos = std::find(begin, begin + avail_num, '\n');
+    ec = result_error; // save error code
 
-        if (!result_error && pos != (begin + avail_num)) {
-          auto my_param = param.load(std::memory_order_acquire);
-          std::string_view line(begin, pos - begin); // remove \n
-          if (0 != line_process(line, my_param.can_objs_)) {
-            SPDLOG_WARN("line post process error.");
-          }
-          rx_buff_.consume(pos - begin + 1);
-          if (my_param.read_cnt_ < my_param.len_) {
-            my_param.read_cnt_++, my_param.can_objs_++;
-            param.store(my_param, std::memory_order_release);
-            async_read(param, ec);
-          } else { // if read finished, stop the deadline timer
-            timer_.cancel();
-          }
-        } else if (!result_error) {
-          std::string temp_str = make_string(rx_buff_);
-          SPDLOG_WARN("rx buffer error: {}", temp_str);
-        } else {
-          // SPDLOG_WARN(result_error.message());
-        }
-      });
+    if (!result_error && pos != (begin + avail_num)) {
+      auto my_param = param.load(std::memory_order_acquire);
+      std::string_view line(begin, pos - begin); // remove \n
+      if (0 != line_process(line, my_param.can_objs_)) {
+        SPDLOG_WARN("line post process error.");
+      }
+      rx_buff_.consume(pos - begin + 1);
+      if (my_param.read_cnt_ < my_param.len_) {
+        my_param.read_cnt_++, my_param.can_objs_++;
+        param.store(my_param, std::memory_order_release);
+        async_read(param, ec);
+      } else { // if read finished, stop the deadline timer
+        timer_.cancel();
+      }
+    } else if (!result_error) {
+      std::string temp_str = make_string(rx_buff_);
+      SPDLOG_WARN("rx buffer error: {}", temp_str);
+    } else {
+      // SPDLOG_WARN(result_error.message());
+    }
+  });
 }
 
-ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
-                                PVCI_CAN_OBJ pReceive, ULONG Len,
-                                INT WaitTime) {
+ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_CAN_OBJ pReceive, ULONG Len, INT WaitTime) {
   if (!_connected.load() || !pReceive || !Len)
     return 0;
 
@@ -382,7 +351,7 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
   io_context_.restart();
   async_read(param, ec);
   timer_.expires_from_now(boost::posix_time::milliseconds(WaitTime));
-  timer_.async_wait([&](const error_code &ec) {
+  timer_.async_wait([&](const error_code& ec) {
     if (!ec) { // no error mean timeout
       client_socket_.cancel();
     }
@@ -400,7 +369,7 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
   uint32_t read_num = param.load().read_cnt_; // frame count
   while (_connected.load() && rx_buff_.size() > 0 && read_num < Len) {
     const auto avail_num = rx_buff_.size();
-    auto begin = boost::asio::buffer_cast<const char *>(rx_buff_.data());
+    auto begin = boost::asio::buffer_cast<const char*>(rx_buff_.data());
     auto pos = std::find(begin, begin + avail_num, '\n');
     if (pos == (begin + avail_num))
       break;
@@ -414,8 +383,7 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
   return read_num;
 }
 
-int CanImpCanNet::connect(const std::string &host, const std::string &service,
-                          int timeoutMs) {
+int CanImpCanNet::connect(const std::string& host, const std::string& service, int timeoutMs) {
   using boost::asio::ip::tcp;
   using namespace boost::system;
   // Resolve the host name and service to a list of endpoints.
@@ -424,8 +392,7 @@ int CanImpCanNet::connect(const std::string &host, const std::string &service,
   error_code_t error;
   io_context_.restart();
   boost::asio::async_connect(client_socket_, endpoints,
-                             [&](const error_code_t &result_error,
-                                 const tcp::endpoint & /*result_endpoint*/) {
+                             [&](const error_code_t& result_error, const tcp::endpoint& /*result_endpoint*/) {
                                const auto v = result_error.value();
                                error = result_error;
                                if (errc::operation_canceled != v) {
@@ -434,7 +401,7 @@ int CanImpCanNet::connect(const std::string &host, const std::string &service,
                              });
 
   timer_.expires_from_now(boost::posix_time::milliseconds(timeoutMs));
-  timer_.async_wait([&](const error_code_t &result_error) {
+  timer_.async_wait([&](const error_code_t& result_error) {
     if (!result_error) { // no error mean timeout, need cancel socket ops.
       error = errc::make_error_code(errc::timed_out);
       client_socket_.cancel();
@@ -452,22 +419,21 @@ int CanImpCanNet::connect(const std::string &host, const std::string &service,
   return 0;
 }
 
-int CanImpCanNet::write_line(const char *p, size_t len, error_code_t &ec) {
+int CanImpCanNet::write_line(const char* p, size_t len, error_code_t& ec) {
   using namespace boost::asio::error;
   using namespace boost::system;
 
   io_context_.restart();
-  boost::asio::async_write(
-      client_socket_, boost::asio::buffer(p, len),
-      [&](const error_code_t &result_error, std::size_t /*result_n*/) {
-        if (!result_error) {
-          timer_.cancel();
-        }
-        ec = result_error;
-      });
+  boost::asio::async_write(client_socket_, boost::asio::buffer(p, len),
+                           [&](const error_code_t& result_error, std::size_t /*result_n*/) {
+                             if (!result_error) {
+                               timer_.cancel();
+                             }
+                             ec = result_error;
+                           });
 
   timer_.expires_from_now(boost::posix_time::milliseconds(100));
-  timer_.async_wait([&](const error_code_t &result_ec) {
+  timer_.async_wait([&](const error_code_t& result_ec) {
     if (!result_ec) { // no error mean timeout, cancel socket ops.
       ec = errc::make_error_code(errc::operation_canceled);
       client_socket_.cancel();
@@ -494,7 +460,9 @@ int CanImpCanNet::write_line(const char *p, size_t len, error_code_t &ec) {
 extern "C" {
 #endif
 
-LIBCC_DLL CanImpInterface *createCanNet() { return new CanImpCanNet(); }
+LIBCC_DLL CanImpInterface* createCanNet() {
+  return new CanImpCanNet();
+}
 
 #ifdef __cplusplus
 }

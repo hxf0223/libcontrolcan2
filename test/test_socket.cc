@@ -39,18 +39,17 @@ TEST(Socket, perfServer) {
     acceptor_server.accept(server_socket); // waiting for connection
 
     boost::system::error_code ec{};
-    const char *cmd_recv = "VCI_Receive,";
+    const char* cmd_recv = "VCI_Receive,";
     uint64_t txcount = 0;
     char txbuff[256];
 
     while (!ec) {
       VCI_CAN_OBJ can_obj{};
-      *(uint64_t *)(can_obj.Data) = txcount;
+      *(uint64_t*)(can_obj.Data) = txcount;
       auto dur = std::chrono::system_clock::now().time_since_epoch();
       uint64_t now = std::chrono::duration_cast<microsec>(dur).count();
 
-      auto size = bin2hex::bin2hex_fast(txbuff, cmd_recv, &txcount, &now,
-                                        &can_obj, "\n");
+      auto size = bin2hex::bin2hex_fast(txbuff, cmd_recv, &txcount, &now, &can_obj, "\n");
       LOG(INFO) << "size: " << size << ", data: " << txbuff;
 
       boost::asio::write(server_socket, boost::asio::buffer(txbuff, size), ec);
@@ -70,7 +69,7 @@ TEST(Socket, perfServer) {
  * 接收其发送的CAN Object帧，并解析出CANObject。
  */
 TEST(Socket, perfClient) {
-  auto client_proc = [](const std::shared_ptr<CanImpInterface> &canDc) {
+  auto client_proc = [](const std::shared_ptr<CanImpInterface>& canDc) {
     constexpr DWORD kRxBuffSize = 100;
     VCI_CAN_OBJ can_rx_buff[kRxBuffSize];
     const size_t recv_cnt_max = 10000 * 300;
@@ -78,11 +77,9 @@ TEST(Socket, perfClient) {
 
     // auto tm0 = std::chrono::high_resolution_clock::now();
     while (recv_frame_cnt < recv_cnt_max) {
-      auto recv_frame_num = canDc->VCI_Receive(kDevtype, kDevid, kChannel,
-                                               can_rx_buff, kRxBuffSize, 10);
+      auto recv_frame_num = canDc->VCI_Receive(kDevtype, kDevid, kChannel, can_rx_buff, kRxBuffSize, 10);
       for (ULONG i = 0; i < recv_frame_num; i++) {
-        std::string const str =
-            can::utils::bin2hex_dump(can_rx_buff[i].Data, 8);
+        std::string const str = can::utils::bin2hex_dump(can_rx_buff[i].Data, 8);
         LOG(INFO) << recv_frame_cnt << ": " << str;
         recv_frame_cnt++;
       }
@@ -96,27 +93,22 @@ TEST(Socket, perfClient) {
 
   std::shared_ptr<CanImpInterface> can_dc(createCanNet());
   auto result = can_dc->VCI_OpenDevice(kDevtype, 0, 0);
-  CHECK(result == vciReturnType::STATUS_OK)
-      << "CAN NET VCI_OpenDevice fail: " << result;
+  CHECK(result == vciReturnType::STATUS_OK) << "CAN NET VCI_OpenDevice fail: " << result;
 
   auto cfg = test::helper::createVciInitCfg(0x00, 0x1C, 0xffffffff);
   result = can_dc->VCI_InitCAN(kDevtype, kDevid, kChannel, &cfg);
-  CHECK(result == vciReturnType::STATUS_OK)
-      << "CAN NET VCI_InitCAN fail: " << result;
+  CHECK(result == vciReturnType::STATUS_OK) << "CAN NET VCI_InitCAN fail: " << result;
 
   result = can_dc->VCI_StartCAN(kDevtype, kDevid, kChannel);
-  CHECK(result == vciReturnType::STATUS_OK)
-      << "CAN NET VCI_StartCAN fail: " << result;
+  CHECK(result == vciReturnType::STATUS_OK) << "CAN NET VCI_StartCAN fail: " << result;
 
   std::thread client_thread(client_proc, can_dc);
   client_thread.join();
 }
 
 namespace {
-inline std::string
-make_string(const boost::asio::streambuf &streambuf) { // NOLINT
-  return {boost::asio::buffers_begin(streambuf.data()),
-          boost::asio::buffers_end(streambuf.data())};
+inline std::string make_string(const boost::asio::streambuf& streambuf) { // NOLINT
+  return {boost::asio::buffers_begin(streambuf.data()), boost::asio::buffers_end(streambuf.data())};
 }
 } // namespace
 
@@ -138,8 +130,7 @@ TEST(Socket, perfServer2) {
 
     while (!ec) {
       // VCI_CAN_OBJ can_obj;
-      auto read_num = boost::asio::read_until(
-          server_socket, boost::asio::dynamic_buffer(input_buffer), "\n", ec);
+      auto read_num = boost::asio::read_until(server_socket, boost::asio::dynamic_buffer(input_buffer), "\n", ec);
       if (ec) {
         continue;
       }
@@ -168,7 +159,7 @@ TEST(Socket, perfServer2) {
  */
 TEST(Socket, perfClient2) {
   using namespace std::chrono_literals;
-  auto client_proc = [](const std::shared_ptr<CanImpInterface> &canDc) {
+  auto client_proc = [](const std::shared_ptr<CanImpInterface>& canDc) {
     constexpr DWORD kCanTxBuffSize = 1;
     VCI_CAN_OBJ can_tx_buff[kCanTxBuffSize];
     const size_t recv_cnt_max = 10000 * 30; // NOLINT
@@ -176,9 +167,8 @@ TEST(Socket, perfClient2) {
 
     auto tm0 = std::chrono::steady_clock::now();
     while (send_count < recv_cnt_max) {
-      *(uint64_t *)(can_tx_buff[0].Data) = send_count;
-      auto e = canDc->VCI_Transmit(kDevtype, kDevid, kChannel, can_tx_buff,
-                                   kCanTxBuffSize);
+      *(uint64_t*)(can_tx_buff[0].Data) = send_count;
+      auto e = canDc->VCI_Transmit(kDevtype, kDevid, kChannel, can_tx_buff, kCanTxBuffSize);
       CHECK(e == vciReturnType::STATUS_OK) << "VCI_Transmit return " << e;
       std::this_thread::sleep_for(300ms);
       send_count++;
@@ -186,23 +176,19 @@ TEST(Socket, perfClient2) {
 
     auto tm2 = std::chrono::steady_clock::now();
     std::chrono::duration<double, std::milli> const dur1 = tm2 - tm0;
-    LOG(INFO) << "transmit frame num: " << send_count
-              << ", time in ms: " << dur1.count();
+    LOG(INFO) << "transmit frame num: " << send_count << ", time in ms: " << dur1.count();
   }; // client_proc
 
   std::shared_ptr<CanImpInterface> can_dc(createCanNet());
   auto result = can_dc->VCI_OpenDevice(kDevtype, 0, 0);
-  CHECK(result == vciReturnType::STATUS_OK)
-      << "CAN NET VCI_OpenDevice fail: " << result;
+  CHECK(result == vciReturnType::STATUS_OK) << "CAN NET VCI_OpenDevice fail: " << result;
 
   auto cfg = test::helper::createVciInitCfg(0x00, 0x1C, 0xffffffff);
   result = can_dc->VCI_InitCAN(kDevtype, kDevid, kChannel, &cfg);
-  CHECK(result == vciReturnType::STATUS_OK)
-      << "CAN NET VCI_InitCAN fail: " << result;
+  CHECK(result == vciReturnType::STATUS_OK) << "CAN NET VCI_InitCAN fail: " << result;
 
   result = can_dc->VCI_StartCAN(kDevtype, kDevid, kChannel);
-  CHECK(result == vciReturnType::STATUS_OK)
-      << "CAN NET VCI_StartCAN fail: " << result;
+  CHECK(result == vciReturnType::STATUS_OK) << "CAN NET VCI_StartCAN fail: " << result;
 
   std::thread client_thread(client_proc, can_dc);
   client_thread.join();

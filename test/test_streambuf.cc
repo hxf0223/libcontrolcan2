@@ -15,8 +15,7 @@ TEST(streambuf, write) {
 
   boost::asio::io_service io_service;
   boost::asio::ip::tcp::socket socket(io_service);
-  socket.connect(boost::asio::ip::tcp::endpoint(
-      boost::asio::ip::address::from_string(host_ip_addr), kHostPort));
+  socket.connect(boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string(host_ip_addr), kHostPort));
 
   boost::asio::streambuf b;
 
@@ -53,8 +52,7 @@ TEST(streambuf, read) {
 
   boost::asio::io_service io_service;
   boost::asio::ip::tcp::socket socket(io_service);
-  socket.connect(boost::asio::ip::tcp::endpoint(
-      boost::asio::ip::address::from_string(host_ip_addr), kHostPort));
+  socket.connect(boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string(host_ip_addr), kHostPort));
 
   boost::asio::streambuf b;
 

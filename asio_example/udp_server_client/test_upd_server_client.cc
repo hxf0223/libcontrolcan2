@@ -19,7 +19,7 @@ TEST(asioDemo, udpServer) {
     while (true) {
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-  } catch (const std::exception &ex) {
+  } catch (const std::exception& ex) {
     LOG(ERROR) << ex.what();
   }
 

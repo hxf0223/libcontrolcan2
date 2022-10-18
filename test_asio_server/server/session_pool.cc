@@ -12,4 +12,6 @@ std::shared_ptr<Session> SessionPool::get_session(int session) {
   return wk_session.lock();
 }
 
-int SessionPool::get_size() { return pool_.size(); }
+int SessionPool::get_size() {
+  return pool_.size();
+}

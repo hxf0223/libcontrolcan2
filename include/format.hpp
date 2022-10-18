@@ -14,14 +14,16 @@ class ArgBase {
 public:
   ArgBase() {}
   virtual ~ArgBase() {}
-  virtual void Format(std::ostringstream &ss, const std::string &fmt) = 0;
+  virtual void Format(std::ostringstream& ss, const std::string& fmt) = 0;
 };
 
-template <class T> class Arg : public ArgBase {
+template <class T>
+class Arg : public ArgBase {
 public:
-  Arg(T arg) : m_arg(arg) {}
+  Arg(T arg)
+      : m_arg(arg) {}
   virtual ~Arg() {}
-  virtual void Format(std::ostringstream &ss, const std::string &fmt) {
+  virtual void Format(std::ostringstream& ss, const std::string& fmt) {
     ss << m_arg;
   }
 
@@ -29,21 +31,22 @@ private:
   T m_arg;
 };
 
-class ArgArray : public std::vector<ArgBase *> {
+class ArgArray : public std::vector<ArgBase*> {
 public:
   ArgArray() {}
   ~ArgArray() {
-    std::for_each(begin(), end(), [](ArgBase *p) { delete p; });
+    std::for_each(begin(), end(), [](ArgBase* p) {
+      delete p;
+    });
   }
 };
 
-static void FormatItem(std::ostringstream &ss, const std::string &item,
-                       const ArgArray &args) {
+static void FormatItem(std::ostringstream& ss, const std::string& item, const ArgArray& args) {
   int index = 0;
   int alignment = 0;
   std::string fmt;
 
-  char *endptr = nullptr;
+  char* endptr = nullptr;
   index = strtol(&item[0], &endptr, 10);
   if (index < 0 || index >= args.size()) {
     return;
@@ -67,18 +70,19 @@ static void FormatItem(std::ostringstream &ss, const std::string &item,
   return;
 }
 
-template <class T> static void Transfer(ArgArray &argArray, T t) {
+template <class T>
+static void Transfer(ArgArray& argArray, T t) {
   argArray.push_back(new Arg<T>(t));
 }
 
 template <class T, typename... Args>
-static void Transfer(ArgArray &argArray, T t, Args &&...args) {
+static void Transfer(ArgArray& argArray, T t, Args&&... args) {
   Transfer(argArray, t);
   Transfer(argArray, args...);
 }
 
 template <typename... Args>
-std::string Format(const std::string &format, Args &&...args) {
+std::string Format(const std::string& format, Args&&... args) {
   if (sizeof...(args) == 0) {
     return format;
   }

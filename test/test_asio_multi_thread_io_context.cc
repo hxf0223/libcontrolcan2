@@ -8,29 +8,25 @@ using tcp = io::ip::tcp;
 using error_code = boost::system::error_code;
 
 class Session {
-  Session(io::io_context &io_context)
-      : socket_(io_context), read_(io_context), write_(io_context) {}
+  Session(io::io_context& io_context)
+      : socket_(io_context)
+      , read_(io_context)
+      , write_(io_context) {}
 
   void asyncRead() {
-    io::async_read(
-        socket_, read_buffer_,
-        io::bind_executor(
-            read_, [&](error_code error, std::size_t /*bytes_transferred*/) {
-              if (!error) {
-                asyncRead();
-              }
-            }));
+    io::async_read(socket_, read_buffer_, io::bind_executor(read_, [&](error_code error, std::size_t /*bytes_transferred*/) {
+                     if (!error) {
+                       asyncRead();
+                     }
+                   }));
   }
 
   void asyncWrite() {
-    io::async_read(
-        socket_, write_buffer_,
-        io::bind_executor(
-            write_, [&](error_code error, std::size_t /*bytes_transferred*/) {
-              if (!error) {
-                asyncWrite();
-              }
-            }));
+    io::async_read(socket_, write_buffer_, io::bind_executor(write_, [&](error_code error, std::size_t /*bytes_transferred*/) {
+                     if (!error) {
+                       asyncWrite();
+                     }
+                   }));
   }
 
 private:
@@ -42,17 +38,19 @@ private:
   boost::asio::streambuf write_buffer_;
 };
 
-int main2(int /*argc*/, char * /*argv*/[]) {
+int main2(int /*argc*/, char* /*argv*/[]) {
   io::io_context io_context;
   std::vector<std::thread> threads;
   auto count = std::thread::hardware_concurrency() * 2;
 
   threads.reserve(count);
   for (int i = 0; i < count; i++) {
-    threads.emplace_back([&] { io_context.run(); });
+    threads.emplace_back([&] {
+      io_context.run();
+    });
   }
 
-  for (auto &thread : threads) {
+  for (auto& thread : threads) {
     if (thread.joinable()) {
       thread.join();
     }

@@ -11,21 +11,17 @@
 
 class multicast_sender {
 public:
-  multicast_sender(const std::string &address,
-                   const std::string &multicast_address,
-                   const unsigned short multicast_port)
-      : work_(io_service_),
-        multicast_endpoint_(
-            boost::asio::ip::address::from_string(multicast_address),
-            multicast_port),
-        socket_(io_service_, boost::asio::ip::udp::endpoint(
-                                 boost::asio::ip::address::from_string(address),
-                                 0 /* any port */)) {
+  multicast_sender(const std::string& address, const std::string& multicast_address, const unsigned short multicast_port)
+      : work_(io_service_)
+      , multicast_endpoint_(boost::asio::ip::address::from_string(multicast_address), multicast_port)
+      , socket_(io_service_, boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(address), 0 /* any port */)) {
     // Start running the io_service.  The work_ object will keep
     // io_service::run() from returning even if there is no real work
     // queued into the io_service.
     auto self = this;
-    work_thread_ = std::thread([self]() { self->io_service_.run(); });
+    work_thread_ = std::thread([self]() {
+      self->io_service_.run();
+    });
   }
 
   ~multicast_sender() {
@@ -36,7 +32,7 @@ public:
     work_thread_.join();
   }
 
-  void send(const char *data, const int size) {
+  void send(const char* data, const int size) {
     // Caller may delete before the async operation finishes, so copy the
     // buffer and associate it to the completion handler's lifetime.  Note
     // that the completion may not run in the event the io_servie is
@@ -44,11 +40,8 @@ public:
     // a RAII object (std::shared_ptr) is ideal.
     auto buffer = std::make_shared<std::string>(data, size);
     socket_.async_send_to(boost::asio::buffer(*buffer), multicast_endpoint_,
-                          [buffer](const boost::system::error_code &error,
-                                   std::size_t bytes_transferred) {
-                            std::cout << "Wrote " << bytes_transferred
-                                      << " bytes with " << error.message()
-                                      << std::endl;
+                          [buffer](const boost::system::error_code& error, std::size_t bytes_transferred) {
+                            std::cout << "Wrote " << bytes_transferred << " bytes with " << error.message() << std::endl;
                           });
   }
 
@@ -63,7 +56,7 @@ private:
 TEST(asioDemo, asio_worker_and_share_ptr) {
   constexpr size_t SIZE = 8192;
   multicast_sender sender("127.0.0.1", "239.255.0.0", 30000);
-  char *data = (char *)malloc(SIZE);
+  char* data = (char*)malloc(SIZE);
   std::memset(data, 0, SIZE);
   sender.send(data, SIZE);
   free(data);

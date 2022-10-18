@@ -16,11 +16,10 @@ using boost::asio::ip::udp;
 
 class udpClient {
 public:
-  udpClient(boost::asio::io_service &io_service, const std::string &host,
-            const std::string &port)
-      : io_service_(io_service),
-        socket_(io_service, udp::endpoint(udp::v4(), 0)),
-        deadline_(io_service_) {
+  udpClient(boost::asio::io_service& io_service, const std::string& host, const std::string& port)
+      : io_service_(io_service)
+      , socket_(io_service, udp::endpoint(udp::v4(), 0))
+      , deadline_(io_service_) {
     udp::resolver resolver(io_service_);
     udp::resolver::query query(udp::v4(), host, port);
     udp::resolver::iterator iter = resolver.resolve(query);
@@ -30,24 +29,23 @@ public:
     check_deadline();
   }
 
-  ~udpClient() { socket_.close(); }
+  ~udpClient() {
+    socket_.close();
+  }
 
-  void send(const std::string &msg);
-  std::string receive(boost::posix_time::time_duration timeout,
-                      boost::system::error_code &ec);
+  void send(const std::string& msg);
+  std::string receive(boost::posix_time::time_duration timeout, boost::system::error_code& ec);
 
 private:
   void check_deadline();
 
-  static void handle_receive(const boost::system::error_code &ec,
-                             std::size_t length,
-                             boost::system::error_code *out_ec,
-                             std::size_t *out_length) {
+  static void handle_receive(const boost::system::error_code& ec, std::size_t length, boost::system::error_code* out_ec,
+                             std::size_t* out_length) {
     *out_ec = ec;
     *out_length = length;
   }
 
-  boost::asio::io_service &io_service_;
+  boost::asio::io_service& io_service_;
   udp::socket socket_;
   udp::endpoint endpoint_;
   deadline_timer deadline_;

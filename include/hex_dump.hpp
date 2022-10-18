@@ -13,11 +13,13 @@
 namespace can {
 namespace utils {
 
-template <typename T> struct is_array_or_vector {
+template <typename T>
+struct is_array_or_vector {
   enum { value = false };
 };
 
-template <typename T, typename A> struct is_array_or_vector<std::vector<T, A>> {
+template <typename T, typename A>
+struct is_array_or_vector<std::vector<T, A>> {
   enum { value = true };
 };
 
@@ -26,43 +28,37 @@ struct is_array_or_vector<std::array<T, N>> {
   enum { value = true };
 };
 
-template <class T,
-          class = typename std::enable_if<is_array_or_vector<T>::value>::type>
-static std::string bin2hex_dump(std::ostringstream &oss, T &bin) {
+template <class T, class = typename std::enable_if<is_array_or_vector<T>::value>::type>
+static std::string bin2hex_dump(std::ostringstream& oss, T& bin) {
   const auto separator = ' ';
   oss << std::hex << std::nouppercase;
 
   std::for_each(bin.begin(), bin.end(), [&oss, &separator](unsigned char ch) {
-    oss << std::setw(2) << std::setfill('0') << static_cast<unsigned>(ch)
-        << separator;
+    oss << std::setw(2) << std::setfill('0') << static_cast<unsigned>(ch) << separator;
   });
 
   oss << std::dec << std::setfill(' '); // reset stream to original
   return oss.str();
 }
 
-template <class T,
-          class = typename std::enable_if<is_array_or_vector<T>::value>::type>
-static std::string bin2hex_dump(T &bin) {
+template <class T, class = typename std::enable_if<is_array_or_vector<T>::value>::type>
+static std::string bin2hex_dump(T& bin) {
   std::ostringstream oss;
   return bin2hex_dump(oss, bin);
 }
 
-static std::string bin2hex_dump(std::ostringstream &oss,
-                                unsigned char const *pbin, size_t len) {
+static std::string bin2hex_dump(std::ostringstream& oss, unsigned char const* pbin, size_t len) {
   const auto separator = ' ';
   oss << std::hex << std::nouppercase;
 
   for (size_t i = 0; i < len; i++)
-    oss << std::setw(2) << std::setfill('0') << static_cast<int>(*(pbin + i))
-        << separator;
+    oss << std::setw(2) << std::setfill('0') << static_cast<int>(*(pbin + i)) << separator;
 
   oss << std::dec << std::setfill(' '); // reset stream to original
   return oss.str();
 }
 
-static std::string bin2hex(std::ostringstream &oss, unsigned char const *pbin,
-                           size_t len) {
+static std::string bin2hex(std::ostringstream& oss, unsigned char const* pbin, size_t len) {
   oss << std::hex << std::nouppercase;
   for (size_t i = 0; i < len; i++)
     oss << std::setw(2) << std::setfill('0') << static_cast<int>(*(pbin + i));
@@ -71,35 +67,36 @@ static std::string bin2hex(std::ostringstream &oss, unsigned char const *pbin,
   return oss.str();
 }
 
-static std::string bin2hex_dump(unsigned char const *pbin, size_t len) {
+static std::string bin2hex_dump(unsigned char const* pbin, size_t len) {
   std::ostringstream oss;
   return bin2hex_dump(oss, pbin, len);
 }
 
-static std::string bin2hex(unsigned char const *pbin, size_t len) {
+static std::string bin2hex(unsigned char const* pbin, size_t len) {
   std::ostringstream oss;
   return bin2hex(oss, pbin, len);
 }
 
 struct bin2hex {
-  template <typename T> static const T ptr_of(const T &v, std::true_type) {
+  template <typename T>
+  static const T ptr_of(const T& v, std::true_type) {
     return v;
   }
 
-  template <class T> static const T *ptr_of(const T &v, std::false_type) {
+  template <class T>
+  static const T* ptr_of(const T& v, std::false_type) {
     return &v;
   }
 
-  static size_t bin2hex_fast(const char *dst) {
-    auto ptr_dst = const_cast<char *>(dst);
+  static size_t bin2hex_fast(const char* dst) {
+    auto ptr_dst = const_cast<char*>(dst);
     *ptr_dst = '\0';
     return 0;
   }
 
   template <typename... Args>
-  static size_t bin2hex_fast(const char *dst, const char *const src,
-                             Args... rest) {
-    auto ptr_dst = const_cast<char *>(dst);
+  static size_t bin2hex_fast(const char* dst, const char* const src, Args... rest) {
+    auto ptr_dst = const_cast<char*>(dst);
     size_t src_bytes = ::strlen(src);
     ::memcpy(ptr_dst, src, src_bytes);
 
@@ -108,35 +105,32 @@ struct bin2hex {
   }
 
   template <typename T, typename... Args>
-  static size_t bin2hex_fast(const char *dst, const T &head, Args... rest) {
+  static size_t bin2hex_fast(const char* dst, const T& head, Args... rest) {
     using rm_ref_t = std::remove_reference_t<T>;
     using decay2_t = std::remove_const_t<std::remove_reference_t<T>>;
     static_assert(std::is_pod<decay2_t>::value,
                   "Not a POD type."); // do NOT use std::decay<T>::type
-    uint8_t *psrc =
-        (uint8_t *)ptr_of(head, typename std::is_pointer<rm_ref_t>::type());
-    const size_t bytes = sizeof(
-        std::remove_const_t<std::remove_reference_t<std::remove_pointer_t<T>>>);
+    uint8_t* psrc = (uint8_t*)ptr_of(head, typename std::is_pointer<rm_ref_t>::type());
+    const size_t bytes = sizeof(std::remove_const_t<std::remove_reference_t<std::remove_pointer_t<T>>>);
 
-    auto pdst = const_cast<char *>(dst);
+    auto pdst = const_cast<char*>(dst);
     do_conv(pdst, psrc, bytes);
 
     auto rest_size = bin2hex_fast(pdst + bytes * 2, rest...);
     return (bytes * 2 + rest_size);
   }
 
-  static std::string bin2hex_fast2(void *const p, size_t len) {
+  static std::string bin2hex_fast2(void* const p, size_t len) {
     std::string str(len * 2, ' ');
-    const auto psrc = static_cast<unsigned char *>(p);
-    do_conv(const_cast<char *>(str.data()), psrc, len);
+    const auto psrc = static_cast<unsigned char*>(p);
+    do_conv(const_cast<char*>(str.data()), psrc, len);
 
     return str;
   }
 
 private:
-  static void do_conv(char *pdst, const uint8_t *psrc, size_t len) {
-    static char hexmap[]{'0', '1', '2', '3', '4', '5', '6', '7',
-                         '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+  static void do_conv(char* pdst, const uint8_t* psrc, size_t len) {
+    static char hexmap[]{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
     for (size_t i = 0; i < len; i++) {
       *pdst++ = hexmap[(psrc[i] & 0xF0) >> 4];
       *pdst++ = hexmap[psrc[i] & 0x0F];
@@ -166,8 +160,7 @@ static std::vector<unsigned char> hex_string_to_bin(std::string str) {
   return v;
 }
 
-static inline void hex_string_to_bin_fastest(const char *src, size_t srcLen,
-                                             uint8_t *out) {
+static inline void hex_string_to_bin_fastest(const char* src, size_t srcLen, uint8_t* out) {
   // clang-format off
   const static uint8_t hashmap[] = {
     0,  0,  0,  0,  0,  0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // gap before first hex digit
@@ -188,13 +181,11 @@ static inline void hex_string_to_bin_fastest(const char *src, size_t srcLen,
   }
 }
 
-static inline void hex_string_to_bin_fastest(const std::string &str,
-                                             uint8_t *out) {
+static inline void hex_string_to_bin_fastest(const std::string& str, uint8_t* out) {
   return hex_string_to_bin_fastest(str.data(), str.length(), out);
 }
 
-static inline std::vector<unsigned char>
-hex_string_to_bin_fastest(const std::string &str) {
+static inline std::vector<unsigned char> hex_string_to_bin_fastest(const std::string& str) {
   std::vector<uint8_t> v(str.length() / 2);
   hex_string_to_bin_fastest(str, v.data());
   return v;

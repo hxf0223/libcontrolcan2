@@ -19,14 +19,13 @@ TEST(gitVersion, func) {
 
   LOG(INFO) << "commit " << git::CommitSHA1() << " (" << git::Branch() << ")\n"
             << "describe " << git::Describe() << "\n"
-            << "Author: " << git::AuthorName() << " <" << git::AuthorEmail()
-            << ">\n"
+            << "Author: " << git::AuthorName() << " <" << git::AuthorEmail() << ">\n"
             << "Date: " << git::CommitDate() << "\n\n"
             << git::CommitSubject() << "\n"
             << git::CommitBody();
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   FLAGS_alsologtostderr = true;
   FLAGS_colorlogtostderr = true;
   ::testing::InitGoogleTest(&argc, argv);

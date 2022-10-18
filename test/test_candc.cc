@@ -29,17 +29,14 @@ TEST(CANDC, load) {
 TEST(CANDC, receive) {
   std::shared_ptr<CanImpInterface> const can_dc(createCanDC());
   auto result = can_dc->VCI_OpenDevice(kDevtype, 0, 0);
-  CHECK(result == vciReturnType::STATUS_OK)
-      << "CAN NET VCI_OpenDevice fail: " << result;
+  CHECK(result == vciReturnType::STATUS_OK) << "CAN NET VCI_OpenDevice fail: " << result;
 
   auto cfg = test::helper::createVciInitCfg(0x00, 0x1C, 0xffffffff);
   result = can_dc->VCI_InitCAN(kDevtype, kDevid, kChannel, &cfg);
-  CHECK(result == vciReturnType::STATUS_OK)
-      << "CAN NET VCI_InitCAN fail: " << result;
+  CHECK(result == vciReturnType::STATUS_OK) << "CAN NET VCI_InitCAN fail: " << result;
 
   result = can_dc->VCI_StartCAN(kDevtype, kDevid, kChannel);
-  CHECK(result == vciReturnType::STATUS_OK)
-      << "CAN NET VCI_StartCAN fail: " << result;
+  CHECK(result == vciReturnType::STATUS_OK) << "CAN NET VCI_StartCAN fail: " << result;
 
   for (size_t i = 0; i < 1000; i++) {
     VCI_CAN_OBJ obj{};
@@ -53,6 +50,5 @@ TEST(CANDC, receive) {
   }
 
   result = can_dc->VCI_CloseDevice(kDevtype, kDevid);
-  CHECK(result == vciReturnType::STATUS_OK)
-      << "CAN DC VCI_CloseDevice fail: " << result;
+  CHECK(result == vciReturnType::STATUS_OK) << "CAN DC VCI_CloseDevice fail: " << result;
 }

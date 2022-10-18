@@ -64,7 +64,7 @@ public:
   }
 
 private:
-  bool is_ellapsed(const uint64_t &nowTick) const {
+  bool is_ellapsed(const uint64_t& nowTick) const {
     if (delta_ratio_ > 0.0) {
       auto now_tm = nowTick * delta_ratio_;
       return ((now_tm - tm0_) > 1000); // longer than 1 second
@@ -82,7 +82,9 @@ private:
   tickUpdate tu_;
 
 public:
-  tickExt() { beginInitTick(); }
+  tickExt() {
+    beginInitTick();
+  }
 
   uint64_t getTick() const {
     if (!valid_tick_)

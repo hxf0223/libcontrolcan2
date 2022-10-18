@@ -8,7 +8,7 @@ using namespace can::utils;
 
 TEST(CAN, bin2hex_template) {
   char buffer[256]{0};
-  const char *pszcstr = ".const string.";
+  const char* pszcstr = ".const string.";
   uint64_t const data64 = 0x0102030405060708;
   uint32_t const data32 = 0x090A0B0C;
 
@@ -22,10 +22,9 @@ TEST(CAN, bin2hex_template) {
   LOG(INFO) << "bin2hex size: " << size << ", data64 + data32: " << buffer;
 
   size = bin2hex::bin2hex_fast(buffer, pszcstr, data64, data32);
-  LOG(INFO) << "bin2hex size: " << size
-            << ", const char* + data64 + data32: " << buffer;
+  LOG(INFO) << "bin2hex size: " << size << ", const char* + data64 + data32: " << buffer;
 
-  const auto &data64_ref = data64;
+  const auto& data64_ref = data64;
   size = bin2hex::bin2hex_fast(buffer, data64_ref);
   LOG(INFO) << "bin2hex size: " << size << ", data64 ref: " << buffer;
 
@@ -38,6 +37,5 @@ TEST(CAN, bin2hex_template) {
   LOG(INFO) << "VCI_CAN_OBJ size: " << sizeof(VCI_CAN_OBJ);
 
   size = bin2hex::bin2hex_fast(buffer, ".const string.", &can_obj);
-  LOG(INFO) << "bin2hex size: " << size
-            << ", const char* + can_obj address: " << buffer;
+  LOG(INFO) << "bin2hex size: " << size << ", const char* + can_obj address: " << buffer;
 }

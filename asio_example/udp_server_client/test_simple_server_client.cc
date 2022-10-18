@@ -14,10 +14,8 @@ TEST(asioDemo, udpServer2) {
   socket.open(boost::asio::ip::udp::v4());
   socket.set_option(boost::asio::ip::udp::socket::reuse_address(true));
   socket.set_option(boost::asio::socket_base::broadcast(true));
-  local_endpoint =
-      boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::any(), 3999);
-  remote_endpoint = boost::asio::ip::udp::endpoint(
-      boost::asio::ip::address_v4::broadcast(), 8888);
+  local_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::any(), 3999);
+  remote_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4::broadcast(), 8888);
 
   try {
     socket.bind(local_endpoint);
@@ -43,9 +41,7 @@ TEST(asioDemo, udpClient2) {
   size_t rx_count = 0;
   char buf[500] = {0};
   while (1) {
-    std::size_t bytes_transferred =
-        socket.receive_from(boost::asio::buffer(buf), sender_endpoint);
-    LOG(INFO) << ++rx_count << ". receive " << bytes_transferred
-              << " bytes. data: " << buf;
+    std::size_t bytes_transferred = socket.receive_from(boost::asio::buffer(buf), sender_endpoint);
+    LOG(INFO) << ++rx_count << ". receive " << bytes_transferred << " bytes. data: " << buf;
   }
 }

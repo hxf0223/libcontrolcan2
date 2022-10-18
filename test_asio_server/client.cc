@@ -14,7 +14,7 @@ using std::endl;
 using std::string;
 using namespace boost::asio;
 
-void send_msg(const string &msg, boost::asio::ip::tcp::socket &socket) {
+void send_msg(const string& msg, boost::asio::ip::tcp::socket& socket) {
   boost::system::error_code error;
   boost::asio::write(socket, buffer(msg), error);
   if (error) {
@@ -22,7 +22,7 @@ void send_msg(const string &msg, boost::asio::ip::tcp::socket &socket) {
   }
 }
 
-void receive_msg(boost::asio::ip::tcp::socket &socket) {
+void receive_msg(boost::asio::ip::tcp::socket& socket) {
   boost::system::error_code error;
   streambuf receive_buffer;
   // read(socket, receive_buffer, transfer_all(), error);
@@ -30,20 +30,19 @@ void receive_msg(boost::asio::ip::tcp::socket &socket) {
   if (error && error != error::eof) {
     cout << "receive failed: " << error.message() << endl;
   } else {
-    const char *data = buffer_cast<const char *>(receive_buffer.data());
+    const char* data = buffer_cast<const char*>(receive_buffer.data());
     cout << "receive len " << strlen(data) << ": " << data;
   }
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   string host_ip_addr = "127.0.0.1";
   constexpr int host_port = 9999;
   size_t msg_id = 0;
 
   boost::asio::io_service io_service;
   boost::asio::ip::tcp::socket socket(io_service);
-  socket.connect(boost::asio::ip::tcp::endpoint(
-      boost::asio::ip::address::from_string(host_ip_addr), host_port));
+  socket.connect(boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string(host_ip_addr), host_port));
 
 #if 0
   while (1) {

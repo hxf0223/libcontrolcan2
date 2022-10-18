@@ -2,12 +2,12 @@
 #define USB_CAN_H
 
 #if defined WIN32 || defined _WIN32 || defined _WINDOWS
-#include <ostream>
-#include <stdint.h>
-#include <windows.h>
+#  include <ostream>
+#  include <stdint.h>
+#  include <windows.h>
 #else
-#include <ostream>
-#include <stdint.h>
+#  include <ostream>
+#  include <stdint.h>
 
 typedef uint16_t USHORT;
 typedef uint8_t UCHAR;
@@ -19,11 +19,11 @@ typedef uint32_t UINT;
 typedef int16_t SHORT;
 typedef int8_t CHAR;
 typedef int32_t INT;
-typedef void *PVOID;
+typedef void* PVOID;
 
-#ifndef __stdcall
-#define __stdcall
-#endif
+#  ifndef __stdcall
+#    define __stdcall
+#  endif
 #endif
 
 // device type enum
@@ -80,20 +80,14 @@ enum class vciDevType : DWORD {
 #define ERR_BUFFERCREATE 0x8000
 
 // return error
-enum class vciReturnType {
-  STATUS_OK = 1,
-  STATUS_ERR = 0,
-  STATUS_NET_CONN_FAIL = -1
-};
+enum class vciReturnType { STATUS_OK = 1, STATUS_ERR = 0, STATUS_NET_CONN_FAIL = -1 };
 
-inline bool operator!=(const vciReturnType &lhs, const DWORD &rhs) {
+inline bool operator!=(const vciReturnType& lhs, const DWORD& rhs) {
   return (static_cast<DWORD>(lhs) != rhs);
 }
 
 template <typename T>
-inline std::ostream &operator<<(
-    typename std::enable_if<std::is_enum<T>::value, std::ostream>::type &stream,
-    const T &e) {
+inline std::ostream& operator<<(typename std::enable_if<std::is_enum<T>::value, std::ostream>::type& stream, const T& e) {
   return stream << static_cast<typename std::underlying_type<T>::type>(e);
 }
 
