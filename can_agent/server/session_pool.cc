@@ -1,7 +1,7 @@
 #include "session_pool.h"
 
-void SessionPool::addToPool(std::shared_ptr<Session> session) {
-  std::weak_ptr<Session> wk_session = session;
+void SessionPool::addToPool(const std::shared_ptr<Session> session) {
+  const std::weak_ptr<Session> wk_session = session;
   pool_.push_back(session);
 }
 
