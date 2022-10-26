@@ -106,6 +106,7 @@ find . -regex '.*\.\(cc\|cpp\|hpp\|cu\|c\|h\)' -exec clang-format -style=file -i
 - [boost_asio_zeromq](https://github.com/iyedb/boost_asio_zeromq)(<https://iyedb.github.io/cpp11/en/2014/07/11/asio-zeromq-cpp11.html>)
 - [cmake git version](https://github.com/andrew-hardin/cmake-git-version-tracking)
 - [ticks](https://en.wikipedia.org/wiki/Time_Stamp_Counter)
+- [clang-tidy-ignore](https://github.com/vmware/concord-bft/blob/master/.clang-tidy-ignore)
 
 ## template相关参考
 

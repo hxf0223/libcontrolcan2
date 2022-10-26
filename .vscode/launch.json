@@ -38,6 +38,26 @@
             "sourceFileMap": {
                 "/build/glibc-S9d2JN": "/usr/src/glibc"
             }
+        },
+        {
+            "name": "Python: launch",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "stopOnEntry": false,
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/scritps:${env:PYTHONPATH}",
+                "LD_LIBRARY_PATH": "${workspaceFolder}/bin:${env:LD_LIBRARY_PATH}"
+            },
+            "args": [
+                "-p",
+                "/home/hxf0223/work/libcontrolcan2/build",
+                "-config-fil",
+                ".clang-tidy"
+            ]
         }
     ]
 }

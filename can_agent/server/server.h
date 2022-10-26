@@ -7,7 +7,7 @@
 #include "session.h"
 #include "session_pool.h"
 
-typedef std::shared_ptr<Session> session_ptr;
+using session_ptr = std::shared_ptr<Session>;
 
 class Server {
 private:
@@ -25,6 +25,6 @@ public:
   ~Server();
   void startAccepting();
 
-  void handle_accept(const boost::system::error_code& ec);
-  void handle_shutdown();
+  void handleAccept(const boost::system::error_code& ec);
+  void handleShutdown();
 };

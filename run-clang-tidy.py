@@ -31,6 +31,7 @@ http://clang.llvm.org/docs/HowToSetupToolingForLLVM.html
 
 from __future__ import print_function
 
+import fnmatch
 import argparse
 import glob
 import json
@@ -50,6 +51,27 @@ try:
 except ImportError:
   yaml = None
 
+DEFAULT_CLANG_TIDY_IGNORE=".clang-tidy-ignore"
+
+def filter_files(ignore_config, files):
+  """Filter out all files specified via globs in DEFAULT_CLANG_TIDY_IGNORE.
+  """
+  globs = list()
+  with open(ignore_config, 'r') as tidy_ignore:
+    for l in tidy_ignore:
+      line = l.strip()
+      # Tolerate comments and empty lines
+      if not line or line.startswith('#'):
+        continue
+      globs.append(line)
+
+  exclude = set()
+  for g in globs:
+    for entry in files:
+      if fnmatch.fnmatch(entry, g):
+        exclude.add(entry)
+
+  return list(set(files) - exclude), exclude
 
 def strtobool(val):
   """Convert a string representation of truth to a bool following LLVM's CLI argument parsing."""
@@ -276,6 +298,8 @@ def main():
                       action='append', default=[],
                       help='Additional argument to prepend to the compiler '
                       'command line.')
+  parser.add_argument('-ignore', default=DEFAULT_CLANG_TIDY_IGNORE,
+                      help='File path to clang-tidy-ignore')
   parser.add_argument('-quiet', action='store_true',
                       help='Run clang-tidy in quiet mode')
   parser.add_argument('-load', dest='plugins',
@@ -325,6 +349,9 @@ def main():
   database = json.load(open(os.path.join(build_path, db_path)))
   files = set([make_absolute(entry['file'], entry['directory'])
            for entry in database])
+  files, excluded = filter_files(args.ignore, files)
+  if excluded:
+    print("Excluding the following files:\n" + "\n".join(excluded) + "\n")
 
   max_task = args.j
   if max_task == 0:
