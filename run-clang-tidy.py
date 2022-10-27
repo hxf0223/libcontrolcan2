@@ -350,7 +350,7 @@ def main():
   files = set([make_absolute(entry['file'], entry['directory'])
            for entry in database])
   files, excluded = filter_files(args.ignore, files)
-  if excluded and args.quiet:
+  if excluded and not args.quiet:
     print("Excluding the following files:\n" + "\n".join(excluded) + "\n")
 
   max_task = args.j
