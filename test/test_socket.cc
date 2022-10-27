@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <ratio>
@@ -72,7 +73,7 @@ TEST(Socket, perfClient) {
   auto client_proc = [](const std::shared_ptr<CanImpInterface>& canDc) {
     constexpr DWORD kRxBuffSize = 100;
     VCI_CAN_OBJ can_rx_buff[kRxBuffSize];
-    const size_t recv_cnt_max = 10000 * 300;
+    const size_t recv_cnt_max = static_cast<long>(10000 * 300);
     ULONG recv_frame_cnt = 0;
 
     // auto tm0 = std::chrono::high_resolution_clock::now();

@@ -3,6 +3,7 @@
 #include "lib_control_can_exp.h"
 #include "usbcan.h"
 
+// NOLINTBEGIN
 class CanImpInterface {
 public:
   CanImpInterface() = default;
@@ -32,6 +33,7 @@ public:
   virtual vciReturnType VCI_Transmit(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_CAN_OBJ pSend, ULONG Len) = 0;
   virtual ULONG VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_CAN_OBJ pReceive, ULONG Len, INT WaitTime) = 0;
 };
+// NOLINTEND
 
 #ifdef __cplusplus
 extern "C" {

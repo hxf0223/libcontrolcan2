@@ -10,6 +10,8 @@
 #include <utility>
 #include <vector>
 
+// NOLINTBEGIN
+
 namespace can {
 namespace utils {
 
@@ -193,3 +195,5 @@ static inline std::vector<unsigned char> hex_string_to_bin_fastest(const std::st
 
 } // namespace utils
 } // namespace can
+
+// NOLINTEND

@@ -35,7 +35,7 @@ void Server::startAccepting() {
 
   // async_accept is blocking and the app will not progress unless a client
   // attempts to connect
-  acceptor_.async_accept(session_->get_socket(), boost::bind(&Server::handleAccept, this, boost::asio::placeholders::error)); // NOLINT
+  acceptor_.async_accept(session_->getSocket(), boost::bind(&Server::handleAccept, this, boost::asio::placeholders::error)); // NOLINT
 }
 
 // If client attempts to connect, handle acception here

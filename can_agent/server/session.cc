@@ -28,7 +28,7 @@ Session::~Session() {
 void Session::start() {
   ppq_handle_ = eventpp_q_.appendListener(ppq_can_obj_evt_id,
                                           std::bind(&Session::consume_can_obj_handler, shared_from_this(), std::placeholders::_1));
-  boost::system::error_code ec;
+  const boost::system::error_code ec;
   do_can_obj_transpose(ec);
 }
 
@@ -48,14 +48,15 @@ void Session::consume_can_obj_handler(const canobj_queue_node_t& node) {
 void Session::do_can_obj_transpose(const boost::system::error_code& ec) {
   canobj_queue_node_t node;
   for (size_t i = 0; i < 8; i++) {
-    if (!spsc_queue_.pop(node))
+    if (!spsc_queue_.pop(node)) {
       break;
+    }
 
     std::ostream os(&shr_tx_buff_);
     os << node.can_obj_;
   }
   if (shr_tx_buff_.size() > 0) {
-    write_message();
+    writeMessage();
     return;
   }
 
@@ -64,14 +65,14 @@ void Session::do_can_obj_transpose(const boost::system::error_code& ec) {
   deadline_.async_wait(boost::bind(&Session::do_can_obj_transpose, self, boost::asio::placeholders::error));
 }
 
-void Session::write_message() {
+void Session::writeMessage() {
   auto self = shared_from_this();
   boost::asio::async_write(
       socket_, shr_tx_buff_,
-      boost::bind(&Session::handle_write, self, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+      boost::bind(&Session::handleWrite, self, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 
-void Session::handle_write(const boost::system::error_code& ec, std::size_t bytesTransfered) {
+void Session::handleWrite(const boost::system::error_code& ec, std::size_t bytesTransfered) {
   shr_tx_buff_.consume(bytesTransfered);
 
   if (ec) {
@@ -80,11 +81,11 @@ void Session::handle_write(const boost::system::error_code& ec, std::size_t byte
     return;
   }
 
-  boost::system::error_code ec2;
+  const boost::system::error_code ec2;
   do_can_obj_transpose(ec2);
 }
 
-void Session::handle_read(const boost::system::error_code& ec, std::size_t bytesTransfered) {
+void Session::handleRead(const boost::system::error_code& ec, std::size_t /*bytesTransfered*/) {
   if (!ec) {
   }
 }

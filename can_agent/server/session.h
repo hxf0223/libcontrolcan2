@@ -22,7 +22,7 @@ private:
   eventpp_queue_handle_t ppq_handle_;
 
 public:
-  boost::asio::ip::tcp::socket& get_socket() {
+  boost::asio::ip::tcp::socket& getSocket() {
     return socket_;
   }
   Session(boost::asio::io_context& ioContext, eventpp_queue_t& ppq);
@@ -35,7 +35,7 @@ private:
   void consume_can_obj_handler(const canobj_queue_node_t& node);
   void do_can_obj_transpose(const boost::system::error_code& ec);
 
-  void write_message();
-  void handle_write(const boost::system::error_code& ec, std::size_t bytesTransfered);
-  void handle_read(const boost::system::error_code& ec, std::size_t bytesTransfered);
+  void writeMessage();
+  void handleWrite(const boost::system::error_code& ec, std::size_t bytesTransfered);
+  void handleRead(const boost::system::error_code& ec, std::size_t bytesTransfered);
 };

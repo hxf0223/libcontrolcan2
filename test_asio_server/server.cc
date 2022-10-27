@@ -4,13 +4,13 @@
 #include "server/server.h"
 
 namespace {
-constexpr short lisenPort = 9999;
+constexpr short kLisenPort = 9999;
 }
 
-int main(int argc, char** argv) {
+int main(int /*argc*/, char** /*argv*/) {
   try {
     boost::asio::io_context io_context;
-    Server s = Server(io_context, lisenPort);
+    Server s = Server(io_context, kLisenPort);
     s.startAccepting();
     io_context.run();
   } catch (boost::system::system_error& ec) {

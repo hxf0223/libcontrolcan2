@@ -13,7 +13,7 @@
 #  pragma warning(disable : 4101)
 #endif
 
-typedef Ini<> ini_t;
+using ini_t = Ini<>;
 
 CanImpDirectCan::CanImpDirectCan() {
   const auto dir_path = getexepath().parent_path();
@@ -31,16 +31,19 @@ CanImpDirectCan::CanImpDirectCan() {
     auto sec = ini["KERNELDLL"];
     for (const auto& key : sec) {
       uint32_t type;
-      if (!boost::conversion::try_lexical_convert<uint32_t>(key.first, type))
+      if (!boost::conversion::try_lexical_convert<uint32_t>(key.first, type)) {
         continue;
+      }
 
       auto temp_path = sub_path / key.second;
-      if (!boost::filesystem::exists(temp_path))
+      if (!boost::filesystem::exists(temp_path)) {
         continue;
+      }
 
       auto up = load_library_s(temp_path.string());
-      if (!up)
+      if (!up) {
         continue;
+      }
 
       _lib_map.insert(std::pair<uint32_t, std::unique_ptr<dll_load_dll_type>>(type, std::move(up)));
     }
@@ -61,10 +64,10 @@ CanImpDirectCan::~CanImpDirectCan() {
 #endif
 }
 
-vciReturnType CanImpDirectCan::VCI_OpenDevice(DWORD DeviceType, DWORD DeviceInd, DWORD Reserved) {
-  auto const it = _lib_map.find(DeviceType);
+vciReturnType CanImpDirectCan::VCI_OpenDevice(DWORD deviceType, DWORD deviceInd, DWORD reserved) {
+  auto const it = _lib_map.find(deviceType);
   if (it != _lib_map.end()) {
-    auto err = it->second->fOpenDevice(DeviceType, DeviceInd, Reserved);
+    auto err = it->second->fOpenDevice(deviceType, deviceInd, reserved);
 #ifdef ENABLE_DC_DEBUG
     std::cout << "CanImpDirectCan::VCI_OpenDevice(" << DeviceType << ", " << DeviceInd << ", " << Reserved << "): " << err
               << std::endl;
@@ -75,28 +78,28 @@ vciReturnType CanImpDirectCan::VCI_OpenDevice(DWORD DeviceType, DWORD DeviceInd,
   return vciReturnType::STATUS_ERR;
 }
 
-vciReturnType CanImpDirectCan::VCI_CloseDevice(DWORD DeviceType, DWORD DeviceInd) {
-  auto const it = _lib_map.find(DeviceType);
+vciReturnType CanImpDirectCan::VCI_CloseDevice(DWORD deviceType, DWORD deviceInd) {
+  auto const it = _lib_map.find(deviceType);
   if (it != _lib_map.end()) {
-    auto err = it->second->fCloseDevice(DeviceType, DeviceInd);
+    auto err = it->second->fCloseDevice(deviceType, deviceInd);
     return static_cast<vciReturnType>(err);
   }
 
   return vciReturnType::STATUS_ERR;
 }
 
-vciReturnType CanImpDirectCan::VCI_ReadBoardInfo(DWORD DeviceType, DWORD DeviceInd, PVCI_BOARD_INFO pInfo) {
-  auto const it = _lib_map.find(DeviceType);
+vciReturnType CanImpDirectCan::VCI_ReadBoardInfo(DWORD deviceType, DWORD deviceInd, PVCI_BOARD_INFO pInfo) {
+  auto const it = _lib_map.find(deviceType);
   if (it != _lib_map.end()) {
-    auto err = it->second->fReadBoardInfo(DeviceType, DeviceInd, pInfo);
+    auto err = it->second->fReadBoardInfo(deviceType, deviceInd, pInfo);
     return static_cast<vciReturnType>(err);
   }
 
   return vciReturnType::STATUS_ERR;
 }
 
-vciReturnType CanImpDirectCan::VCI_InitCAN(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_INIT_CONFIG pInitConfig) {
-  auto const it = _lib_map.find(DeviceType);
+vciReturnType CanImpDirectCan::VCI_InitCAN(DWORD deviceType, DWORD deviceInd, DWORD canInd, PVCI_INIT_CONFIG pInitConfig) {
+  auto const it = _lib_map.find(deviceType);
   if (it != _lib_map.end()) {
 #ifdef ENABLE_DC_DEBUG
     std::cout << "AccCode: " << std::hex << (DWORD)(pInitConfig->AccCode) << ", ";
@@ -108,77 +111,77 @@ vciReturnType CanImpDirectCan::VCI_InitCAN(DWORD DeviceType, DWORD DeviceInd, DW
     std::cout << "Mode: " << std::hex << (DWORD)(pInitConfig->Mode) << std::endl;
 #endif
 
-    auto err = it->second->fInitCan(DeviceType, DeviceInd, CANInd, pInitConfig);
+    auto err = it->second->fInitCan(deviceType, deviceInd, canInd, pInitConfig);
     return static_cast<vciReturnType>(err);
   }
 
   return vciReturnType::STATUS_ERR;
 }
 
-vciReturnType CanImpDirectCan::VCI_ReadErrInfo(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_ERR_INFO pErrInfo) {
-  auto const it = _lib_map.find(DeviceType);
+vciReturnType CanImpDirectCan::VCI_ReadErrInfo(DWORD deviceType, DWORD deviceInd, DWORD canInd, PVCI_ERR_INFO pErrInfo) {
+  auto const it = _lib_map.find(deviceType);
   if (it != _lib_map.end()) {
-    auto err = it->second->fReadErrInfo(DeviceType, DeviceInd, CANInd, pErrInfo);
+    auto err = it->second->fReadErrInfo(deviceType, deviceInd, canInd, pErrInfo);
     return static_cast<vciReturnType>(err);
   }
 
   return vciReturnType::STATUS_ERR;
 }
 
-vciReturnType CanImpDirectCan::VCI_ReadCANStatus(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_CAN_STATUS pCANStatus) {
-  auto const it = _lib_map.find(DeviceType);
+vciReturnType CanImpDirectCan::VCI_ReadCANStatus(DWORD deviceType, DWORD deviceInd, DWORD canInd, PVCI_CAN_STATUS pCANStatus) {
+  auto const it = _lib_map.find(deviceType);
   if (it != _lib_map.end()) {
-    auto err = it->second->fReadCanStatus(DeviceType, DeviceInd, CANInd, pCANStatus);
+    auto err = it->second->fReadCanStatus(deviceType, deviceInd, canInd, pCANStatus);
     return static_cast<vciReturnType>(err);
   }
 
   return vciReturnType::STATUS_ERR;
 }
 
-vciReturnType CanImpDirectCan::VCI_GetReference(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, DWORD RefType, PVOID pData) {
-  auto const it = _lib_map.find(DeviceType);
+vciReturnType CanImpDirectCan::VCI_GetReference(DWORD deviceType, DWORD deviceInd, DWORD canInd, DWORD refType, PVOID pData) {
+  auto const it = _lib_map.find(deviceType);
   if (it != _lib_map.end()) {
-    auto err = it->second->fGetReference(DeviceType, DeviceInd, CANInd, RefType, pData);
+    auto err = it->second->fGetReference(deviceType, deviceInd, canInd, refType, pData);
     return static_cast<vciReturnType>(err);
   }
 
   return vciReturnType::STATUS_ERR;
 }
 
-vciReturnType CanImpDirectCan::VCI_SetReference(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, DWORD RefType, PVOID pData) {
-  auto const it = _lib_map.find(DeviceType);
+vciReturnType CanImpDirectCan::VCI_SetReference(DWORD deviceType, DWORD deviceInd, DWORD canInd, DWORD refType, PVOID pData) {
+  auto const it = _lib_map.find(deviceType);
   if (it != _lib_map.end()) {
-    auto err = it->second->fSetReference(DeviceType, DeviceInd, CANInd, RefType, pData);
+    auto err = it->second->fSetReference(deviceType, deviceInd, canInd, refType, pData);
     return static_cast<vciReturnType>(err);
   }
 
   return vciReturnType::STATUS_ERR;
 }
 
-DWORD CanImpDirectCan::VCI_GetReceiveNum(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd) {
-  auto const it = _lib_map.find(DeviceType);
+DWORD CanImpDirectCan::VCI_GetReceiveNum(DWORD deviceType, DWORD deviceInd, DWORD canInd) {
+  auto const it = _lib_map.find(deviceType);
   if (it != _lib_map.end()) {
-    auto const err = it->second->fGetReceiveNum(DeviceType, DeviceInd, CANInd);
+    auto const err = it->second->fGetReceiveNum(deviceType, deviceInd, canInd);
     return err;
   }
 
   return 0;
 }
 
-vciReturnType CanImpDirectCan::VCI_ClearBuffer(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd) {
-  auto const it = _lib_map.find(DeviceType);
+vciReturnType CanImpDirectCan::VCI_ClearBuffer(DWORD deviceType, DWORD deviceInd, DWORD canInd) {
+  auto const it = _lib_map.find(deviceType);
   if (it != _lib_map.end()) {
-    auto err = it->second->fClearBuffer(DeviceType, DeviceInd, CANInd);
+    auto err = it->second->fClearBuffer(deviceType, deviceInd, canInd);
     return static_cast<vciReturnType>(err);
   }
 
   return vciReturnType::STATUS_ERR;
 }
 
-vciReturnType CanImpDirectCan::VCI_StartCAN(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd) {
-  auto const it = _lib_map.find(DeviceType);
+vciReturnType CanImpDirectCan::VCI_StartCAN(DWORD deviceType, DWORD deviceInd, DWORD canInd) {
+  auto const it = _lib_map.find(deviceType);
   if (it != _lib_map.end()) {
-    auto err = it->second->fStartCan(DeviceType, DeviceInd, CANInd);
+    auto err = it->second->fStartCan(deviceType, deviceInd, canInd);
 
 #ifdef ENABLE_DC_DEBUG
     std::cout << "CanImpDirectCan::VCI_StartCAN(" << DeviceType << ", " << DeviceInd << ", " << CANInd << "): " << err << std::endl;
@@ -189,18 +192,18 @@ vciReturnType CanImpDirectCan::VCI_StartCAN(DWORD DeviceType, DWORD DeviceInd, D
   return vciReturnType::STATUS_ERR;
 }
 
-vciReturnType CanImpDirectCan::VCI_ResetCAN(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd) {
-  auto it = _lib_map.find(DeviceType);
+vciReturnType CanImpDirectCan::VCI_ResetCAN(DWORD deviceType, DWORD deviceInd, DWORD canInd) {
+  auto it = _lib_map.find(deviceType);
   if (it != _lib_map.end()) {
-    auto err = it->second->fResetCan(DeviceType, DeviceInd, CANInd);
+    auto err = it->second->fResetCan(deviceType, deviceInd, canInd);
     return static_cast<vciReturnType>(err);
   }
 
   return vciReturnType::STATUS_ERR;
 }
 
-vciReturnType CanImpDirectCan::VCI_Transmit(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_CAN_OBJ pSend, ULONG Len) {
-  auto it = _lib_map.find(DeviceType);
+vciReturnType CanImpDirectCan::VCI_Transmit(DWORD deviceType, DWORD deviceInd, DWORD canInd, PVCI_CAN_OBJ pSend, ULONG len) {
+  auto it = _lib_map.find(deviceType);
   if (it != _lib_map.end()) {
     // debug output
     /*std::cout << "CanImpDirectCan::VCI_Transmit, devType: " << DeviceType <<
@@ -217,17 +220,17 @@ vciReturnType CanImpDirectCan::VCI_Transmit(DWORD DeviceType, DWORD DeviceInd, D
       std::cout << ", Data: " << can::utils::bin2hex_fast(pSend[i].Data, 8) <<
     std::endl;
     }*/
-    auto err = it->second->fTransmit(DeviceType, DeviceInd, CANInd, pSend, Len);
+    auto err = it->second->fTransmit(deviceType, deviceInd, canInd, pSend, len);
     return static_cast<vciReturnType>(err);
   }
 
   return vciReturnType::STATUS_ERR;
 }
 
-ULONG CanImpDirectCan::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_CAN_OBJ pReceive, ULONG Len, INT WaitTime) {
-  const auto it = _lib_map.find(DeviceType);
+ULONG CanImpDirectCan::VCI_Receive(DWORD deviceType, DWORD deviceInd, DWORD canInd, PVCI_CAN_OBJ pReceive, ULONG len, INT waitTime) {
+  const auto it = _lib_map.find(deviceType);
   if (it != _lib_map.end()) {
-    auto const err = it->second->fReceive(DeviceType, DeviceInd, CANInd, pReceive, Len, WaitTime);
+    auto const err = it->second->fReceive(deviceType, deviceInd, canInd, pReceive, len, waitTime);
 #ifdef ENABLE_DC_DEBUG
     std::cout << "CanImpDirectCan::VCI_Receive(" << DeviceType << ", " << DeviceInd << ", " << CANInd << ", ..., " << Len << ", "
               << WaitTime << "): " << err << std::endl;

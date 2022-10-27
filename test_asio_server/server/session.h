@@ -16,15 +16,15 @@ private:
   std::vector<char> tx_buffer_;
 
 public:
-  boost::asio::ip::tcp::socket& get_socket() {
+  boost::asio::ip::tcp::socket& getSocket() {
     return socket_;
   }
   Session(boost::asio::io_context& ioContext);
   ~Session();
 
   void start();
-  void write_message();
+  void writeMessage();
 
-  void handle_write(const boost::system::error_code& ec, std::size_t bytesTransfered);
-  void handle_read(const boost::system::error_code& ec, std::size_t bytesTransfered);
+  void handleWrite(const boost::system::error_code& ec, std::size_t bytesTransfered);
+  void handleRead(const boost::system::error_code& ec, std::size_t bytesTransfered);
 };

@@ -86,6 +86,11 @@ find . -regex '.*\.\(cc\|cpp\|hpp\|cu\|c\|h\)' -exec clang-format -style=file -i
 ```
 代码检查：[Extra Clang Tools 16.0.0git documentation](https://clang.llvm.org/extra/clang-tidy/checks/readability/identifier-naming.html)
 
+## 代码静态检查
+```bash
+python run-clang-tidy.py -p ./build -config-file .clang-tidy -quiet
+```
+
 ## 参考
 
 - [CMake设置MSVC工程MT/MTd/MD/MDd](https://blog.csdn.net/Copperxcx/article/details/123084367)

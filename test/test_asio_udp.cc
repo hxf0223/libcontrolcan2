@@ -8,8 +8,6 @@
 #include "glog/logging.h"
 #include "gtest/gtest.h"
 
-using boost::bind;
-
 namespace {
 constexpr short kUdpPort = 9999;
 }
@@ -33,12 +31,12 @@ public:
                                       boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
   }
 
-  void handleReceive(const boost::system::error_code& /*error*/, std::size_t bytes_transferred) {
-    std::cout << "Received Data" << bytes_transferred << std::endl;
+  void handleReceive(const boost::system::error_code& /*error*/, std::size_t bytesTransferred) {
+    std::cout << "Received Data" << bytesTransferred << std::endl;
   }
 
-  void handleSend(const boost::system::error_code& /*error*/, std::size_t bytes_transferred) {
-    std::cout << "Sent byte num: " << bytes_transferred << std::endl;
+  void handleSend(const boost::system::error_code& /*error*/, std::size_t bytesTransferred) {
+    std::cout << "Sent byte num: " << bytesTransferred << std::endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
     asyncSendData();
   }
@@ -98,9 +96,9 @@ private:
     deadline_.async_wait(boost::bind(&UdpClient::checkDeadline, this)); // NOLINT
   }
 
-  static void handleReceive(const ec_t& ec, std::size_t length, ec_t* out_ec, std::size_t* out_length) {
-    *out_ec = ec;
-    *out_length = length;
+  static void handleReceive(const ec_t& ec, std::size_t length, ec_t* outEc, std::size_t* outLength) {
+    *outEc = ec;
+    *outLength = length;
   }
 
 private:
