@@ -17,7 +17,7 @@ using ini_t = Ini<>;
 
 CanImpDirectCan::CanImpDirectCan() {
   const auto dir_path = getexepath().parent_path();
-  boost::filesystem::path ini_path(dir_path / "kerneldlls" / "kerneldll.ini");
+  const boost::filesystem::path ini_path(dir_path / "kerneldlls" / "kerneldll.ini");
 
 #ifdef ENABLE_DC_DEBUG
   std::cout << "ctor CanImpDirectCan: " << ini_path.string() << std::endl;
@@ -242,7 +242,7 @@ ULONG CanImpDirectCan::VCI_Receive(DWORD deviceType, DWORD deviceInd, DWORD canI
 }
 
 dll_load_dll_type* CanImpDirectCan::load_library(const std::string& path) {
-  auto dll = new dll_load_dll_type(path);
+  auto* dll = new dll_load_dll_type(path);
   return dll;
 }
 

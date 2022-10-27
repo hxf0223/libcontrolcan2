@@ -45,7 +45,7 @@ void Session::consume_can_obj_handler(const canobj_queue_node_t& node) {
   }
 }
 
-void Session::do_can_obj_transpose(const boost::system::error_code& ec) {
+void Session::do_can_obj_transpose(const boost::system::error_code& /*ec*/) {
   canobj_queue_node_t node;
   for (size_t i = 0; i < 8; i++) {
     if (!spsc_queue_.pop(node)) {

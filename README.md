@@ -91,6 +91,15 @@ find . -regex '.*\.\(cc\|cpp\|hpp\|cu\|c\|h\)' -exec clang-format -style=file -i
 python run-clang-tidy.py -p ./build -config-file .clang-tidy -quiet
 ```
 
+在代码中，使用NOLINT等（以及带参数的版本）标注禁用静态检查。
+```C++
+// NOLINT
+// NOLINTNEXTLINE
+
+// NOLINTBEGIN
+// NOLINTEND
+```
+
 ## 参考
 
 - [CMake设置MSVC工程MT/MTd/MD/MDd](https://blog.csdn.net/Copperxcx/article/details/123084367)

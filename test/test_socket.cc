@@ -130,7 +130,6 @@ TEST(Socket, perfServer2) {
     std::string input_buffer;
 
     while (!ec) {
-      // VCI_CAN_OBJ can_obj;
       auto read_num = boost::asio::read_until(server_socket, boost::asio::dynamic_buffer(input_buffer), "\n", ec);
       if (ec) {
         continue;
@@ -141,7 +140,7 @@ TEST(Socket, perfServer2) {
         continue;
       }
 
-      std::string const data(input_buffer.begin(), input_buffer.begin() + pos);
+      std::string const data(input_buffer.begin(), input_buffer.begin() + pos); // NOLINT
       input_buffer.erase(0, pos + 1);
 
       LOG(INFO) << "len: " << data.length() << ": " << data;

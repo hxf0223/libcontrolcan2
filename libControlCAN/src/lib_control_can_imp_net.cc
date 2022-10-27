@@ -41,6 +41,7 @@
 #  pragma comment(lib, "AdvApi32.lib")
 #endif
 
+// NOLINTBEGIN(misc-no-recursion)
 // #define TCP_WRITE_TIMEOUT 200
 using ini_t = Ini<>;
 using std::chrono::microseconds;
@@ -62,7 +63,7 @@ std::regex CanImpCanNet::_hex_str_pattern2("^(?:[0-9a-fA-F][0-9a-fA-F])+$");
 CanImpCanNet::CanImpCanNet()
     : _connected(false) {
   const auto dir_path = getexepath().parent_path();
-  boost::filesystem::path ini_path(dir_path / "control_can.ini");
+  const boost::filesystem::path ini_path(dir_path / "control_can.ini");
   rx_buff_.prepare(static_cast<std::size_t>(1024 * 8));
 
   if (boost::filesystem::exists(ini_path)) {
@@ -325,7 +326,7 @@ int CanImpCanNet::line_process(const std::string_view& str, PVCI_CAN_OBJ dst) {
 }
 
 void CanImpCanNet::async_read(std::atomic<asyncReadParam>& param, error_code_t& ec) {
-  asyncReadParam temp_param = param.load(std::memory_order_acquire);
+  const auto temp_param = param.load(std::memory_order_acquire);
   if (temp_param.read_cnt_ >= temp_param.len_) {
     timer_.cancel();
     return;
@@ -342,7 +343,7 @@ void CanImpCanNet::async_read(std::atomic<asyncReadParam>& param, error_code_t& 
 
     if (!resultError && pos != (begin + avail_num)) {
       auto my_param = param.load(std::memory_order_acquire);
-      std::string_view line(begin, pos - begin); // remove \n
+      const std::string_view line(begin, pos - begin); // remove \n
       if (0 != line_process(line, my_param.can_objs_)) {
         SPDLOG_WARN("line post process error."); // NOLINT
       }
@@ -355,7 +356,7 @@ void CanImpCanNet::async_read(std::atomic<asyncReadParam>& param, error_code_t& 
         timer_.cancel();
       }
     } else if (!resultError) {
-      std::string temp_str = makeString(rx_buff_);
+      const std::string temp_str = makeString(rx_buff_);
       SPDLOG_WARN("rx buffer error: {}", temp_str); // NOLINT
     } else {
       // SPDLOG_WARN(result_error.message());
@@ -402,7 +403,7 @@ ULONG CanImpCanNet::VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd,
       break;
     }
 
-    std::string_view line(begin, pos - begin); // remove \n
+    const std::string_view line(begin, pos - begin); // remove \n
     line_process(line, pReceive + read_num);
     rx_buff_.consume(pos - begin + 1);
     read_num++;
@@ -482,6 +483,8 @@ int CanImpCanNet::write_line(const char* p, size_t len, error_code_t& ec) {
 
   return 0;
 }
+
+// NOLINTEND(misc-no-recursion)
 
 // export function
 #include "lib_control_can_imp.h"

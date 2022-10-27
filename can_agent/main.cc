@@ -6,7 +6,6 @@
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <signal.h>
 #include <string>
 #include <string_view>
 #include <thread>
@@ -49,6 +48,7 @@ static void canRxFunc(std::atomic_bool* runFlag, eventpp_queue_t& ppq) {
   // uint64_t now = duration_cast<microseconds>(dur).count();
 
   auto e = VCI_OpenDevice(kDevtype, 0, 0);
+  CHECK(e != 0) << "VCI_OpenDevice fail: " << e;
   auto cfg = createVciInitCfg(0x00, 0x1C, 0xffffffff);
   e = VCI_InitCAN(kDevtype, kDevid, kChannel, &cfg);
   CHECK(e != 0) << "VCI_InitCAN fail: " << e;
@@ -121,6 +121,7 @@ static void pubSimuFunc(std::atomic_bool* runFlag, eventpp_queue_t& ppq) {
     }
 
     auto err = ppq.process();
+    CHECK(err != false) << "eventpp_queue_t::process fail.";
     std::this_thread::sleep_for(milliseconds(10));
   }
 

@@ -20,8 +20,8 @@ Server::Server(boost::asio::io_context& ioContext, short port)
 void Server::startAccepting() {
   session_ = std::make_shared<Session>(io_context_);
 
-  for (int i = 0; i < session_pool_->getSize(); ++i) {
-    std::shared_ptr<Session> selected_session = session_pool_->getSession(i);
+  for (int i = 0; i < session_pool_->getSize(); i++) {
+    const std::shared_ptr<Session> selected_session = session_pool_->getSession(i);
   }
 
   // async_accept is blocking and the app will not progress unless a client

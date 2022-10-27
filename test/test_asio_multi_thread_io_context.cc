@@ -7,11 +7,13 @@ namespace io = boost::asio;
 using tcp = io::ip::tcp;
 using error_code = boost::system::error_code;
 
+// NOLINTBEGIN
+
 class Session {
-  Session(io::io_context& io_context)
-      : socket_(io_context)
-      , read_(io_context)
-      , write_(io_context) {}
+  Session(io::io_context& ioContext)
+      : socket_(ioContext)
+      , read_(ioContext)
+      , write_(ioContext) {}
 
   void asyncRead() {
     io::async_read(socket_, read_buffer_, io::bind_executor(read_, [&](error_code error, std::size_t /*bytes_transferred*/) {
@@ -58,3 +60,5 @@ int main2(int /*argc*/, char* /*argv*/[]) {
 
   return 0;
 }
+
+// NOLINTEND

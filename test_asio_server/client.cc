@@ -23,20 +23,16 @@ void sendMsg(const string& msg, boost::asio::ip::tcp::socket& socket) {
 }
 
 void receiveMsg(boost::asio::ip::tcp::socket& socket) {
-  boost::system::error_code error;
   streambuf receive_buffer;
-  // read(socket, receive_buffer, transfer_all(), error);
-  boost::asio::read_until(socket, receive_buffer, "\n");
-  if (error && error != error::eof) {
-    cout << "receive failed: " << error.message() << endl;
-  } else {
+  auto num = boost::asio::read_until(socket, receive_buffer, "\n");
+  if (num > 0) {
     const char* data = buffer_cast<const char*>(receive_buffer.data());
     cout << "receive len " << strlen(data) << ": " << data;
   }
 }
 
 int main(int /*argc*/, char* /*argv*/[]) {
-  string host_ip_addr = "127.0.0.1";
+  const string host_ip_addr = "127.0.0.1";
   constexpr int kHostPort = 9999;
 
   boost::asio::io_service io_service;

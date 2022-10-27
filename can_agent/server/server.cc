@@ -30,11 +30,10 @@ void Server::startAccepting() {
   session_ = std::make_shared<Session>(io_context_, std::ref(eventpp_queue_));
 
   for (size_t i = 0; i < session_pool_->getSize(); i++) {
-    std::shared_ptr<Session> selected_session = session_pool_->getSession(i);
+    const std::shared_ptr<Session> selected_session = session_pool_->getSession(i);
   }
 
-  // async_accept is blocking and the app will not progress unless a client
-  // attempts to connect
+  // async_accept is blocking and the app will not progress unless a client attempts to connect
   acceptor_.async_accept(session_->getSocket(), boost::bind(&Server::handleAccept, this, boost::asio::placeholders::error)); // NOLINT
 }
 
