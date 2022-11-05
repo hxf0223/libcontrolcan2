@@ -33,12 +33,12 @@ public:
                                       boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
   }
 
-  void handleReceive(const boost::system::error_code& /*error*/, std::size_t bytes_transferred) {
-    std::cout << "Received Data" << bytes_transferred << std::endl;
+  void handleReceive(const boost::system::error_code& /*error*/, std::size_t bytesTransferred) {
+    std::cout << "Received Data" << bytesTransferred << std::endl;
   }
 
-  void handleSend(const boost::system::error_code& /*error*/, std::size_t bytes_transferred) {
-    std::cout << "Sent byte num: " << bytes_transferred << std::endl;
+  void handleSend(const boost::system::error_code& /*error*/, std::size_t bytesTransferred) {
+    std::cout << "Sent byte num: " << bytesTransferred << std::endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
     asyncSendData();
   }

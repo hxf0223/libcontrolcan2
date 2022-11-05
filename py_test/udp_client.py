@@ -1,9 +1,9 @@
 # UDP广播案例-发送端
 from socket import *
 import time
- 
+
 # 设定目标地址
-dest = ('192.168.33.255', 9999)  # 192.168.31是我的网段,255代表任意IP
+dest = ('192.168.8.255', 9987)  # 192.168.31是我的网段,255代表任意IP
 s = socket(AF_INET, SOCK_DGRAM)
 s.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
 data = '我是客户端小白,我的时间是{}'.format(time.time())
