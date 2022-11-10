@@ -21,10 +21,14 @@ private:
   eventpp_queue_t& eventpp_queue_;
 
 public:
+  Server(const Server&) = delete;
+  Server(Server&&) = delete;
+  Server& operator=(const Server&) = delete;
+  Server& operator=(Server&&) = delete;
   Server(short port, boost::asio::io_context& ioContext, eventpp_queue_t& ppq);
   ~Server();
-  void startAccepting();
 
+  void startAccepting();
   void handleAccept(const boost::system::error_code& ec);
   void handleShutdown();
 };

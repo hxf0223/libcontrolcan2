@@ -41,8 +41,8 @@ public:
     // rather than a lambda.
     boost::system::error_code error;
     boost::asio::async_connect(socket_, endpoints,
-                               [&](const boost::system::error_code& result_error, const tcp::endpoint& /*result_endpoint*/) {
-                                 error = result_error;
+                               [&](const boost::system::error_code& resultError, const tcp::endpoint& /*result_endpoint*/) {
+                                 error = resultError;
                                });
 
     // Run the operation until it completes, or until the timeout.
@@ -62,9 +62,9 @@ public:
     boost::system::error_code error;
     std::size_t n = 0;
     boost::asio::async_read_until(socket_, boost::asio::dynamic_buffer(input_buffer_), '\n',
-                                  [&](const boost::system::error_code& result_error, std::size_t result_n) {
-                                    error = result_error;
-                                    n = result_n;
+                                  [&](const boost::system::error_code& resultError, std::size_t resultN) {
+                                    error = resultError;
+                                    n = resultN;
                                   });
 
     // Run the operation until it completes, or until the timeout.
@@ -89,8 +89,8 @@ public:
     // rather than a lambda.
     boost::system::error_code error;
     boost::asio::async_write(socket_, boost::asio::buffer(data),
-                             [&](const boost::system::error_code& result_error, std::size_t /*result_n*/) {
-                               error = result_error;
+                             [&](const boost::system::error_code& resultError, std::size_t /*result_n*/) {
+                               error = resultError;
                              });
 
     // Run the operation until it completes, or until the timeout.
@@ -217,9 +217,9 @@ auto asyncReadWithTimeout(Stream& stream, ConstBufferSequence&& sequence, std::s
   psm->start(millis);
 }
 
-std::size_t readData(boost::asio::ip::tcp::socket& socket, std::vector<unsigned char>& buffer, unsigned int size_to_read,
+std::size_t readData(boost::asio::ip::tcp::socket& socket, std::vector<unsigned char>& buffer, unsigned int sizeToRead,
                      boost::system::error_code& ec) {
-  buffer.resize(size_to_read);
+  buffer.resize(sizeToRead);
 
   ec.clear();
   std::size_t bytes_read = 0;

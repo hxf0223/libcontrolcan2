@@ -7,18 +7,20 @@
 
 #include <stdbool.h>
 
+// NOLINTBEGIN
+
 #ifdef __cplusplus
-#define GIT_VERSION_TRACKING_EXTERN_C_BEGIN extern "C" {
-#define GIT_VERSION_TRACKING_EXTERN_C_END }
+#  define GIT_VERSION_TRACKING_EXTERN_C_BEGIN extern "C" {
+#  define GIT_VERSION_TRACKING_EXTERN_C_END }
 #else
-#define GIT_VERSION_TRACKING_EXTERN_C_BEGIN
-#define GIT_VERSION_TRACKING_EXTERN_C_END
+#  define GIT_VERSION_TRACKING_EXTERN_C_BEGIN
+#  define GIT_VERSION_TRACKING_EXTERN_C_END
 #endif
 
 // Don't mangle the C function names if included in a CXX file.
 GIT_VERSION_TRACKING_EXTERN_C_BEGIN
 
-/// Is the metadata populated? 
+/// Is the metadata populated?
 //
 /// We may not have metadata if there wasn't a .git directory
 /// (e.g. downloaded source code without revision history).
@@ -65,51 +67,49 @@ GIT_VERSION_TRACKING_EXTERN_C_END
 /// This is header-only in an effort to keep the
 /// underlying static library C99 compliant.
 
-
 // We really want to use std::string_view if it appears
 // that the compiler will support it. If that fails,
 // revert back to std::string.
-#define GIT_VERSION_TRACKING_CPP_17_STANDARD 201703L
-#if __cplusplus >= GIT_VERSION_TRACKING_CPP_17_STANDARD
-#define GIT_VERSION_USE_STRING_VIEW 1
-#else
-#define GIT_VERSION_USE_STRING_VIEW 0
-#endif
+#  define GIT_VERSION_TRACKING_CPP_17_STANDARD 201703L
+#  if __cplusplus >= GIT_VERSION_TRACKING_CPP_17_STANDARD
+#    define GIT_VERSION_USE_STRING_VIEW 1
+#  else
+#    define GIT_VERSION_USE_STRING_VIEW 0
+#  endif
 
-
-#if GIT_VERSION_USE_STRING_VIEW
-#include <cstring>
-#include <string_view>
-#else
-#include <string>
-#endif
+#  if GIT_VERSION_USE_STRING_VIEW
+#    include <cstring>
+#    include <string_view>
+#  else
+#    include <string>
+#  endif
 
 namespace git {
 
-#if GIT_VERSION_USE_STRING_VIEW
+#  if GIT_VERSION_USE_STRING_VIEW
 using StringOrView = std::string_view;
-#else
+#  else
 typedef std::string StringOrView;
-#endif
+#  endif
 
 namespace internal {
 
 /// Short-hand method for initializing a std::string or std::string_view given a C-style const char*.
 const StringOrView InitString(const char* from_c_interface) {
-  #if GIT_VERSION_USE_STRING_VIEW
-    return StringOrView { from_c_interface, std::strlen(from_c_interface) };
-  #else
-    return std::string(from_c_interface);
-  #endif
+#  if GIT_VERSION_USE_STRING_VIEW
+  return StringOrView{from_c_interface, std::strlen(from_c_interface)};
+#  else
+  return std::string(from_c_interface);
+#  endif
 }
 
-}  // namespace internal
+} // namespace internal
 
 inline bool IsPopulated() {
   return git_IsPopulated();
 }
 inline bool AnyUncommittedChanges() {
-  return  git_AnyUncommittedChanges();
+  return git_AnyUncommittedChanges();
 }
 inline const StringOrView& AuthorName() {
   static const StringOrView kValue = internal::InitString(git_AuthorName());
@@ -144,11 +144,12 @@ inline const StringOrView Branch() {
   return kValue;
 }
 
-}  // namespace git
-
+} // namespace git
 
 // Cleanup our defines to avoid polluting.
-#undef GIT_VERSION_USE_STRING_VIEW
-#undef GIT_VERSION_TRACKING_CPP_17_STANDARD
+#  undef GIT_VERSION_USE_STRING_VIEW
+#  undef GIT_VERSION_TRACKING_CPP_17_STANDARD
 
-#endif  // __cplusplus
+#endif // __cplusplus
+
+// NOLINTEND

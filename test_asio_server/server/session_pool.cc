@@ -1,17 +1,19 @@
 #include "session_pool.h"
 
-SessionPool::SessionPool() {}
+using std::weak_ptr;
 
-void SessionPool::add_to_pool(std::shared_ptr<Session> session) {
-  std::weak_ptr<Session> wk_session = session;
+SessionPool::SessionPool() = default;
+
+void SessionPool::addToPool(const std::shared_ptr<Session> session) { // NOLINT
+  const std::weak_ptr<Session> wk_session = session;
   pool_.push_back(session);
 }
 
-std::shared_ptr<Session> SessionPool::get_session(int session) {
-  std::weak_ptr<Session> wk_session = pool_[session];
+std::shared_ptr<Session> SessionPool::getSession(int session) {
+  const weak_ptr<Session> wk_session = pool_[session];
   return wk_session.lock();
 }
 
-int SessionPool::get_size() {
-  return pool_.size();
+int SessionPool::getSize() {
+  return (int)(pool_.size());
 }

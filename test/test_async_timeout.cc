@@ -28,9 +28,8 @@ class BlockingReader {
   bool read_error_{};
 
   // Called when an async read completes or has been cancelled
-  void readComplete(const boost::system::error_code& error, size_t bytes_transferred) {
-
-    read_error_ = (error || bytes_transferred == 0);
+  void readComplete(const boost::system::error_code& error, size_t bytesTransferred) {
+    read_error_ = (error || bytesTransferred == 0);
 
     // Read has finished, so cancel the
     // timer.
@@ -39,10 +38,8 @@ class BlockingReader {
 
   // Called when the timer's deadline expires.
   void timeOut(const boost::system::error_code& error) {
-
     // Was the timeout was cancelled?
     if (error) {
-      // yes
       return;
     }
 

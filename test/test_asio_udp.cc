@@ -8,8 +8,6 @@
 #include "glog/logging.h"
 #include "gtest/gtest.h"
 
-using boost::bind;
-
 namespace {
 constexpr short kUdpPort = 9999;
 }
@@ -98,9 +96,9 @@ private:
     deadline_.async_wait(boost::bind(&UdpClient::checkDeadline, this)); // NOLINT
   }
 
-  static void handleReceive(const ec_t& ec, std::size_t length, ec_t* out_ec, std::size_t* out_length) {
-    *out_ec = ec;
-    *out_length = length;
+  static void handleReceive(const ec_t& ec, std::size_t length, ec_t* outEc, std::size_t* outLength) {
+    *outEc = ec;
+    *outLength = length;
   }
 
 private:

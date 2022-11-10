@@ -30,7 +30,9 @@ TEST(CAN, F001_P0) {
 
   auto cfg = test::helper::createVciInitCfg(0x00, 0x1C, 0xffffffff);
   result = VCI_InitCAN(kDevtype, kDevid, kChannel, &cfg);
+  CHECK(result != 0) << "VCI_InitCAN fail: " << result;
   result = VCI_StartCAN(kDevtype, kDevid, kChannel);
+  CHECK(result != 0) << "VCI_StartCAN fail: " << result;
 
   VCI_CAN_OBJ can_obj;
   uint8_t send_data[] = {0x03, 0x22, 0x28, 0x00, 0xAA, 0xAA, 0xAA, 0xAA};
@@ -49,6 +51,7 @@ TEST(CAN, F001_P0) {
 
   for (int i = 0; i < 4000; i++, can_obj.Data[2]++) {
     result = VCI_Transmit(kDevtype, kDevid, kChannel, &can_obj, 1);
+    CHECK(result != 0) << "VCI_Transmit fail: " << result;
     auto len = VCI_Receive(kDevtype, kDevid, kChannel, can_recv_buff, 1, 100);
     if (len > 0) {
       std::string const str = can::utils::bin2hex_dump(can_recv_buff[0].Data, 8);
@@ -68,9 +71,11 @@ TEST(CAN, F002_P0) {
 
   auto cfg = test::helper::createVciInitCfg(0x00, 0x1C, 0xffffffff);
   result = VCI_InitCAN(kDevtype, kDevid, kChannel, &cfg);
+  CHECK(result != 0) << "VCI_InitCAN fail: " << result;
 
   VCI_CAN_OBJ can_recv_buff[100];
   result = VCI_StartCAN(kDevtype, kDevid, kChannel);
+  CHECK(result != 0) << "VCI_StartCAN fail: " << result;
 
   LOG(INFO) << std::setfill('0') << std::setw(8);
   for (int i = 0; i < 4000; i++) {

@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <ratio>
@@ -72,7 +73,7 @@ TEST(Socket, perfClient) {
   auto client_proc = [](const std::shared_ptr<CanImpInterface>& canDc) {
     constexpr DWORD kRxBuffSize = 100;
     VCI_CAN_OBJ can_rx_buff[kRxBuffSize];
-    const size_t recv_cnt_max = 10000 * 300;
+    const size_t recv_cnt_max = static_cast<long>(10000 * 300);
     ULONG recv_frame_cnt = 0;
 
     // auto tm0 = std::chrono::high_resolution_clock::now();
@@ -129,7 +130,6 @@ TEST(Socket, perfServer2) {
     std::string input_buffer;
 
     while (!ec) {
-      // VCI_CAN_OBJ can_obj;
       auto read_num = boost::asio::read_until(server_socket, boost::asio::dynamic_buffer(input_buffer), "\n", ec);
       if (ec) {
         continue;
@@ -140,7 +140,7 @@ TEST(Socket, perfServer2) {
         continue;
       }
 
-      std::string const data(input_buffer.begin(), input_buffer.begin() + pos);
+      std::string const data(input_buffer.begin(), input_buffer.begin() + pos); // NOLINT
       input_buffer.erase(0, pos + 1);
 
       LOG(INFO) << "len: " << data.length() << ": " << data;

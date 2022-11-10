@@ -34,7 +34,7 @@ TEST(evnetQueue, Function) {
     }
   };
 
-  Functor1 ft1;
+  const Functor1 ft1;
   using queue_t = eventpp::EventQueue<int, void(const std::string&)>;
   using queue_handle_t = queue_t::Handle;
   queue_t q;
@@ -53,8 +53,8 @@ TEST(evnetQueue, Function) {
 
   Class1 c1;
   LOG(INFO) << "!!! append more after queue and process";
-  q.appendListener(1, [object_ptr = &c1](auto&& PH1) {
-    object_ptr->printStr(std::forward<decltype(PH1)>(PH1));
+  q.appendListener(1, [object_ptr = &c1](auto&& pH1) {
+    object_ptr->printStr(std::forward<decltype(pH1)>(pH1));
   });
   q.appendListener(1, f3);
   q.enqueue(1, "test string 3");

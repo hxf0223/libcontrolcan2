@@ -38,7 +38,7 @@ public:
   ULONG VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CANInd, PVCI_CAN_OBJ pReceive, ULONG Len, INT WaitTime) override;
 
 private:
-  static dll_load_dll_type* load_library(std::string path);
+  static dll_load_dll_type* load_library(const std::string& path);
   static std::unique_ptr<dll_load_dll_type> load_library_s(std::string path);
 
 private:

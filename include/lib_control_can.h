@@ -7,6 +7,7 @@
 #include "lib_control_can_exp.h"
 #include "usbcan.h"
 
+// NOLINTBEGIN
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -31,3 +32,4 @@ ULONG LIBCC_EXPORT_CALL VCI_Receive(DWORD DeviceType, DWORD DeviceInd, DWORD CAN
 #ifdef __cplusplus
 }
 #endif
+// NOLINTEND
