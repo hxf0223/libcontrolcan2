@@ -14,5 +14,10 @@ if (CMAKE_HOST_WIN32)
 		MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 endif()
 
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test_zmq)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test_eventpp)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test_git_ver)
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/udp_server) # boost.asio upd server demo
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test_asio_server_client) # test for asio server/client comm.
+
