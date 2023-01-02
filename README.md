@@ -26,6 +26,8 @@ Socket客户端依赖 libControlCan.so/libControlCan.dll 实现通讯，且可�
 |-- asio_example : Boost.Asio 学习测试代码
 ```
 
+使用 eventpp(MCMP)实现数据分发，性能测试结果pdf：[can_agent performance](./doc/can_agent_performance.pdf)
+
 ## 1. 开发环境
 
 - VS2022扩展（Windows）：Clang Power Tools ；
