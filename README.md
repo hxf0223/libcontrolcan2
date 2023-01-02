@@ -1,5 +1,31 @@
 # README
 
+多路 CAN <--> TCP/IP 转发器：can_agent + libControlCan.so/libControlCan.dll。使用 Boost.Asio 实现跨平台支持：
+
+- Windows 10/7
+- Linux/Ubuntu
+- Arm Linux
+
+CAN 设备接收数据可通过 Socket 转发给多个客户端（主要实现Receive）；同时 Socket 客户端可以通过 Transmit 发送消息到 CAN 设备。
+
+Socket客户端依赖 libControlCan.so/libControlCan.dll 实现通讯，且可以使用 libControlCan.dll 替换周立功 can_test 中的同名dll，使得周立功 can_test 转为通过 can_agent 访问 USBCAN设备。
+
+底层支持的CAN设备：
+
+- 周立功 USB CAN II 设备；
+- 其他兼容周立功 USB CAN II 的设备，及升级型号；
+
+代码结构：
+
+```bash
+|
+|-- include : libControlCAN API头文件，高性能bytes/text转换
+|-- libControlCAN : CAN <--> Socket 透传实现lib
+|-- can_agent : Socket agent 服务
+|-- test : Boost.Asio TCP/UDP, eventpp, zmq, CAN收发, CAN/Socket透传测试及demo
+|-- asio_example : Boost.Asio 学习测试代码
+```
+
 ## 1. 开发环境
 
 - VS2022扩展（Windows）：Clang Power Tools ；

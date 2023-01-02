@@ -41,7 +41,7 @@ endif()
 
 include_directories("${PROJECT_SOURCE_DIR}/3rd/include")
 
-include_directories("${PROJECT_SOURCE_DIR}/libzmq/include")
+include_directories("${PROJECT_SOURCE_DIR}/3rd/libzmq/include")
 include_directories("${PROJECT_SOURCE_DIR}/3rd/include/cppzmq")
 include_directories("${PROJECT_SOURCE_DIR}/3rd/googletest/include")
 include_directories("${PROJECT_SOURCE_DIR}/include")
@@ -51,12 +51,9 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/3rd/glog-0.6.0")
 add_subdirectory("${PROJECT_SOURCE_DIR}/3rd/googletest")
 include_directories(${GLOG_INC_DIR})
 
-add_subdirectory("libzmq")
+add_subdirectory("3rd/libzmq")
 add_subdirectory("libControlCAN")
 
 add_subdirectory("can_agent")
 add_subdirectory ("test")
-add_subdirectory ("test_zmq")
-add_subdirectory("test_asio_server")
 add_subdirectory("asio_example")
-add_subdirectory("udp_server")
