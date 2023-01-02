@@ -5,16 +5,14 @@ endif (POLICY CMP0091)
 
 project ("ControlCAN" VERSION 0.0.2)
 
-# cmake_policy(SET policy NEW)
-
 # cmake set info
 #set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set (CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 17)
 
-set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin )
-set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin ) # set static lib's output dir
-set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin ) # set DSO output dir
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin) # set static lib's output dir
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin) # set DSO output dir
 add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS) # dismiss compile message about boost placeholders
 
 if (CMAKE_HOST_WIN32)
@@ -25,9 +23,21 @@ endif()
 include(cmake/build_type.cmake)
 include(cmake/build_options.cmake)
 
-# for windows compile or cross-platform compile
-include_directories("$ENV{BOOST_ROOT}/include")
-link_directories("$ENV{BOOST_ROOT}/lib")
+
+# find needed boost from system config
+#set(Boost_USE_STATIC_LIBS ON)
+set(BOOST_COMPONENTS date_time chrono filesystem iostreams program_options regex system thread)
+find_package(Boost REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+if(Boost_FOUND)
+	message(STATUS "Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
+	message(STATUS "Boost_LIB_VERSION: ${Boost_LIB_VERSION}")
+
+	include_directories(${Boost_INCLUDE_DIRS})
+	link_directories(${BOOST_LIBRARYDIR})
+else()
+	message(FATAL_ERROR "Boost not found.")
+endif()
+
 
 include_directories("${PROJECT_SOURCE_DIR}/3rd/include")
 

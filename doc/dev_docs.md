@@ -3,6 +3,7 @@
 ## _WIN32_WINNT 版本定义
 
 libControlCAN用到的BOOST::ASIO需要定义WINNT版本：-D_WIN32_WINNT。
+
 ```bash
 // https://docs.microsoft.com/zh-cn/cpp/porting/modifying-winver-and-win32-winnt?view=msvc-170
 // _WIN32_WINNT version constants
