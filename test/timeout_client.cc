@@ -223,7 +223,7 @@ std::size_t readData(boost::asio::ip::tcp::socket& socket, std::vector<unsigned 
 
   ec.clear();
   std::size_t bytes_read = 0;
-  boost::asio::io_context& io_context = static_cast<boost::asio::io_context&>(socket.get_executor().context());
+  auto& io_context = static_cast<boost::asio::io_context&>(socket.get_executor().context());
   asyncReadWithTimeout(socket, boost::asio::buffer(buffer),
                        2000, // 2 seconds for example
                        [&](auto&& err, auto size) {
