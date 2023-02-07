@@ -42,7 +42,9 @@ std::atomic_bool pub_thd_init_done{false};
 
 } // namespace
 
-static void canRxFunc(std::atomic_bool* runFlag, eventpp_queue_t& ppq) {
+namespace {
+
+void canRxFunc(std::atomic_bool* runFlag, eventpp_queue_t& ppq) {
   using namespace std::chrono;
   // auto dur = system_clock::now().time_since_epoch();
   // uint64_t now = duration_cast<microseconds>(dur).count();
@@ -84,13 +86,14 @@ static void canRxFunc(std::atomic_bool* runFlag, eventpp_queue_t& ppq) {
     ppq.processIf([&frame_num](const canobj_queue_node_t /*event*/) {
       return (frame_num > 0);
     });
+
     // std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 
   LOG(INFO) << "can_rx_func exit.";
 }
 
-static void pubSimuFunc(std::atomic_bool* runFlag, eventpp_queue_t& ppq) {
+void pubSimuFunc(std::atomic_bool* runFlag, eventpp_queue_t& ppq) {
   using namespace std::chrono;
 
   tick::tickExt tick_ext;
@@ -127,6 +130,8 @@ static void pubSimuFunc(std::atomic_bool* runFlag, eventpp_queue_t& ppq) {
 
   LOG(INFO) << "pub_simu_func exit.";
 }
+
+} // namespace
 
 int main(int /*argc*/, char** argv) {
   FLAGS_alsologtostderr = true;
