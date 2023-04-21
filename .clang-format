@@ -1,4 +1,5 @@
-# see https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+# see <https://clang.llvm.org/docs/ClangFormatStyleOptions.html>
+
 ---
 BasedOnStyle: LLVM
 Language: Cpp
