@@ -21,32 +21,32 @@ Session::Session(boost::asio::io_context& ioContext, eventpp_queue_t& ppq)
 }
 
 Session::~Session() {
-  disconnect_to_eventqq();
+  disconnectToEventqq();
   std::cout << "Session terminated." << std::endl;
 }
 
 void Session::start() {
-  ppq_handle_ = eventpp_q_.appendListener(ppq_can_obj_evt_id,
-                                          std::bind(&Session::consume_can_obj_handler, shared_from_this(), std::placeholders::_1));
+  ppq_handle_ =
+      eventpp_q_.appendListener(kPpqCanObjEvtId, std::bind(&Session::consumeCanObjHandler, shared_from_this(), std::placeholders::_1));
   const boost::system::error_code ec;
-  do_can_obj_transpose(ec);
+  doCanObjTranspose(ec);
 }
 
-void Session::disconnect_to_eventqq() {
+void Session::disconnectToEventqq() {
   if (ppq_handle_.use_count() > 0) {
     // remove listener to let this session destroied
-    eventpp_q_.removeListener(ppq_can_obj_evt_id, ppq_handle_);
+    eventpp_q_.removeListener(kPpqCanObjEvtId, ppq_handle_);
   }
 }
 
-void Session::consume_can_obj_handler(const canobj_queue_node_t& node) {
+void Session::consumeCanObjHandler(const CanobjQueueNodeT& node) {
   if (!spsc_queue_.push(node)) {
-    LOG(WARNING) << "Session::consume_can_obj_handler fail.";
+    LOG(WARNING) << "Session::consumeCanObjHandler fail.";
   }
 }
 
-void Session::do_can_obj_transpose(const boost::system::error_code& /*ec*/) {
-  canobj_queue_node_t node;
+void Session::doCanObjTranspose(const boost::system::error_code& /*ec*/) {
+  CanobjQueueNodeT node;
   for (size_t i = 0; i < 8; i++) {
     if (!spsc_queue_.pop(node)) {
       break;
@@ -62,7 +62,7 @@ void Session::do_can_obj_transpose(const boost::system::error_code& /*ec*/) {
 
   auto self = shared_from_this();
   deadline_.expires_from_now(boost::posix_time::milliseconds(10));
-  deadline_.async_wait(boost::bind(&Session::do_can_obj_transpose, self, boost::asio::placeholders::error));
+  deadline_.async_wait(boost::bind(&Session::doCanObjTranspose, self, boost::asio::placeholders::error));
 }
 
 void Session::writeMessage() {
@@ -77,12 +77,12 @@ void Session::handleWrite(const boost::system::error_code& ec, std::size_t bytes
 
   if (ec) {
     LOG(WARNING) << "Session::handle_write " << ec.what();
-    disconnect_to_eventqq();
+    disconnectToEventqq();
     return;
   }
 
   const boost::system::error_code ec2;
-  do_can_obj_transpose(ec2);
+  doCanObjTranspose(ec2);
 }
 
 void Session::handleRead(const boost::system::error_code& ec, std::size_t /*bytesTransfered*/) {

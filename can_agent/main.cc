@@ -67,7 +67,7 @@ void canRxFunc(std::atomic_bool* runFlag, eventpp_queue_t& ppq) {
   constexpr DWORD kRxBuffSize = 100;
   VCI_CAN_OBJ can_rx_buff[kRxBuffSize];
   const char* cmd_recv = "VCI_Receive,";
-  canobj_queue_node_t send_buff;
+  CanobjQueueNodeT send_buff;
   uint64_t send_count = 0;
 
   while (runFlag->load()) {
@@ -79,11 +79,11 @@ void canRxFunc(std::atomic_bool* runFlag, eventpp_queue_t& ppq) {
       auto& can_obj = can_rx_buff[i];
       auto* ptr_dst = (char*)send_buff.can_obj_;
       send_buff.len_ = can::utils::bin2hex::bin2hex_fast(ptr_dst, cmd_recv, &send_count, &now, &can_obj, "\n");
-      ppq.enqueue(ppq_can_obj_evt_id, send_buff);
+      ppq.enqueue(kPpqCanObjEvtId, send_buff);
       send_count++;
     }
 
-    ppq.processIf([&frame_num](const canobj_queue_node_t /*event*/) {
+    ppq.processIf([&frame_num](const CanobjQueueNodeT /*event*/) {
       return (frame_num > 0);
     });
 
@@ -106,7 +106,7 @@ void pubSimuFunc(std::atomic_bool* runFlag, eventpp_queue_t& ppq) {
   // auto dur = system_clock::now().time_since_epoch();
   // uint64_t now = duration_cast<microseconds>(dur).count();
   const char* cmd_recv = "VCI_Receive,";
-  canobj_queue_node_t send_buff;
+  CanobjQueueNodeT send_buff;
   uint64_t send_count = 0;
 
   while (runFlag->load()) {
@@ -119,7 +119,7 @@ void pubSimuFunc(std::atomic_bool* runFlag, eventpp_queue_t& ppq) {
 
       auto* ptr_dst = (char*)send_buff.can_obj_;
       send_buff.len_ = can::utils::bin2hex::bin2hex_fast(ptr_dst, cmd_recv, &send_count, &now, &can_obj, "\n");
-      ppq.enqueue(ppq_can_obj_evt_id, send_buff);
+      ppq.enqueue(kPpqCanObjEvtId, send_buff);
       send_count++;
     }
 
